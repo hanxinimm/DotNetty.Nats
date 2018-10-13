@@ -3,7 +3,7 @@
 
 using System.Runtime.Serialization;
 
-namespace DotNetty.Codecs.NATS.Packets
+namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
     public abstract class Packet

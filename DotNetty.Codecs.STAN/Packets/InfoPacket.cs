@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
-namespace DotNetty.Codecs.NATS.Packets
+namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
     public class InfoPacket : Packet

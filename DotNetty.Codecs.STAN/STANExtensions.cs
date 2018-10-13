@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using DotNetty.Codecs.NATS.Packets;
+using DotNetty.Codecs.STAN.Packets;
 using System.Text.RegularExpressions;
 
-namespace DotNetty.Codecs.NATS
+namespace DotNetty.Codecs.STAN
 {
     internal static class STANExtensions
     {
