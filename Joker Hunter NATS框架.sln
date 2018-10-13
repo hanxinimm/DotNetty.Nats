@@ -13,11 +13,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppMore", "ConsoleAp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Codecs.NATS", "DotNetty.Codecs.NATS\DotNetty.Codecs.NATS.csproj", "{AF964607-E817-4A5E-A907-24F90FBFC030}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleAppPush", "ConsoleAppPush\ConsoleAppPush.csproj", "{3653D8C2-08F4-43B7-B1BF-060AD397779D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleNATSPush", "ConsoleAppPush\ConsoleNATSPush.csproj", "{3653D8C2-08F4-43B7-B1BF-060AD397779D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Handlers.NATS", "DotNetty.Handlers.NATS\DotNetty.Handlers.NATS.csproj", "{BD63BA81-EBF5-42B5-8355-15FF0C601501}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Codecs.STAN", "DotNetty.Codecs.STAN\DotNetty.Codecs.STAN.csproj", "{FBF1D840-08A3-4E81-BBA1-5005F7CF65E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSTANPush", "ConsoleSTANPush\ConsoleSTANPush.csproj", "{9801A056-3FBF-4AF7-8752-A58E3113F3E2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetty.Handlers.STAN", "DotNetty.Handlers.STAN\DotNetty.Handlers.STAN.csproj", "{43BDD6A7-2052-40E9-876C-53BE8885429D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +61,14 @@ Global
 		{FBF1D840-08A3-4E81-BBA1-5005F7CF65E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBF1D840-08A3-4E81-BBA1-5005F7CF65E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBF1D840-08A3-4E81-BBA1-5005F7CF65E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9801A056-3FBF-4AF7-8752-A58E3113F3E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9801A056-3FBF-4AF7-8752-A58E3113F3E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9801A056-3FBF-4AF7-8752-A58E3113F3E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9801A056-3FBF-4AF7-8752-A58E3113F3E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43BDD6A7-2052-40E9-876C-53BE8885429D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43BDD6A7-2052-40E9-876C-53BE8885429D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43BDD6A7-2052-40E9-876C-53BE8885429D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43BDD6A7-2052-40E9-876C-53BE8885429D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

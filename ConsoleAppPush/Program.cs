@@ -1,7 +1,7 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Codecs;
-using DotNetty.Codecs.STAN;
-using DotNetty.Codecs.STAN.Packets;
+using DotNetty.Codecs.NATS;
+using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Handlers.NATS;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;

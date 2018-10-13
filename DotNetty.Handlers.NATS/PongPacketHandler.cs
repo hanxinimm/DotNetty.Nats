@@ -4,7 +4,7 @@
 namespace DotNetty.Handlers.NATS
 {
     using System;
-    using DotNetty.Codecs.STAN.Packets;
+    using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Transport.Channels;
 
     public class PongPacketHandler : SimpleChannelInboundHandler<PongPacket>

@@ -78,9 +78,9 @@ namespace DotNetty.Codecs.STAN
             {
                 switch (input.ReadByte())
                 {
-                    case NATSConstants.FIELDDELIMITER_SPACES:
-                    case NATSConstants.FIELDDELIMITER_TAB:
-                    case NATSConstants.NEWLINES_CR:
+                    case STANConstants.FIELDDELIMITER_SPACES:
+                    case STANConstants.FIELDDELIMITER_TAB:
+                    case STANConstants.NEWLINES_CR:
                         return input.GetString(0, i, Encoding.UTF8);
                     default:
                         break;
@@ -95,11 +95,11 @@ namespace DotNetty.Codecs.STAN
             {
                 switch (input.ReadByte())
                 {
-                    case NATSConstants.FIELDDELIMITER_SPACES:
-                    case NATSConstants.FIELDDELIMITER_TAB:
+                    case STANConstants.FIELDDELIMITER_SPACES:
+                    case STANConstants.FIELDDELIMITER_TAB:
                         return input.GetString(startIndex, i, Encoding.UTF8);
-                    case NATSConstants.NEWLINES_CR:
-                        if (NATSConstants.NEWLINES_LF == input.ReadByte()) return string.Empty;
+                    case STANConstants.NEWLINES_CR:
+                        if (STANConstants.NEWLINES_LF == input.ReadByte()) return string.Empty;
                         throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
                     default:
                         break;
@@ -114,11 +114,11 @@ namespace DotNetty.Codecs.STAN
             {
                 switch (input.ReadByte())
                 {
-                    case NATSConstants.FIELDDELIMITER_SPACES:
-                    case NATSConstants.FIELDDELIMITER_TAB:
+                    case STANConstants.FIELDDELIMITER_SPACES:
+                    case STANConstants.FIELDDELIMITER_TAB:
                         return Unpooled.Empty;
-                    case NATSConstants.NEWLINES_CR:
-                        if (NATSConstants.NEWLINES_LF == input.ReadByte())
+                    case STANConstants.NEWLINES_CR:
+                        if (STANConstants.NEWLINES_LF == input.ReadByte())
                         {
                             input.SetReaderIndex(startIndex);
                             return input.ReadBytes(i);

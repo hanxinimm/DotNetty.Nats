@@ -1,11 +1,11 @@
-﻿using DotNetty.Codecs.NATS.Packets;
+﻿using DotNetty.Codecs.STAN.Packets;
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace DotNetty.Handlers.NATS
+namespace DotNetty.Handlers.STAN
 {
     public class MessagePacketHandler : SimpleChannelInboundHandler<MessagePacket>
     {

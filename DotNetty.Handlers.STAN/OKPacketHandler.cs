@@ -1,10 +1,10 @@
-﻿using DotNetty.Codecs.NATS.Packets;
+﻿using DotNetty.Codecs.STAN.Packets;
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace DotNetty.Handlers.NATS
+namespace DotNetty.Handlers.STAN
 {
     public class OKPacketHandler : SimpleChannelInboundHandler<OKPacket>
     {

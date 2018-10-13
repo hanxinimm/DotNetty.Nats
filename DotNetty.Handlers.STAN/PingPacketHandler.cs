@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace DotNetty.Handlers.NATS
+namespace DotNetty.Handlers.STAN
 {
     using System;
-    using DotNetty.Codecs.NATS.Packets;
+    using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Transport.Channels;
 
     public class PingPacketHandler : SimpleChannelInboundHandler<PingPacket>
