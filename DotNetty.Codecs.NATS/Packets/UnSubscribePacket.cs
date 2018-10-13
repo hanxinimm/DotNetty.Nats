@@ -6,10 +6,10 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class UnSubscribePacket : Packet
+    public class UnSubscribePacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.UNSUB;
+        public override NATSPacketType PacketType => NATSPacketType.UNSUB;
 
         public UnSubscribePacket(string id)
         {

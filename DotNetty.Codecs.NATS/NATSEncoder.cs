@@ -12,7 +12,7 @@ namespace DotNetty.Codecs.NATS
     using DotNetty.Common.Utilities;
     using DotNetty.Transport.Channels;
 
-    public sealed class NATSEncoder : MessageToMessageEncoder<Packet>
+    public sealed class NATSEncoder : MessageToMessageEncoder<NATSPacket>
     {
         public static readonly NATSEncoder Instance = new NATSEncoder();
 
@@ -41,7 +41,7 @@ namespace DotNetty.Codecs.NATS
             PONG_BYTES = Encoding.UTF8.GetBytes(Signatures.PONG);
         }
 
-        protected override void Encode(IChannelHandlerContext context, Packet message, List<object> output) => DoEncode(context.Allocator, message, output);
+        protected override void Encode(IChannelHandlerContext context, NATSPacket message, List<object> output) => DoEncode(context.Allocator, message, output);
 
         public override bool IsSharable => true;
 
@@ -52,26 +52,26 @@ namespace DotNetty.Codecs.NATS
         ///     @param packet MQTT packet to encode
         ///     @return ByteBuf with encoded bytes
         /// </summary>
-        internal static void DoEncode(IByteBufferAllocator bufferAllocator, Packet packet, List<object> output)
+        internal static void DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
         {
             switch (packet.PacketType)
             {
-                case PacketType.CONNECT:
+                case NATSPacketType.CONNECT:
                     EncodeConnectMessage(bufferAllocator, (ConnectPacket)packet, output);
                     break;
-                case PacketType.PUB:
+                case NATSPacketType.PUB:
                     EncodePublishMessage(bufferAllocator, (PublishPacket)packet, output);
                     break;
-                case PacketType.SUB:
+                case NATSPacketType.SUB:
                     EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
                     break;
-                case PacketType.UNSUB:
+                case NATSPacketType.UNSUB:
                     EncodeUnsubscribeMessage(bufferAllocator, (UnSubscribePacket)packet, output);
                     break;
-                case PacketType.PING:
+                case NATSPacketType.PING:
                     EncodePingMessage(bufferAllocator, (PingPacket)packet, output);
                     break;
-                case PacketType.PONG:
+                case NATSPacketType.PONG:
                     EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
                     break;
                 //case PacketType.CONNACK:

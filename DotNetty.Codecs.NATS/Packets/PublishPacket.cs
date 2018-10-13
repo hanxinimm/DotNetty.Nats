@@ -8,10 +8,10 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class PublishPacket : Packet
+    public class PublishPacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.PUB;
+        public override NATSPacketType PacketType => NATSPacketType.PUB;
 
         public PublishPacket(string subject)
         {

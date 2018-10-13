@@ -5,7 +5,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATS\Packets\NATSPacket.cs" Link="Packets\NATSPacket.cs" />
+    <Compile Include="..\DotNetty.Codecs.NATS\Packets\NATSPacketType.cs" Link="Packets\NATSPacketType.cs" />
+    <Compile Include="..\DotNetty.Codecs.NATS\Packets\PublishPacket.cs" Link="Packets\PublishPacket.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DotNetty.Codecs" Version="0.6.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.6.1" />
+    <PackageReference Include="Google.Protobuf.Tools" Version="3.6.1" />
   </ItemGroup>
 
 </Project>

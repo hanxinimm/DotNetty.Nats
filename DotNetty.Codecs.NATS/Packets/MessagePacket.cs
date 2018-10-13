@@ -8,10 +8,10 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class MessagePacket : Packet
+    public class MessagePacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.MSG;
+        public override NATSPacketType PacketType => NATSPacketType.MSG;
 
         public MessagePacket(string subject, string subscribeId, IByteBuffer payload, string replyTo)
         {

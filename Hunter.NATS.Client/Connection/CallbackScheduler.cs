@@ -11,7 +11,7 @@ namespace Hunter.NATS.Client
     {
         Channel<Task> tasks = new Channel<Task>() { Name = "Tasks" };
         Task executorTask = null;
-        object runningLock = new object();
+        readonly object runningLock = new object();
         bool schedulerRunning = false;
 
         private bool Running

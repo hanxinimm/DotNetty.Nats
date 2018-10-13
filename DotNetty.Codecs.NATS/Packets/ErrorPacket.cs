@@ -6,10 +6,10 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class ErrorPacket : Packet
+    public class ErrorPacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.MINUS_ERR;
+        public override NATSPacketType PacketType => NATSPacketType.MINUS_ERR;
 
         public ErrorPacket(string message)
         {

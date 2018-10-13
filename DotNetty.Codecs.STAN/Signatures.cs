@@ -9,15 +9,16 @@ namespace DotNetty.Codecs.STAN
         internal const string CRLF = "\r\n";
         internal const string SPACES = " ";
 
-        internal const string INFO = "INFO";
-        internal const string CONNECT = "CONNECT";
-        internal const string PUB = "PUB";
-        internal const string SUB = "SUB";
-        internal const string UNSUB = "UNSUB";
-        internal const string MSG = "MSG";
-        internal const string PING = "PING";
-        internal const string PONG = "PONG";
-        internal const string OK = "+OK";
-        internal const string ERR = "-ERR";
+        internal const string ConnectRequest = "ConnectRequest";
+        internal const string ConnectResponse = "ConnectResponse";
+        internal const string SubscriptionRequest = "SubscriptionRequest";
+        internal const string SubscriptionResponse = "SubscriptionResponse";
+        internal const string UnsubscribeRequest = "UnsubscribeRequest";
+        internal const string PubMsg = "PubMsg";
+        internal const string PubAck = "PubAck";
+        internal const string MsgProto = "MsgProto";
+        internal const string Ack = "Ack";
+        internal const string CloseRequest = "CloseRequest";
+        internal const string CloseResp = "CloseResp";
     }
 }

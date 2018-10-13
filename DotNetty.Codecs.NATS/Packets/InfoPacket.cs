@@ -8,9 +8,9 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class InfoPacket : Packet
+    public class InfoPacket : NATSPacket
     {
-        public override PacketType PacketType => PacketType.INFO;
+        public override NATSPacketType PacketType => NATSPacketType.INFO;
 
         /// <summary>
         /// NATS服务器的唯一标识符

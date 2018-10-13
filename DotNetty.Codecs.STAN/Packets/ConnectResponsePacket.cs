@@ -8,9 +8,9 @@ using System.Text;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public class InfoPacket : Packet
+    public class ConnectResponsePacket : STANPacket
     {
-        public override PacketType PacketType => PacketType.INFO;
+        public override STANPacketType PacketType => STANPacketType.ConnectResponse;
 
         /// <summary>
         /// NATS服务器的唯一标识符
@@ -70,13 +70,13 @@ namespace DotNetty.Codecs.STAN.Packets
         [DataMember]
         public string[] ClusterRoutes { get; set; }
 
-        public static InfoPacket CreateFromJson(string json)
+        public static ConnectResponsePacket CreateFromJson(string json)
         {
             using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
             {
-                var serializer = new DataContractJsonSerializer(typeof(InfoPacket));
+                var serializer = new DataContractJsonSerializer(typeof(ConnectResponsePacket));
                 stream.Position = 0;
-                return (InfoPacket)serializer.ReadObject(stream);
+                return (ConnectResponsePacket)serializer.ReadObject(stream);
             }
         }
 

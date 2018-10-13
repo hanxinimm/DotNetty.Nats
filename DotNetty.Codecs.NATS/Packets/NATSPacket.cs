@@ -6,10 +6,10 @@ using System.Runtime.Serialization;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public abstract class Packet
+    public abstract class NATSPacket
     {
         [IgnoreDataMember]
-        public abstract PacketType PacketType { get; }
+        public abstract NATSPacketType PacketType { get; }
 
         public override string ToString()
         {

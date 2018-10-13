@@ -8,10 +8,10 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class ConnectPacket : Packet
+    public class ConnectPacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.CONNECT;
+        public override NATSPacketType PacketType => NATSPacketType.CONNECT;
 
         /// <summary>
         /// TODO:写成包内可以访问

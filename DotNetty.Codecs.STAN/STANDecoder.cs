@@ -30,7 +30,7 @@ namespace DotNetty.Codecs.STAN
                 switch (this.State)
                 {
                     case ParseState.Ready:
-                        if (!TryDecodePacket(input, context, out Packet packet))
+                        if (!TryDecodePacket(input, context, out STANPacket packet))
                         {
                             this.RequestReplay();
                             return;
@@ -57,7 +57,7 @@ namespace DotNetty.Codecs.STAN
 
         
 
-        static bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out Packet packet)
+        static bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out STANPacket packet)
         {
             if (buffer.ReadableBytes == 0)
             {
@@ -131,22 +131,22 @@ namespace DotNetty.Codecs.STAN
             return input.GetBytes(startIndex, input);
         }
 
-        static Packet DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        static STANPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             switch (packetSignature)
             {
-                case Signatures.INFO:
-                    return DecodeInfoPacket(buffer, context);
-                case Signatures.MSG:
-                    return DecodeMessagePacket(buffer, context);
-                case Signatures.OK:
-                    return DecodeOKPacket(buffer, context);
-                case Signatures.PING:
-                    return DecodePingPacket(buffer, context);
-                case Signatures.PONG:
-                    return DecodePongPacket(buffer, context);
-                case Signatures.ERR:
-                    return DecodeErrorPacket(buffer, context);
+                case Signatures.ConnectRequest:
+                    return DecodeConnectRequestPacket(buffer, context);
+                //case Signatures.ConnectResponse:
+                //    return DecodeMessagePacket(buffer, context);
+                //case Signatures.OK:
+                //    return DecodeOKPacket(buffer, context);
+                //case Signatures.PING:
+                //    return DecodePingPacket(buffer, context);
+                //case Signatures.PONG:
+                //    return DecodePongPacket(buffer, context);
+                //case Signatures.ERR:
+                //    return DecodeErrorPacket(buffer, context);
                 default:
                     Console.WriteLine("--|{0}|--", packetSignature);
                     return null;
@@ -154,45 +154,45 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
-        static Packet DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        static STANPacket DecodeConnectRequestPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            return InfoPacket.CreateFromJson(DecodeString(buffer));
+            return ConnectResponsePacket.CreateFromJson(DecodeString(buffer));
         }
 
-        static Packet DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
-        {
+        //static Packet DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
+        //{
 
-            var Subject = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+        //    var Subject = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
 
-            var SubscribeId = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+        //    var SubscribeId = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
 
-            var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+        //    var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
 
-            var Payload = GetBytesFromNewlines(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+        //    var Payload = GetBytesFromNewlines(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
 
-            return new MessagePacket(Subject, SubscribeId, Payload, ReplyTo);
+        //    return new MessagePacket(Subject, SubscribeId, Payload, ReplyTo);
 
-        }
+        //}
 
-        static Packet DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        {
-            return new ErrorPacket(DecodeStringNew(buffer));
-        }
+        //static Packet DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        //{
+        //    return new ErrorPacket(DecodeStringNew(buffer));
+        //}
 
-        static Packet DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        {
-            return new OKPacket();
-        }
+        //static Packet DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        //{
+        //    return new OKPacket();
+        //}
 
-        static Packet DecodePingPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        {
-            return new PingPacket();
-        }
+        //static Packet DecodePingPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        //{
+        //    return new PingPacket();
+        //}
 
-        static PongPacket DecodePongPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        {
-            return new PongPacket();
-        }
+        //static PongPacket DecodePongPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        //{
+        //    return new PongPacket();
+        //}
 
         static string DecodeString(IByteBuffer buffer) => DecodeString(buffer, 0, 20480);
 

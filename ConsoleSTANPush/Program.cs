@@ -46,14 +46,14 @@ namespace ConsoleSTANPush
 
                         channel.Pipeline.AddLast(new DelimiterBasedFrameDecoder(1024, Delimiters.LineDelimiter()));
                         channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder(true, 20480));
-                        channel.Pipeline.AddLast(new PingPacketHandler(), new PongPacketHandler(), new OKPacketHandler(), new MessagePacketHandler(), new InfoPacketHandler(), new ErrorPacketHandler());
+                        channel.Pipeline.AddLast(new ConnectResponsePacketHandler());
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4222));
 
                 //await bootstrapChannel.WriteAndFlushAsync(new ConnectPacket(false, false, false, null, null, "test-client", null));
 
-                await bootstrapChannel.WriteAndFlushAsync(new PingPacket());
+                await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("",""));
 
                 for (; ; )
                 {
@@ -92,8 +92,8 @@ namespace ConsoleSTANPush
                             //await bootstrapChannel.WriteAndFlushAsync(string.Format("PUB foo {1}\r\n{0}\r\n", json, bytes.Length));
                             //await bootstrapChannel.WriteAndFlushAsync("hello" + "\r\n");
                             //var packet = new SubscribePacket("test1", "foo", string.Empty);
-                            var packet = new PublishPacket("foo", Unpooled.WrappedBuffer(bytes));
-                            await bootstrapChannel.WriteAndFlushAsync(packet);
+                            //var packet = new ("foo", Unpooled.WrappedBuffer(bytes));
+                            //await bootstrapChannel.WriteAndFlushAsync(packet);
                         }
 
                         sw.Stop();

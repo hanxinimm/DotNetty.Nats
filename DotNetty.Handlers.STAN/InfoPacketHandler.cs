@@ -7,9 +7,9 @@ namespace DotNetty.Handlers.STAN
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Transport.Channels;
 
-    public class InfoPacketHandler : SimpleChannelInboundHandler<InfoPacket>
+    public class ConnectResponsePacketHandler : SimpleChannelInboundHandler<ConnectResponsePacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext contex, InfoPacket msg)
+        protected override void ChannelRead0(IChannelHandlerContext contex, ConnectResponsePacket msg)
         {
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
         }

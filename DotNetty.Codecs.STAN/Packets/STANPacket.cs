@@ -6,10 +6,10 @@ using System.Runtime.Serialization;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public abstract class Packet
+    public abstract class STANPacket
     {
         [IgnoreDataMember]
-        public abstract PacketType PacketType { get; }
+        public abstract STANPacketType PacketType { get; }
 
         public override string ToString()
         {

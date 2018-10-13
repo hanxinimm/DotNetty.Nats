@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DotNetty.Codecs.STAN.Packets
+namespace DotNetty.Codecs.NATS.Packets
 {
-    public enum PacketType
+    public enum NATSPacketType
     {
         /// <summary>
         /// Server	Sent to client after initial TCP/IP connection

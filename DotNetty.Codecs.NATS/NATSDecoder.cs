@@ -30,7 +30,7 @@ namespace DotNetty.Codecs.NATS
                 switch (this.State)
                 {
                     case ParseState.Ready:
-                        if (!TryDecodePacket(input, context, out Packet packet))
+                        if (!TryDecodePacket(input, context, out NATSPacket packet))
                         {
                             this.RequestReplay();
                             return;
@@ -57,7 +57,7 @@ namespace DotNetty.Codecs.NATS
 
         
 
-        static bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out Packet packet)
+        static bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out NATSPacket packet)
         {
             if (buffer.ReadableBytes == 0)
             {
@@ -131,7 +131,7 @@ namespace DotNetty.Codecs.NATS
             return input.GetBytes(startIndex, input);
         }
 
-        static Packet DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        static NATSPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             switch (packetSignature)
             {
@@ -154,12 +154,12 @@ namespace DotNetty.Codecs.NATS
             }
         }
 
-        static Packet DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        static NATSPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             return InfoPacket.CreateFromJson(DecodeString(buffer));
         }
 
-        static Packet DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
+        static NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
 
             var Subject = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
@@ -174,17 +174,17 @@ namespace DotNetty.Codecs.NATS
 
         }
 
-        static Packet DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        static NATSPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             return new ErrorPacket(DecodeStringNew(buffer));
         }
 
-        static Packet DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        static NATSPacket DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             return new OKPacket();
         }
 
-        static Packet DecodePingPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        static NATSPacket DecodePingPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             return new PingPacket();
         }

@@ -12,7 +12,7 @@ namespace DotNetty.Codecs.STAN
     using DotNetty.Common.Utilities;
     using DotNetty.Transport.Channels;
 
-    public sealed class STANEncoder : MessageToMessageEncoder<Packet>
+    public sealed class STANEncoder : MessageToMessageEncoder<STANPacket>
     {
         public static readonly STANEncoder Instance = new STANEncoder();
 
@@ -33,15 +33,15 @@ namespace DotNetty.Codecs.STAN
             SPACES_BYTES = Encoding.UTF8.GetBytes(Signatures.SPACES);
             CRLF_BYTES = Encoding.UTF8.GetBytes(Signatures.CRLF);
 
-            CONNECT_BYTES = Encoding.UTF8.GetBytes(Signatures.CONNECT);
-            PUB_BYTES = Encoding.UTF8.GetBytes(Signatures.PUB);
-            SUB_BYTES = Encoding.UTF8.GetBytes(Signatures.SUB);
-            UNSUB_BYTES = Encoding.UTF8.GetBytes(Signatures.UNSUB);
-            PING_BYTES = Encoding.UTF8.GetBytes(Signatures.PING);
-            PONG_BYTES = Encoding.UTF8.GetBytes(Signatures.PONG);
+            //CONNECT_BYTES = Encoding.UTF8.GetBytes(Signatures.CONNECT);
+            //PUB_BYTES = Encoding.UTF8.GetBytes(Signatures.PUB);
+            //SUB_BYTES = Encoding.UTF8.GetBytes(Signatures.SUB);
+            //UNSUB_BYTES = Encoding.UTF8.GetBytes(Signatures.UNSUB);
+            //PING_BYTES = Encoding.UTF8.GetBytes(Signatures.PING);
+            //PONG_BYTES = Encoding.UTF8.GetBytes(Signatures.PONG);
         }
 
-        protected override void Encode(IChannelHandlerContext context, Packet message, List<object> output) => DoEncode(context.Allocator, message, output);
+        protected override void Encode(IChannelHandlerContext context, STANPacket message, List<object> output) => DoEncode(context.Allocator, message, output);
 
         public override bool IsSharable => true;
 
@@ -52,28 +52,28 @@ namespace DotNetty.Codecs.STAN
         ///     @param packet MQTT packet to encode
         ///     @return ByteBuf with encoded bytes
         /// </summary>
-        internal static void DoEncode(IByteBufferAllocator bufferAllocator, Packet packet, List<object> output)
+        internal static void DoEncode(IByteBufferAllocator bufferAllocator, STANPacket packet, List<object> output)
         {
             switch (packet.PacketType)
             {
-                case PacketType.CONNECT:
-                    EncodeConnectMessage(bufferAllocator, (ConnectPacket)packet, output);
+                case STANPacketType.ConnectRequest:
+                    EncodeConnectMessage(bufferAllocator, (ConnectRequestPacket)packet, output);
                     break;
-                case PacketType.PUB:
-                    EncodePublishMessage(bufferAllocator, (PublishPacket)packet, output);
-                    break;
-                case PacketType.SUB:
-                    EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
-                    break;
-                case PacketType.UNSUB:
-                    EncodeUnsubscribeMessage(bufferAllocator, (UnSubscribePacket)packet, output);
-                    break;
-                case PacketType.PING:
-                    EncodePingMessage(bufferAllocator, (PingPacket)packet, output);
-                    break;
-                case PacketType.PONG:
-                    EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
-                    break;
+                //case PacketType.PUB:
+                //    EncodePublishMessage(bufferAllocator, (PublishPacket)packet, output);
+                //    break;
+                //case PacketType.SUB:
+                //    EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
+                //    break;
+                //case PacketType.UNSUB:
+                //    EncodeUnsubscribeMessage(bufferAllocator, (UnSubscribePacket)packet, output);
+                //    break;
+                //case PacketType.PING:
+                //    EncodePingMessage(bufferAllocator, (PingPacket)packet, output);
+                //    break;
+                //case PacketType.PONG:
+                //    EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
+                //    break;
                 //case PacketType.CONNACK:
                 //    EncodeConnAckMessage(bufferAllocator, (ConnAckPacket)packet, output);
                 //    break;
@@ -99,9 +99,9 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
-        static void EncodeConnectMessage(IByteBufferAllocator bufferAllocator, ConnectPacket packet, List<object> output)
+        static void EncodeConnectMessage(IByteBufferAllocator bufferAllocator, ConnectRequestPacket packet, List<object> output)
         {
-            byte[] ConnectOptionBytes = EncodeStringInUtf8(packet.ToJson());
+            byte[] ConnectOptionBytes = EncodeStringInUtf8(packet.ToString());
             IByteBuffer buf = null;
             try
             {
@@ -120,169 +120,169 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
-        static void EncodePublishMessage(IByteBufferAllocator bufferAllocator, PublishPacket packet, List<object> output)
-        {
+        //static void EncodePublishMessage(IByteBufferAllocator bufferAllocator, PublishPacket packet, List<object> output)
+        //{
 
-            packet.ValidateTopicName();
+        //    packet.ValidateTopicName();
 
-            byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
-            byte[] ReplyToBytes = EncodeStringInUtf8(packet.ReplyTo);
+        //    byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
+        //    byte[] ReplyToBytes = EncodeStringInUtf8(packet.ReplyTo);
 
-            int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
-            variablePartSize += (ReplyToBytes.Length > 0 ? ReplyToBytes.Length + SPACES_BYTES.Length : 0);
+        //    int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
+        //    variablePartSize += (ReplyToBytes.Length > 0 ? ReplyToBytes.Length + SPACES_BYTES.Length : 0);
             
-            IByteBuffer Payload = packet.Payload ?? Unpooled.Empty;
+        //    IByteBuffer Payload = packet.Payload ?? Unpooled.Empty;
 
-            byte[] PayloadSize = EncodeStringInUtf8(Payload.ReadableBytes.ToString());
+        //    byte[] PayloadSize = EncodeStringInUtf8(Payload.ReadableBytes.ToString());
 
-            variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
-            variablePartSize += Payload.ReadableBytes + CRLF_BYTES.Length;
+        //    variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
+        //    variablePartSize += Payload.ReadableBytes + CRLF_BYTES.Length;
 
-            int fixedHeaderBufferSize = PUB_BYTES.Length + SPACES_BYTES.Length;
+        //    int fixedHeaderBufferSize = PUB_BYTES.Length + SPACES_BYTES.Length;
 
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
-                buf.WriteBytes(PUB_BYTES);
-                buf.WriteBytes(SPACES_BYTES);
-                buf.WriteBytes(SubjectNameBytes);
-                buf.WriteBytes(SPACES_BYTES);
-                if (!string.IsNullOrEmpty(packet.ReplyTo))
-                {
-                    buf.WriteBytes(ReplyToBytes);
-                    buf.WriteBytes(SPACES_BYTES);
-                }
-                buf.WriteBytes(PayloadSize);
-                buf.WriteBytes(CRLF_BYTES);
-                if (packet.Payload != null)
-                {
-                    buf.WriteBytes(Payload);
-                }
-                buf.WriteBytes(CRLF_BYTES);
+        //    IByteBuffer buf = null;
+        //    try
+        //    {
+        //        buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
+        //        buf.WriteBytes(PUB_BYTES);
+        //        buf.WriteBytes(SPACES_BYTES);
+        //        buf.WriteBytes(SubjectNameBytes);
+        //        buf.WriteBytes(SPACES_BYTES);
+        //        if (!string.IsNullOrEmpty(packet.ReplyTo))
+        //        {
+        //            buf.WriteBytes(ReplyToBytes);
+        //            buf.WriteBytes(SPACES_BYTES);
+        //        }
+        //        buf.WriteBytes(PayloadSize);
+        //        buf.WriteBytes(CRLF_BYTES);
+        //        if (packet.Payload != null)
+        //        {
+        //            buf.WriteBytes(Payload);
+        //        }
+        //        buf.WriteBytes(CRLF_BYTES);
 
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
-        }
+        //        output.Add(buf);
+        //        buf = null;
+        //    }
+        //    finally
+        //    {
+        //        buf?.SafeRelease();
+        //    }
+        //}
 
-        static void EncodeSubscribeMessage(IByteBufferAllocator bufferAllocator, SubscribePacket packet, List<object> output)
-        {
-            byte[] IdBytes = EncodeStringInUtf8(packet.Id);
-            byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
-            byte[] GroupBytes = EncodeStringInUtf8(packet.Group);
+        //static void EncodeSubscribeMessage(IByteBufferAllocator bufferAllocator, SubscribePacket packet, List<object> output)
+        //{
+        //    byte[] IdBytes = EncodeStringInUtf8(packet.Id);
+        //    byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
+        //    byte[] GroupBytes = EncodeStringInUtf8(packet.Group);
 
-            int variablePartSize = IdBytes.Length + SPACES_BYTES.Length;
-            variablePartSize += SubjectNameBytes.Length + SPACES_BYTES.Length;
+        //    int variablePartSize = IdBytes.Length + SPACES_BYTES.Length;
+        //    variablePartSize += SubjectNameBytes.Length + SPACES_BYTES.Length;
 
-            if (GroupBytes.Length > 0)
-            {
-                variablePartSize += GroupBytes.Length + SPACES_BYTES.Length;
-            }
+        //    if (GroupBytes.Length > 0)
+        //    {
+        //        variablePartSize += GroupBytes.Length + SPACES_BYTES.Length;
+        //    }
 
-            int fixedHeaderBufferSize = SUB_BYTES.Length + SPACES_BYTES.Length;
+        //    int fixedHeaderBufferSize = SUB_BYTES.Length + SPACES_BYTES.Length;
 
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
-                buf.WriteBytes(SUB_BYTES);
-                buf.WriteBytes(SPACES_BYTES);
-                buf.WriteBytes(SubjectNameBytes);
-                buf.WriteBytes(SPACES_BYTES);
-                if (GroupBytes.Length > 0)
-                {
-                    buf.WriteBytes(GroupBytes);
-                    buf.WriteBytes(SPACES_BYTES);
-                }
-                buf.WriteBytes(IdBytes);
-                buf.WriteBytes(CRLF_BYTES);
+        //    IByteBuffer buf = null;
+        //    try
+        //    {
+        //        buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
+        //        buf.WriteBytes(SUB_BYTES);
+        //        buf.WriteBytes(SPACES_BYTES);
+        //        buf.WriteBytes(SubjectNameBytes);
+        //        buf.WriteBytes(SPACES_BYTES);
+        //        if (GroupBytes.Length > 0)
+        //        {
+        //            buf.WriteBytes(GroupBytes);
+        //            buf.WriteBytes(SPACES_BYTES);
+        //        }
+        //        buf.WriteBytes(IdBytes);
+        //        buf.WriteBytes(CRLF_BYTES);
 
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
-        }
+        //        output.Add(buf);
+        //        buf = null;
+        //    }
+        //    finally
+        //    {
+        //        buf?.SafeRelease();
+        //    }
+        //}
 
-        static void EncodeUnsubscribeMessage(IByteBufferAllocator bufferAllocator, UnSubscribePacket packet, List<object> output)
-        {
-            byte[] IdBytes = EncodeStringInUtf8(packet.Id);
-            byte[] WaitMessagesBytes = EncodeStringInUtf8(packet.WaitMessages?.ToString() ?? string.Empty);
+        //static void EncodeUnsubscribeMessage(IByteBufferAllocator bufferAllocator, UnSubscribePacket packet, List<object> output)
+        //{
+        //    byte[] IdBytes = EncodeStringInUtf8(packet.Id);
+        //    byte[] WaitMessagesBytes = EncodeStringInUtf8(packet.WaitMessages?.ToString() ?? string.Empty);
 
-            int variablePartSize = IdBytes.Length + SPACES_BYTES.Length;
+        //    int variablePartSize = IdBytes.Length + SPACES_BYTES.Length;
 
-            if (WaitMessagesBytes.Length > 0)
-            {
-                variablePartSize += WaitMessagesBytes.Length + SPACES_BYTES.Length;
-            }
+        //    if (WaitMessagesBytes.Length > 0)
+        //    {
+        //        variablePartSize += WaitMessagesBytes.Length + SPACES_BYTES.Length;
+        //    }
 
-            int fixedHeaderBufferSize = UNSUB_BYTES.Length + SPACES_BYTES.Length;
+        //    int fixedHeaderBufferSize = UNSUB_BYTES.Length + SPACES_BYTES.Length;
 
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
-                buf.WriteBytes(UNSUB_BYTES);
-                buf.WriteBytes(SPACES_BYTES);
-                buf.WriteBytes(IdBytes);
-                if (WaitMessagesBytes.Length > 0)
-                {
-                    buf.WriteBytes(SPACES_BYTES);
-                    buf.WriteBytes(WaitMessagesBytes);
-                }
-                buf.WriteBytes(CRLF_BYTES);
+        //    IByteBuffer buf = null;
+        //    try
+        //    {
+        //        buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
+        //        buf.WriteBytes(UNSUB_BYTES);
+        //        buf.WriteBytes(SPACES_BYTES);
+        //        buf.WriteBytes(IdBytes);
+        //        if (WaitMessagesBytes.Length > 0)
+        //        {
+        //            buf.WriteBytes(SPACES_BYTES);
+        //            buf.WriteBytes(WaitMessagesBytes);
+        //        }
+        //        buf.WriteBytes(CRLF_BYTES);
 
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
-        }
+        //        output.Add(buf);
+        //        buf = null;
+        //    }
+        //    finally
+        //    {
+        //        buf?.SafeRelease();
+        //    }
+        //}
 
-        static void EncodePingMessage(IByteBufferAllocator bufferAllocator, PingPacket packet, List<object> output)
-        {
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(PING_BYTES.Length);
-                buf.WriteBytes(PING_BYTES);
-                buf.WriteBytes(CRLF_BYTES);
+        //static void EncodePingMessage(IByteBufferAllocator bufferAllocator, PingPacket packet, List<object> output)
+        //{
+        //    IByteBuffer buf = null;
+        //    try
+        //    {
+        //        buf = bufferAllocator.Buffer(PING_BYTES.Length);
+        //        buf.WriteBytes(PING_BYTES);
+        //        buf.WriteBytes(CRLF_BYTES);
 
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
-        }
+        //        output.Add(buf);
+        //        buf = null;
+        //    }
+        //    finally
+        //    {
+        //        buf?.SafeRelease();
+        //    }
+        //}
 
-        static void EncodePongMessage(IByteBufferAllocator bufferAllocator, PongPacket packet, List<object> output)
-        {
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(PONG_BYTES.Length);
-                buf.WriteBytes(PONG_BYTES);
-                buf.WriteBytes(CRLF_BYTES);
+        //static void EncodePongMessage(IByteBufferAllocator bufferAllocator, PongPacket packet, List<object> output)
+        //{
+        //    IByteBuffer buf = null;
+        //    try
+        //    {
+        //        buf = bufferAllocator.Buffer(PONG_BYTES.Length);
+        //        buf.WriteBytes(PONG_BYTES);
+        //        buf.WriteBytes(CRLF_BYTES);
 
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
-        }
+        //        output.Add(buf);
+        //        buf = null;
+        //    }
+        //    finally
+        //    {
+        //        buf?.SafeRelease();
+        //    }
+        //}
 
         //static void EncodeConnAckMessage(IByteBufferAllocator bufferAllocator, ConnAckPacket message, List<object> output)
         //{

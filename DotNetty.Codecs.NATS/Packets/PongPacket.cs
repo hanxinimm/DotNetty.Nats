@@ -6,9 +6,9 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class PongPacket : Packet
+    public class PongPacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.PONG;
+        public override NATSPacketType PacketType => NATSPacketType.PONG;
     }
 }

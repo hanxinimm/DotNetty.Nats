@@ -6,10 +6,10 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class SubscribePacket : Packet
+    public class SubscribePacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.SUB;
+        public override NATSPacketType PacketType => NATSPacketType.SUB;
 
         public SubscribePacket(string id, string subject,string group)
         {

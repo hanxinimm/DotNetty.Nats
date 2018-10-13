@@ -6,9 +6,9 @@ using System.Text;
 namespace DotNetty.Codecs.NATS.Packets
 {
     [DataContract]
-    public class PingPacket : Packet
+    public class PingPacket : NATSPacket
     {
         [IgnoreDataMember]
-        public override PacketType PacketType => PacketType.PING;
+        public override NATSPacketType PacketType => NATSPacketType.PING;
     }
 }
