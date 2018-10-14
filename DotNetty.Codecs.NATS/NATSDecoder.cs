@@ -69,7 +69,7 @@ namespace DotNetty.Codecs.NATS
 
             packet = DecodePacketInternal(buffer, signature, context);
 
-            return true;
+            return packet != null;
         }
 
         static string GetSignature(IByteBuffer input)
@@ -135,17 +135,17 @@ namespace DotNetty.Codecs.NATS
         {
             switch (packetSignature)
             {
-                case Signatures.INFO:
+                case NATSSignatures.INFO:
                     return DecodeInfoPacket(buffer, context);
-                case Signatures.MSG:
+                case NATSSignatures.MSG:
                     return DecodeMessagePacket(buffer, context);
-                case Signatures.OK:
+                case NATSSignatures.OK:
                     return DecodeOKPacket(buffer, context);
-                case Signatures.PING:
+                case NATSSignatures.PING:
                     return DecodePingPacket(buffer, context);
-                case Signatures.PONG:
+                case NATSSignatures.PONG:
                     return DecodePongPacket(buffer, context);
-                case Signatures.ERR:
+                case NATSSignatures.ERR:
                     return DecodeErrorPacket(buffer, context);
                 default:
                     Console.WriteLine("--|{0}|--", packetSignature);
@@ -162,13 +162,13 @@ namespace DotNetty.Codecs.NATS
         static NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
 
-            var Subject = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+            var Subject = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
-            var SubscribeId = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+            var SubscribeId = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
-            var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+            var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
-            var Payload = GetBytesFromNewlines(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+            var Payload = GetBytesFromNewlines(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
             return new MessagePacket(Subject, SubscribeId, Payload, ReplyTo);
 

@@ -30,15 +30,15 @@ namespace DotNetty.Codecs.NATS
         static NATSEncoder()
         {
             EMPTY_BYTES = new byte[0];
-            SPACES_BYTES = Encoding.UTF8.GetBytes(Signatures.SPACES);
-            CRLF_BYTES = Encoding.UTF8.GetBytes(Signatures.CRLF);
+            SPACES_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.SPACES);
+            CRLF_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.CRLF);
 
-            CONNECT_BYTES = Encoding.UTF8.GetBytes(Signatures.CONNECT);
-            PUB_BYTES = Encoding.UTF8.GetBytes(Signatures.PUB);
-            SUB_BYTES = Encoding.UTF8.GetBytes(Signatures.SUB);
-            UNSUB_BYTES = Encoding.UTF8.GetBytes(Signatures.UNSUB);
-            PING_BYTES = Encoding.UTF8.GetBytes(Signatures.PING);
-            PONG_BYTES = Encoding.UTF8.GetBytes(Signatures.PONG);
+            CONNECT_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.CONNECT);
+            PUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.PUB);
+            SUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.SUB);
+            UNSUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.UNSUB);
+            PING_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.PING);
+            PONG_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.PONG);
         }
 
         protected override void Encode(IChannelHandlerContext context, NATSPacket message, List<object> output) => DoEncode(context.Allocator, message, output);
@@ -101,7 +101,7 @@ namespace DotNetty.Codecs.NATS
 
         static void EncodeConnectMessage(IByteBufferAllocator bufferAllocator, ConnectPacket packet, List<object> output)
         {
-            byte[] ConnectOptionBytes = EncodeStringInUtf8(packet.ToJson());
+            byte[] ConnectOptionBytes = EncodeStringInUtf8(packet.Content);
             IByteBuffer buf = null;
             try
             {

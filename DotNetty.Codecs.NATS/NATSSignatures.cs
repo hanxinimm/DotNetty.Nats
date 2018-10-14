@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DotNetty.Codecs.NATS
 {
-    public class Signatures
+    public class NATSSignatures
     {
         internal const string CRLF = "\r\n";
         internal const string SPACES = " ";

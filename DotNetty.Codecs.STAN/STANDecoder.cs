@@ -13,14 +13,10 @@ namespace DotNetty.Codecs.STAN
 
     public sealed class STANDecoder : ReplayingDecoder<ParseState>
     {
-        readonly bool isServer;
-        readonly int maxMessageSize;
-
-        public STANDecoder(bool isServer, int maxMessageSize)
+        public STANDecoder()
             : base(ParseState.Ready)
         {
-            this.isServer = isServer;
-            this.maxMessageSize = maxMessageSize;
+
         }
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
@@ -69,7 +65,7 @@ namespace DotNetty.Codecs.STAN
 
             packet = DecodePacketInternal(buffer, signature, context);
 
-            return true;
+            return packet != null;
         }
 
         static string GetSignature(IByteBuffer input)
@@ -135,7 +131,7 @@ namespace DotNetty.Codecs.STAN
         {
             switch (packetSignature)
             {
-                case Signatures.ConnectRequest:
+                case STANSignatures.ConnectRequest:
                     return DecodeConnectRequestPacket(buffer, context);
                 //case Signatures.ConnectResponse:
                 //    return DecodeMessagePacket(buffer, context);
@@ -156,7 +152,8 @@ namespace DotNetty.Codecs.STAN
 
         static STANPacket DecodeConnectRequestPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            return ConnectResponsePacket.CreateFromJson(DecodeString(buffer));
+            return null;
+            //return ConnectResponsePacket.CreateFromJson(DecodeString(buffer));
         }
 
         //static Packet DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)

@@ -10,7 +10,7 @@ namespace DotNetty.Handlers.NATS
     {
         protected override void ChannelRead0(IChannelHandlerContext contex, OKPacket msg)
         {
-            //Console.WriteLine("OK");
+            Console.WriteLine("OK");
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)

@@ -94,12 +94,15 @@ namespace DotNetty.Codecs.NATS.Packets
         [DataMember(Name = "protocol")]
         public int Protocol { get; set; }
 
-        internal string ToJson()
+        internal string Content
         {
-            if (IsSSLRequired)
-                return $"{{\"verbose\":{(IsVerbose ? "true":"false")},\"pedantic\":{(IsPedantic ? "true" : "false")},\"tls_required\":true,\"user\":\"{User}\",\"pass\":\"{Password}\",\"name\":\"{ClientName}\",\"lang\":\".net_core\",\"version\":\"{Version}\",\"protocol\":1}}";
-            else
-                return $"{{\"verbose\":{(IsVerbose ? "true" : "false")},\"pedantic\":{(IsPedantic ? "true" : "false")},\"tls_required\":false,\"name\":\"{ClientName}\",\"lang\":\".net_core\",\"version\":\"{Version}\",\"protocol\":1}}";
+            get
+            {
+                if (IsSSLRequired)
+                    return $"{{\"verbose\":{(IsVerbose ? "true" : "false")},\"pedantic\":{(IsPedantic ? "true" : "false")},\"tls_required\":true,\"user\":\"{User}\",\"pass\":\"{Password}\",\"name\":\"{ClientName}\",\"lang\":\".net_core\",\"version\":\"{Version}\",\"protocol\":1}}";
+                else
+                    return $"{{\"verbose\":{(IsVerbose ? "true" : "false")},\"pedantic\":{(IsPedantic ? "true" : "false")},\"tls_required\":false,\"name\":\"{ClientName}\",\"lang\":\".net_core\",\"version\":\"{Version}\",\"protocol\":1}}";
+            }
         }
     }
 }

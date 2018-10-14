@@ -50,5 +50,9 @@ namespace DotNetty.Codecs.STAN.Packets
         /// Server	Result of the close request
         /// </summary>
         CloseResp = 10,
+        /// <summary>
+        /// heartbeat inbox
+        /// </summary>
+        Heartbeat = 11
     }
 }

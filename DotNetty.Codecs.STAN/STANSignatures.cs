@@ -4,11 +4,8 @@ using System.Text;
 
 namespace DotNetty.Codecs.STAN
 {
-    public class Signatures
+    public class STANSignatures
     {
-        internal const string CRLF = "\r\n";
-        internal const string SPACES = " ";
-
         internal const string ConnectRequest = "ConnectRequest";
         internal const string ConnectResponse = "ConnectResponse";
         internal const string SubscriptionRequest = "SubscriptionRequest";

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNetty.Codecs.STAN.Protocol;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
@@ -8,32 +9,24 @@ using System.Text;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public class ConnectRequestPacket : STANPacket
+    public class ConnectRequestPacket : STANPublishPacket<ConnectRequest>
     {
+
+        /// <summary>
+        /// 请求连接到NATS Streaming Server
+        /// </summary>
+        /// <param name="clusterID"></param>
+        /// <param name="clientID"></param>
+        /// <param name="discoverPrefix"></param>
+        public ConnectRequestPacket(string clusterID, string clientID, string discoverPrefix = STANConstants.DiscoverPrefix)
+        {
+            Subject = $"{discoverPrefix}.{clusterID}";
+            ReplyTo = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+            Message = new ConnectRequest() { ClientID = clientID, HeartbeatInbox = Guid.NewGuid().ToString() };
+        }
+
         [IgnoreDataMember]
         public override STANPacketType PacketType => STANPacketType.ConnectRequest;
 
-        /// <summary>
-        /// TODO:写成包内可以访问
-        /// </summary>
-        /// <param name="clientID"></param>
-        /// <param name="heartbeatInbox"></param>
-        public ConnectRequestPacket(string clientID, string heartbeatInbox)
-        {
-            ClientID = clientID;
-            HeartbeatInbox = heartbeatInbox;
-        }
-
-        /// <summary>
-        /// 客户端的唯一标识符
-        /// </summary>
-        [DataMember(Name = "clientID")]
-        public string ClientID { get; set; }
-
-        /// <summary>
-        /// NATS Streaming Server将为客户端发送心跳的收件箱
-        /// </summary>
-        [DataMember(Name = "heartbeatInbox")]
-        public string HeartbeatInbox { get; set; }
     }
 }

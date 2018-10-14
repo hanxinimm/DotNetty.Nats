@@ -1,7 +1,11 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Codecs;
+using DotNetty.Codecs.NATS;
+using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.STAN;
 using DotNetty.Codecs.STAN.Packets;
+using DotNetty.Codecs.STAN.Protocol;
+using DotNetty.Handlers.NATS;
 using DotNetty.Handlers.STAN;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
@@ -16,7 +20,7 @@ namespace ConsoleSTANPush
 {
     class Program
     {
-        static async Task RunClientAsync()
+        static async Task Main()
         {
 
             var group = new MultithreadEventLoopGroup(1);
@@ -45,15 +49,18 @@ namespace ConsoleSTANPush
                         //}
 
                         channel.Pipeline.AddLast(new DelimiterBasedFrameDecoder(1024, Delimiters.LineDelimiter()));
-                        channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder(true, 20480));
-                        channel.Pipeline.AddLast(new ConnectResponsePacketHandler());
+                        channel.Pipeline.AddLast(NATSEncoder.Instance, STANEncoder.Instance, new NATSDecoder(true, 20480), new STANDecoder());
+                        channel.Pipeline.AddLast(new InfoPacketHandler(), new OKPacketHandler(),new MessagePacketHandler(), new ConnectResponsePacketHandler());
                     }));
 
-                IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4222));
+                IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
 
-                //await bootstrapChannel.WriteAndFlushAsync(new ConnectPacket(false, false, false, null, null, "test-client", null));
+                await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
 
-                await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("",""));
+                await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher"));
+
+                //await bootstrapChannel.WriteAndFlushAsync(new SubscriptionRequestPacket("appname-publisher",
+                //    "foo." + Guid.NewGuid(), string.Empty, "_INBOX." + Guid.NewGuid().ToString(), 1024, 30, null, StartPosition.NewOnly));
 
                 for (; ; )
                 {
@@ -91,9 +98,9 @@ namespace ConsoleSTANPush
                         {
                             //await bootstrapChannel.WriteAndFlushAsync(string.Format("PUB foo {1}\r\n{0}\r\n", json, bytes.Length));
                             //await bootstrapChannel.WriteAndFlushAsync("hello" + "\r\n");
-                            //var packet = new SubscribePacket("test1", "foo", string.Empty);
+                            var packet = new SubscribePacket("test1", "foo." + Guid.NewGuid(), string.Empty);
                             //var packet = new ("foo", Unpooled.WrappedBuffer(bytes));
-                            //await bootstrapChannel.WriteAndFlushAsync(packet);
+                            await bootstrapChannel.WriteAndFlushAsync(packet);
                         }
 
                         sw.Stop();
@@ -113,7 +120,5 @@ namespace ConsoleSTANPush
                 group.ShutdownGracefullyAsync().Wait(1000);
             }
         }
-
-        static void Main() => RunClientAsync().Wait();
     }
 }
