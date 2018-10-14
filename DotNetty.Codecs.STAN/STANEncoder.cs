@@ -68,7 +68,9 @@ namespace DotNetty.Codecs.STAN
                 case STANPacketType.SubscriptionRequest:
                     EncodePublishMessage(bufferAllocator, (SubscriptionRequestPacket)packet, output);
                     break;
-
+                case STANPacketType.SUB:
+                    EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
+                    break;
                 //case PacketType.UNSUB:
                 //    EncodeUnsubscribeMessage(bufferAllocator, (UnSubscribePacket)packet, output);
                 //    break;
@@ -103,7 +105,7 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
-        static void EncodePublishMessage<TMessage>(IByteBufferAllocator bufferAllocator, STANPublishPacket<TMessage> packet, List<object> output)
+        static void EncodePublishMessage<TMessage>(IByteBufferAllocator bufferAllocator, STANPacket<TMessage> packet, List<object> output)
             where TMessage : IMessage
         {
             byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
@@ -165,6 +167,10 @@ namespace DotNetty.Codecs.STAN
             {
                 variablePartSize += GroupBytes.Length + SPACES_BYTES.Length;
             }
+            else
+            {
+                variablePartSize += SPACES_BYTES.Length;
+            }
 
             int fixedHeaderBufferSize = SUB_BYTES.Length + SPACES_BYTES.Length;
 
@@ -179,6 +185,10 @@ namespace DotNetty.Codecs.STAN
                 if (GroupBytes.Length > 0)
                 {
                     buf.WriteBytes(GroupBytes);
+                    buf.WriteBytes(SPACES_BYTES);
+                }
+                else
+                {
                     buf.WriteBytes(SPACES_BYTES);
                 }
                 buf.WriteBytes(IdBytes);

@@ -1,11 +1,7 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Codecs;
-using DotNetty.Codecs.NATS;
-using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.STAN;
 using DotNetty.Codecs.STAN.Packets;
-using DotNetty.Codecs.STAN.Protocol;
-using DotNetty.Handlers.NATS;
 using DotNetty.Handlers.STAN;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
@@ -49,15 +45,20 @@ namespace ConsoleSTANPush
                         //}
 
                         channel.Pipeline.AddLast(new DelimiterBasedFrameDecoder(1024, Delimiters.LineDelimiter()));
-                        channel.Pipeline.AddLast(NATSEncoder.Instance, STANEncoder.Instance, new NATSDecoder(true, 20480), new STANDecoder());
-                        channel.Pipeline.AddLast(new InfoPacketHandler(), new OKPacketHandler(),new MessagePacketHandler(), new ConnectResponsePacketHandler());
+                        channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
+                        channel.Pipeline.AddLast(new InfoPacketHandler(), new MsgProtoPacketHandler(), new ConnectResponsePacketHandler());
                     }));
 
                 IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
 
                 await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
 
-                await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher"));
+                string ReplyTo = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+
+                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyTo}.*"));
+                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyTo}.*"));
+
+                //await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher", $"{ReplyTo}.{DateTime.Now.Ticks}"));
 
                 //await bootstrapChannel.WriteAndFlushAsync(new SubscriptionRequestPacket("appname-publisher",
                 //    "foo." + Guid.NewGuid(), string.Empty, "_INBOX." + Guid.NewGuid().ToString(), 1024, 30, null, StartPosition.NewOnly));

@@ -166,11 +166,14 @@ namespace DotNetty.Codecs.NATS
 
             var SubscribeId = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
-            var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
+            //TODO;待核验消息格式
+            //var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
+
+            var PayloadSize = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
             var Payload = GetBytesFromNewlines(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
-            return new MessagePacket(Subject, SubscribeId, Payload, ReplyTo);
+            return new MessagePacket(Subject, SubscribeId, string.Empty, int.Parse(PayloadSize), Payload);
 
         }
 

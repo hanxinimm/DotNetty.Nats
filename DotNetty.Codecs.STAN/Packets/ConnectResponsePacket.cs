@@ -9,7 +9,7 @@ using System.Text;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public class ConnectResponsePacket : STANPublishPacket<ConnectResponse>
+    public class ConnectResponsePacket : STANPacket<ConnectResponse>
     {
         public override STANPacketType PacketType => STANPacketType.ConnectResponse;
 

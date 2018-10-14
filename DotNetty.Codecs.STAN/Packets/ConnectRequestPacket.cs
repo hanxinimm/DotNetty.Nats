@@ -9,7 +9,7 @@ using System.Text;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public class ConnectRequestPacket : STANPublishPacket<ConnectRequest>
+    public class ConnectRequestPacket : STANPacket<ConnectRequest>
     {
 
         /// <summary>
@@ -18,10 +18,10 @@ namespace DotNetty.Codecs.STAN.Packets
         /// <param name="clusterID"></param>
         /// <param name="clientID"></param>
         /// <param name="discoverPrefix"></param>
-        public ConnectRequestPacket(string clusterID, string clientID, string discoverPrefix = STANConstants.DiscoverPrefix)
+        public ConnectRequestPacket(string clusterID, string clientID, string replyTo, string discoverPrefix = STANConstants.DiscoverPrefix)
         {
             Subject = $"{discoverPrefix}.{clusterID}";
-            ReplyTo = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+            ReplyTo = replyTo;
             Message = new ConnectRequest() { ClientID = clientID, HeartbeatInbox = Guid.NewGuid().ToString() };
         }
 

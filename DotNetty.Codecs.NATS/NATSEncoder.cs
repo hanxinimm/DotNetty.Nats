@@ -183,6 +183,10 @@ namespace DotNetty.Codecs.NATS
             {
                 variablePartSize += GroupBytes.Length + SPACES_BYTES.Length;
             }
+            else
+            {
+                variablePartSize += SPACES_BYTES.Length;
+            }
 
             int fixedHeaderBufferSize = SUB_BYTES.Length + SPACES_BYTES.Length;
 
@@ -197,6 +201,10 @@ namespace DotNetty.Codecs.NATS
                 if (GroupBytes.Length > 0)
                 {
                     buf.WriteBytes(GroupBytes);
+                    buf.WriteBytes(SPACES_BYTES);
+                }
+                else
+                {
                     buf.WriteBytes(SPACES_BYTES);
                 }
                 buf.WriteBytes(IdBytes);

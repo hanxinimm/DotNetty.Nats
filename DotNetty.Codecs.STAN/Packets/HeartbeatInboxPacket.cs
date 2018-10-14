@@ -8,6 +8,7 @@ namespace DotNetty.Codecs.STAN.Packets
     {
         public HeartbeatInboxPacket()
         {
+            Id = "Id" + Guid.NewGuid().ToString("N");
             Subject = "_INBOX." + Guid.NewGuid().ToString("N");
         }
 

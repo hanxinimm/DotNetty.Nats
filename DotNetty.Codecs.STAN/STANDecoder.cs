@@ -131,12 +131,14 @@ namespace DotNetty.Codecs.STAN
         {
             switch (packetSignature)
             {
+                case STANSignatures.INFO:
+                    return DecodeInfoPacket(buffer, context);
                 case STANSignatures.ConnectRequest:
                     return DecodeConnectRequestPacket(buffer, context);
                 //case Signatures.ConnectResponse:
                 //    return DecodeMessagePacket(buffer, context);
-                //case Signatures.OK:
-                //    return DecodeOKPacket(buffer, context);
+                case STANSignatures.OK:
+                    return DecodeOKPacket(buffer, context);
                 //case Signatures.PING:
                 //    return DecodePingPacket(buffer, context);
                 //case Signatures.PONG:
@@ -150,6 +152,10 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
+        static STANPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        {
+            return InfoPacket.CreateFromJson(DecodeString(buffer));
+        }
         static STANPacket DecodeConnectRequestPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             return null;
@@ -176,10 +182,10 @@ namespace DotNetty.Codecs.STAN
         //    return new ErrorPacket(DecodeStringNew(buffer));
         //}
 
-        //static Packet DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        //{
-        //    return new OKPacket();
-        //}
+        static STANPacket DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        {
+            return new OKPacket();
+        }
 
         //static Packet DecodePingPacket(IByteBuffer buffer, IChannelHandlerContext context)
         //{

@@ -14,7 +14,8 @@ namespace DotNetty.Codecs.STAN
 
         internal const byte NEWLINES_LF = 0x0A;
 
-        internal const string InboxPrefix = "_INBOX.";
+        //TODO:增加内部访问限制
+        public const string InboxPrefix = "_INBOX.";
 
         /// <summary>
         /// NATS C# streaming client version.

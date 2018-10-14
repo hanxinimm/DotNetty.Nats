@@ -13,12 +13,13 @@ namespace DotNetty.Codecs.NATS.Packets
         [IgnoreDataMember]
         public override NATSPacketType PacketType => NATSPacketType.MSG;
 
-        public MessagePacket(string subject, string subscribeId, IByteBuffer payload, string replyTo)
+        public MessagePacket(string subject, string subscribeId, string replyTo, int payloadSize, IByteBuffer payload)
         {
             Subject = subject;
             SubscribeId = subscribeId;
-            Payload = payload;
             ReplyTo = replyTo;
+            Payload = payload;
+            PayloadSize = payloadSize;
         }
 
         /// <summary>
@@ -43,7 +44,7 @@ namespace DotNetty.Codecs.NATS.Packets
         /// 以字节为单位的有效载荷大小
         /// </summary>
         [IgnoreDataMember]
-        public int PayloadLength { get { return this.Payload.WritableBytes; } }
+        public int PayloadSize { get; set; }
 
         /// <summary>
         /// 消息有效载荷数据

@@ -26,7 +26,7 @@ namespace DotNetty.Codecs.STAN.Packets
     }
 
     [DataContract]
-    public abstract class STANPublishPacket<TMessage> : STANPacket where TMessage : IMessage
+    public abstract class STANPacket<TMessage> : STANPacket where TMessage : IMessage
     {
         // <summary>
         /// 主题回复标识

@@ -6,6 +6,10 @@ namespace DotNetty.Codecs.STAN
 {
     public class STANSignatures
     {
+        internal const string INFO = "INFO";
+        internal const string SUB = "SUB";
+        internal const string OK = "+OK";
+
         internal const string ConnectRequest = "ConnectRequest";
         internal const string ConnectResponse = "ConnectResponse";
         internal const string SubscriptionRequest = "SubscriptionRequest";
