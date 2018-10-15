@@ -8,7 +8,10 @@ namespace DotNetty.Codecs.STAN
     {
         internal const string INFO = "INFO";
         internal const string SUB = "SUB";
+        internal const string MSG = "MSG";
         internal const string OK = "+OK";
+        internal const string PING = "PING";
+        internal const string PONG = "PONG";
 
         internal const string ConnectRequest = "ConnectRequest";
         internal const string ConnectResponse = "ConnectResponse";

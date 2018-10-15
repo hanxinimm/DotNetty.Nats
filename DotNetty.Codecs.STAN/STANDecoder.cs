@@ -5,11 +5,14 @@ namespace DotNetty.Codecs.STAN
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Runtime.CompilerServices;
     using System.Text;
     using DotNetty.Buffers;
     using DotNetty.Codecs.STAN.Packets;
+    using DotNetty.Codecs.STAN.Protocol;
     using DotNetty.Transport.Channels;
+    using Google.Protobuf;
 
     public sealed class STANDecoder : ReplayingDecoder<ParseState>
     {
@@ -32,7 +35,6 @@ namespace DotNetty.Codecs.STAN
                             return;
                         }
                         output.Add(packet);
-                        input.SkipBytes(input.ReadableBytes);
                         this.Checkpoint(ParseState.Ready);
                         break;
                     case ParseState.Failed:
@@ -70,24 +72,30 @@ namespace DotNetty.Codecs.STAN
 
         static string GetSignature(IByteBuffer input)
         {
-            for (int i = 0; i < input.WriterIndex; i++)
+            int startIndex = input.ReaderIndex;
+            for (int i = 0; input.ReadableBytes > 0; i++)
             {
-                switch (input.ReadByte())
+                var byt = input.ReadByte();
+                Console.WriteLine(byt);
+                switch (byt)
                 {
                     case STANConstants.FIELDDELIMITER_SPACES:
                     case STANConstants.FIELDDELIMITER_TAB:
+                        return input.GetString(startIndex, i, Encoding.UTF8);
                     case STANConstants.NEWLINES_CR:
-                        return input.GetString(0, i, Encoding.UTF8);
+                        if (STANConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
+                        throw new FormatException($"NATS Newlines is invalid.");
                     default:
                         break;
                 }
             }
-            return input.GetString(0, input.WriterIndex, Encoding.UTF8);
+            return string.Empty;
         }
 
-        static string GetStringFromFieldDelimiters(IByteBuffer input, int startIndex, int readableBytes, string packetSignature)
+        static string GetStringFromFieldDelimiters(IByteBuffer input, string packetSignature)
         {
-            for (int i = 0; i < readableBytes; i++)
+            int startIndex = input.ReaderIndex;
+            for (int i = 0; input.ReadableBytes > 0; i++)
             {
                 switch (input.ReadByte())
                 {
@@ -95,36 +103,53 @@ namespace DotNetty.Codecs.STAN
                     case STANConstants.FIELDDELIMITER_TAB:
                         return input.GetString(startIndex, i, Encoding.UTF8);
                     case STANConstants.NEWLINES_CR:
-                        if (STANConstants.NEWLINES_LF == input.ReadByte()) return string.Empty;
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-                    default:
-                        break;
-                }
-            }
-            return input.GetString(startIndex, readableBytes, Encoding.UTF8);
-        }
-
-        static IByteBuffer GetBytesFromNewlines(IByteBuffer input, int startIndex, int readableBytes, string packetSignature)
-        {
-            for (int i = 0; i < readableBytes; i++)
-            {
-                switch (input.ReadByte())
-                {
-                    case STANConstants.FIELDDELIMITER_SPACES:
-                    case STANConstants.FIELDDELIMITER_TAB:
-                        return Unpooled.Empty;
-                    case STANConstants.NEWLINES_CR:
                         if (STANConstants.NEWLINES_LF == input.ReadByte())
                         {
                             input.SetReaderIndex(startIndex);
-                            return input.ReadBytes(i);
+                            return string.Empty;
                         }
                         throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
                     default:
                         break;
                 }
             }
-            return input.GetBytes(startIndex, input);
+            return string.Empty;
+        }
+
+        static string GetStringFromNewlineDelimiters(IByteBuffer input, string packetSignature)
+        {
+            int startIndex = input.ReaderIndex;
+            for (int i = 0; input.ReadableBytes > 0; i++)
+            {
+                switch (input.ReadByte())
+                {
+                    case STANConstants.NEWLINES_CR:
+                        if (STANConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
+                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                    default:
+                        break;
+                }
+            }
+            return string.Empty;
+        }
+
+        static byte[] GetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature)
+        {
+            var payload = new byte[payloadSize];
+            for (int i = 0; input.ReadableBytes > 0; i++)
+            {
+                var currentByte = input.ReadByte();
+                switch (currentByte)
+                {
+                    case STANConstants.NEWLINES_CR:
+                        if (STANConstants.NEWLINES_LF == input.ReadByte()) break;
+                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                    default:
+                        payload[i] = currentByte;
+                        break;
+                }
+            }
+            return payload;
         }
 
         static STANPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
@@ -133,16 +158,16 @@ namespace DotNetty.Codecs.STAN
             {
                 case STANSignatures.INFO:
                     return DecodeInfoPacket(buffer, context);
-                case STANSignatures.ConnectRequest:
+                case STANSignatures.ConnectResponse:
                     return DecodeConnectRequestPacket(buffer, context);
-                //case Signatures.ConnectResponse:
-                //    return DecodeMessagePacket(buffer, context);
+                case STANSignatures.MSG:
+                    return DecodeMessagePacket(buffer, context);
                 case STANSignatures.OK:
                     return DecodeOKPacket(buffer, context);
-                //case Signatures.PING:
-                //    return DecodePingPacket(buffer, context);
-                //case Signatures.PONG:
-                //    return DecodePongPacket(buffer, context);
+                case STANSignatures.PING:
+                    return DecodePingPacket(buffer, context);
+                case STANSignatures.PONG:
+                    return DecodePongPacket(buffer, context);
                 //case Signatures.ERR:
                 //    return DecodeErrorPacket(buffer, context);
                 default:
@@ -162,20 +187,26 @@ namespace DotNetty.Codecs.STAN
             //return ConnectResponsePacket.CreateFromJson(DecodeString(buffer));
         }
 
-        //static Packet DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
-        //{
+        static STANPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
+        {
+            var MSGPacket = new MsgProtoPacket
+            {
+                Subject = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG),
+                SubscribeId = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG),
+                ReplyTo = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG)
+            };
 
-        //    var Subject = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+            if (int.TryParse(GetStringFromNewlineDelimiters(buffer, STANSignatures.MSG), out int payloadSize))
+            {
+                MSGPacket.PayloadSize = payloadSize;
+            }
 
-        //    var SubscribeId = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+            var Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, STANSignatures.MSG);
 
-        //    var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
+            MSGPacket.Message.MergeFrom(Payload);
 
-        //    var Payload = GetBytesFromNewlines(buffer, buffer.ReaderIndex, buffer.ReadableBytes, Signatures.MSG);
-
-        //    return new MessagePacket(Subject, SubscribeId, Payload, ReplyTo);
-
-        //}
+            return MSGPacket;
+        }
 
         //static Packet DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
         //{
@@ -183,25 +214,25 @@ namespace DotNetty.Codecs.STAN
         //}
 
         static STANPacket DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        {
+        { 
             return new OKPacket();
         }
 
-        //static Packet DecodePingPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        //{
-        //    return new PingPacket();
-        //}
+        static STANPacket DecodePingPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        {
+            return new PingPacket();
+        }
 
-        //static PongPacket DecodePongPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        //{
-        //    return new PongPacket();
-        //}
+        static STANPacket DecodePongPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        {
+            return new PongPacket();
+        }
 
         static string DecodeString(IByteBuffer buffer) => DecodeString(buffer, 0, 20480);
 
         static string DecodeString(IByteBuffer buffer, int minBytes, int maxBytes)
         {
-            int size = buffer.ReadableBytes - 2;
+            int size = buffer.ReadableBytes;
 
             if (size < minBytes)
             {
@@ -217,19 +248,7 @@ namespace DotNetty.Codecs.STAN
                 return string.Empty;
             }
 
-            return buffer.ToString(buffer.ReaderIndex, size, Encoding.UTF8);
-        }
-
-        static string DecodeStringNew(IByteBuffer buffer)
-        {
-            int size = buffer.ReadableBytes;
-
-            if (size <= 0)
-            {
-                return string.Empty;
-            }
-
-            return buffer.ToString(buffer.ReaderIndex, size, Encoding.UTF8);
+            return buffer.ReadBytes(size).ToString(Encoding.UTF8);
         }
     }
 }

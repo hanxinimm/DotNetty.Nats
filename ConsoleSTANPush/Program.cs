@@ -44,7 +44,7 @@ namespace ConsoleSTANPush
                         //    pipeline.AddLast(new TlsHandler(stream => new SslStream(stream, true, (sender, certificate, chain, errors) => true), new ClientTlsSettings(targetHost)));
                         //}
 
-                        channel.Pipeline.AddLast(new DelimiterBasedFrameDecoder(1024, Delimiters.LineDelimiter()));
+                        //channel.Pipeline.AddLast(new STANDelimiterBasedFrameDecoder(1024));
                         channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                         channel.Pipeline.AddLast(new InfoPacketHandler(), new MsgProtoPacketHandler(), new ConnectResponsePacketHandler());
                     }));
@@ -55,10 +55,11 @@ namespace ConsoleSTANPush
 
                 string ReplyTo = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
 
-                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyTo}.*"));
+                Console.WriteLine(ReplyTo);
+
                 await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyTo}.*"));
 
-                //await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher", $"{ReplyTo}.{DateTime.Now.Ticks}"));
+                await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher", $"{ReplyTo}.{DateTime.Now.Ticks}"));
 
                 //await bootstrapChannel.WriteAndFlushAsync(new SubscriptionRequestPacket("appname-publisher",
                 //    "foo." + Guid.NewGuid(), string.Empty, "_INBOX." + Guid.NewGuid().ToString(), 1024, 30, null, StartPosition.NewOnly));

@@ -17,7 +17,15 @@ namespace DotNetty.Codecs.STAN.Packets
         /// <summary>
         /// Server	Acknowledges well-formed protocol message in verbose mode
         /// </summary>
-        PLUS_OK = 8,
+        PLUS_OK,
+        /// <summary>
+        /// Both	PING keep-alive message
+        /// </summary>
+        PING,
+        /// <summary>
+        /// Both	PONG keep-alive response
+        /// </summary>
+        PONG,
         /// <summary>
         /// Client	Subscribe to a subject (or subject wildcard)
         /// </summary>

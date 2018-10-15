@@ -7,9 +7,9 @@ namespace DotNetty.Codecs.STAN.Packets
 {
     public class MsgProtoPacket : STANPacket<MsgProto>
     {
-        public MsgProtoPacket(MsgProto msgProto)
+        public MsgProtoPacket()
         {
-            Message = msgProto;
+            Message = new MsgProto();
         }
 
         public override STANPacketType PacketType => STANPacketType.MsgProto;

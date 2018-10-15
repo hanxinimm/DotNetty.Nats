@@ -12,7 +12,7 @@ namespace DotNetty.Handlers.STAN
         protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
 
-            Console.WriteLine("收到消息 主题 {0}  订阅唯一编号{1} 第 {2} 条", msg.Subject, msg.Message.Subject, Interlocked.Increment( ref MessageCount));
+            //Console.WriteLine("收到消息 主题 {0}  订阅唯一编号{1} 第 {2} 条", msg.Subject, msg.Message.Subject, Interlocked.Increment( ref MessageCount));
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)

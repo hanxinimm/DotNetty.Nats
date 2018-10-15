@@ -36,7 +36,6 @@ namespace DotNetty.Codecs.NATS
                             return;
                         }
                         output.Add(packet);
-                        input.SkipBytes(input.ReadableBytes);
                         this.Checkpoint(ParseState.Ready);
                         break;
                     case ParseState.Failed:
@@ -166,7 +165,7 @@ namespace DotNetty.Codecs.NATS
 
             var SubscribeId = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
-            //TODO;待核验消息格式
+            //TODO;待核验消息格式:迁移另外一个项目代码过来
             //var ReplyTo = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
 
             var PayloadSize = GetStringFromFieldDelimiters(buffer, buffer.ReaderIndex, buffer.ReadableBytes, NATSSignatures.MSG);
@@ -201,7 +200,7 @@ namespace DotNetty.Codecs.NATS
 
         static string DecodeString(IByteBuffer buffer, int minBytes, int maxBytes)
         {
-            int size = buffer.ReadableBytes - 2;
+            int size = buffer.ReadableBytes;
 
             if (size < minBytes)
             {
@@ -217,7 +216,7 @@ namespace DotNetty.Codecs.NATS
                 return string.Empty;
             }
 
-            return buffer.ToString(buffer.ReaderIndex, size, Encoding.UTF8);
+            return buffer.ReadBytes(size).ToString(Encoding.UTF8);
         }
 
         static string DecodeStringNew(IByteBuffer buffer)
