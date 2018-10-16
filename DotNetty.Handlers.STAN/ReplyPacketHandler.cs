@@ -10,23 +10,22 @@ namespace DotNetty.Handlers.STAN
     using DotNetty.Transport.Channels;
     using Google.Protobuf;
 
-    public class SubscriptionResponsePacketHandler : SimpleChannelInboundHandler<MessagePacket>
+    public class ReplyPacketHandler<TPacket> : SimpleChannelInboundHandler<TPacket>
+        where TPacket : STANPacket
     {
         private readonly string _replyTo;
-        private readonly TaskCompletionSource<SubscriptionResponsePacket> _completionSource;
-        public SubscriptionResponsePacketHandler(string replyTo, TaskCompletionSource<SubscriptionResponsePacket> completionSource)
+        private readonly TaskCompletionSource<TPacket> _completionSource;
+        public ReplyPacketHandler(string replyTo, TaskCompletionSource<TPacket> completionSource)
         {
             _replyTo = replyTo;
             _completionSource = completionSource;
         }
 
-        protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
+        protected override void ChannelRead0(IChannelHandlerContext contex, TPacket msg)
         {
             if (msg.Subject == _replyTo)
             {
-                var s = new SubscriptionResponse();
-                s.MergeFrom(msg.Payload);
-                _completionSource.SetResult(new SubscriptionResponsePacket() { Message = s, Subject = msg.Subject, ReplyTo = msg.ReplyTo });
+                _completionSource.SetResult(msg);
             }
         }
 

@@ -9,9 +9,9 @@ using System.Text;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public class ConnectResponsePacket : MessagePacket<ConnectResponse>
+    public class MsgProtoPacket : MessagePacket<MsgProto>
     {
-        public override STANPacketType PacketType => STANPacketType.ConnectResponse;
+        public override STANPacketType PacketType => STANPacketType.MsgProto;
 
     }
 }

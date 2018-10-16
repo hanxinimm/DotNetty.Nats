@@ -31,6 +31,10 @@ namespace DotNetty.Codecs.STAN.Packets
         /// </summary>
         MINUS_ERR,
         /// <summary>
+        /// Client	Subscribe Inbox
+        /// </summary>
+        INBOX,
+        /// <summary>
         /// Client	Subscribe to a subject (or subject wildcard)
         /// </summary>
         SUB,

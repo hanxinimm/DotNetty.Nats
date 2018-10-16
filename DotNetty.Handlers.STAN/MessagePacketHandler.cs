@@ -7,16 +7,9 @@ using System.Threading.Tasks;
 
 namespace DotNetty.Handlers.STAN
 {
-    public class MessagePacketHandler : SimpleChannelInboundHandler<MessagePacket>
+    public class MessagePacketHandler : SimpleChannelInboundHandler<MsgProtoPacket>
     {
-        readonly ConcurrentDictionary<string, MessagePacket> MessageBoxs;
-
-        public MessagePacketHandler(ConcurrentDictionary<string, MessagePacket> messageBoxs)
-        {
-            MessageBoxs = messageBoxs;
-        }
-
-        protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
+        protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
             contex.FireChannelRead(msg);
             //Console.WriteLine("收到消息 主题 {0}  订阅唯一编号{1} 第 {2} 条", msg.Subject, msg.Message.Subject, Interlocked.Increment( ref MessageCount));

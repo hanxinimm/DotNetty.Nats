@@ -38,7 +38,6 @@ namespace ConsoleSTANPush
 
 
                 //ManualResetEvent ConnectRequestCompleted = new ManualResetEvent(false);
-                var Values = new ConcurrentDictionary<string, MessagePacket>();
 
                 var bootstrap = new Bootstrap();
                 bootstrap
@@ -48,8 +47,8 @@ namespace ConsoleSTANPush
                     .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
                         channel.Pipeline.AddFirst(STANEncoder.Instance, new STANDecoder());
-                        channel.Pipeline.AddLast(new InfoPacketHandler(),new ErrorPacketHandler(), new ConnectRequestPacketHandler());
-                        channel.Pipeline.AddLast(new MessagePacketHandler(Values));
+                        channel.Pipeline.AddLast(new ErrorPacketHandler());
+                        channel.Pipeline.AddLast(new MessagePacketHandler());
                     }));
 
 
@@ -57,83 +56,31 @@ namespace ConsoleSTANPush
 
                 await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
 
-                //设置请求响应回复的收件箱前缀
-                string ReplyMessageInbox = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+                //设置请求响应回复的收件箱
+                string InboxId = Guid.NewGuid().ToString("N");
 
                 //侦听连接请求响应消息
-                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyMessageInbox}.*"));
+                await bootstrapChannel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), InboxId));
 
-                var spt = await ContentcAsync(bootstrapChannel, ReplyMessageInbox);
+                var spt = await ContentcAsync(bootstrapChannel, InboxId);
 
-                var subrt = await SubscriptionAsync(bootstrapChannel, spt.Message, ReplyMessageInbox);
+                var msgbytes = Encoding.UTF8.GetBytes("这是一条测试数据");
 
-                Console.WriteLine("完成订阅");
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start(); //  开始监视代码运行时间
 
-                return;
-
-
-
-                //IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
-
-                await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
-
-
-
-                string ReplyTo = $"{STANConstants.ConnectResponseInboxPrefix}{Guid.NewGuid().ToString("N")}";
-
-                Console.WriteLine(ReplyTo);
-
-                //侦听连接请求响应消息
-                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyTo}.*"));
-
-                var ConnectRequestReplyTo = $"{ReplyTo}.{DateTime.Now.Ticks}";
-
-                Console.WriteLine(ConnectRequestReplyTo);
-
-                //发布连接消息
-                await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher", ConnectRequestReplyTo));
-
-                //ConnectRequestCompleted.WaitOne();
-
-
-                var s = new ConnectResponse();
-
-                s.MergeFrom(Values.Values.First().Payload);
-
-                Values.Clear();
-
-                //ConnectRequestCompleted.Reset();
-
-
-                //string Inbox = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
-
-                //订阅侦听消息
-                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), ReplyMessageInbox));
-
-                string SubscribeReplyTo = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
-
-                Console.WriteLine(SubscribeReplyTo);
-
-                //侦听订阅请求响应消息
-                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{SubscribeReplyTo}.*"));
-
-                var SubscriptionRequestReplyTo = $"{ReplyTo}.{DateTime.Now.Ticks}";
-                Console.WriteLine(SubscriptionRequestReplyTo);
-
-                //发送订阅请求
-                await bootstrapChannel.WriteAndFlushAsync(new SubscriptionRequestPacket(s.SubRequests, SubscriptionRequestReplyTo, "appname-publisher",
-                    "foo", string.Empty, ReplyMessageInbox, 1024, 30, null, StartPosition.NewOnly));
-
-                //ConnectRequestCompleted.WaitOne();
-
-                if (Values.Count > 0)
+                for (int i = 0; i < 100; i++)
                 {
-                    var sr = new SubscriptionResponse();
-                    sr.MergeFrom(Values.Values.First().Payload);
-                    var bts = Values.Values.First().Payload;
-                    var str = Encoding.UTF8.GetString(bts);
+                    var subrt = await PublishAsync(bootstrapChannel, spt.Message, InboxId, msgbytes);
                 }
 
+                stopwatch.Stop(); //  停止监视  
+
+                TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
+
+                Console.WriteLine("完成发布" + timespan.Milliseconds);
+
+                return;
 
                 for (; ; )
                 {
@@ -171,9 +118,9 @@ namespace ConsoleSTANPush
                         {
                             //await bootstrapChannel.WriteAndFlushAsync(string.Format("PUB foo {1}\r\n{0}\r\n", json, bytes.Length));
                             //await bootstrapChannel.WriteAndFlushAsync("hello" + "\r\n");
-                            var packet = new SubscribePacket("test1", "foo." + Guid.NewGuid(), string.Empty);
+                            //var packet = new SubscribePacket("test1", "foo." + Guid.NewGuid(), string.Empty);
                             //var packet = new ("foo", Unpooled.WrappedBuffer(bytes));
-                            await bootstrapChannel.WriteAndFlushAsync(packet);
+                            //await bootstrapChannel.WriteAndFlushAsync(packet);
                         }
 
                         sw.Stop();
@@ -194,56 +141,70 @@ namespace ConsoleSTANPush
             }
         }
 
-        public static async Task<ConnectResponsePacket> ContentcAsync(IChannel bootstrapChannel,string replyMessageInbox)
+        public static async Task<ConnectResponsePacket> ContentcAsync(IChannel bootstrapChannel, string inboxId)
         {
 
-            var ConnectRequestReplyTo = $"{replyMessageInbox}.{DateTime.Now.Ticks}";
+            var Packet = new ConnectRequestPacket(inboxId, "main-cluster", "appname-publisher");
 
-            Console.WriteLine(ConnectRequestReplyTo);
+            var ConnectResponseReady = new TaskCompletionSource<ConnectResponsePacket>();
 
-            var RequestSubReady = new TaskCompletionSource<ConnectResponsePacket>();
+            var Handler = new ReplyPacketHandler<ConnectResponsePacket>(Packet.ReplyTo, ConnectResponseReady);
 
-            var Chal = new ConnectResponsePacketHandler(ConnectRequestReplyTo, RequestSubReady);
-
-            bootstrapChannel.Pipeline.AddLast(Chal);
+            bootstrapChannel.Pipeline.AddLast(Handler);
 
             //发布连接消息
-            await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher", ConnectRequestReplyTo));
+            await bootstrapChannel.WriteAndFlushAsync(Packet);
 
-            var Result = await RequestSubReady.Task;
+            var Result = await ConnectResponseReady.Task;
 
-            bootstrapChannel.Pipeline.Remove(Chal);
+            bootstrapChannel.Pipeline.Remove(Handler);
 
             return Result;
         }
 
-        public static async Task<SubscriptionResponsePacket> SubscriptionAsync(IChannel bootstrapChannel, ConnectResponse connectResponse,string replyMessageInbox)
+        public static async Task<SubscriptionResponsePacket> SubscriptionAsync(IChannel bootstrapChannel, ConnectResponse connectResponse,string inboxId)
         {
-            string SubscribeMessageInbox = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+            var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
             //订阅侦听消息
-            await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), SubscribeMessageInbox));
+            await bootstrapChannel.WriteAndFlushAsync(SubscribePacket);
 
-            var SubscriptionRequestReplyTo = $"{replyMessageInbox}.{DateTime.Now.Ticks}";
+            var Packet = new SubscriptionRequestPacket(inboxId, connectResponse.SubRequests,  "appname-publisher",
+                "foo", string.Empty, SubscribePacket.Subject, 1024, 30, null, StartPosition.NewOnly);
 
-            Console.WriteLine(SubscriptionRequestReplyTo);
+            var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
-            var SubscriptionRequestReady = new TaskCompletionSource<SubscriptionResponsePacket>();
+            var Handler = new ReplyPacketHandler<SubscriptionResponsePacket>(Packet.ReplyTo, SubscriptionResponseReady);
 
-            ////侦听订阅请求响应消息
-            //await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{SubscribeReplyTo}.*"));
-
-            var Chal = new SubscriptionResponsePacketHandler(SubscriptionRequestReplyTo, SubscriptionRequestReady);
-
-            bootstrapChannel.Pipeline.AddLast(Chal);
+            bootstrapChannel.Pipeline.AddLast(Handler);
 
             //发送订阅请求
-            await bootstrapChannel.WriteAndFlushAsync(new SubscriptionRequestPacket(connectResponse.SubRequests, SubscriptionRequestReplyTo, "appname-publisher",
-                "foo", string.Empty, SubscribeMessageInbox, 1024, 30, null, StartPosition.NewOnly));
+            await bootstrapChannel.WriteAndFlushAsync(Packet);
 
-            var Result = await SubscriptionRequestReady.Task;
+            var Result = await SubscriptionResponseReady.Task;
 
-            bootstrapChannel.Pipeline.Remove(Chal);
+            bootstrapChannel.Pipeline.Remove(Handler);
+
+            return Result;
+        }
+
+        public static async Task<PubAckPacket> PublishAsync(IChannel bootstrapChannel, ConnectResponse connectResponse, string inboxId, byte[] data)
+        {
+
+            var Packet = new PubMsgPacket(inboxId, connectResponse.PubPrefix, "appname-publisher", "foo", data);
+
+            var PubAckReady = new TaskCompletionSource<PubAckPacket>();
+
+            var Handler = new ReplyPacketHandler<PubAckPacket>(Packet.ReplyTo, PubAckReady);
+
+            bootstrapChannel.Pipeline.AddLast(Handler);
+
+            //发送订阅请求
+            await bootstrapChannel.WriteAndFlushAsync(Packet);
+
+            var Result = await PubAckReady.Task;
+
+            bootstrapChannel.Pipeline.Remove(Handler);
 
             return Result;
         }

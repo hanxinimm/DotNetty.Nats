@@ -133,6 +133,8 @@ namespace DotNetty.Codecs.STAN
 
         static byte[] GetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature)
         {
+            if (payloadSize == 0) return new byte[0];
+
             var payload = new byte[payloadSize];
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
@@ -150,14 +152,21 @@ namespace DotNetty.Codecs.STAN
             return payload;
         }
 
+        static string GetInbox(string subject)
+        {
+            if (subject.Length > 12)
+            {
+                return subject.Substring(0, 12);
+            }
+            return string.Empty;
+        }
+
         static STANPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             switch (packetSignature)
             {
                 case STANSignatures.INFO:
                     return DecodeInfoPacket(buffer, context);
-                case STANSignatures.ConnectResponse:
-                    return DecodeConnectRequestPacket(buffer, context);
                 case STANSignatures.MSG:
                     return DecodeMessagePacket(buffer, context);
                 case STANSignatures.OK:
@@ -187,21 +196,56 @@ namespace DotNetty.Codecs.STAN
 
         static STANPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            var MSGPacket = new MessagePacket
-            {
-                Subject = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG),
-                SubscribeId = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG),
-                ReplyTo = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG)
-            };
+
+            var Subject = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG);
+            var SubscribeId = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG);
+            var ReplyTo = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG);
+
 
             if (int.TryParse(GetStringFromNewlineDelimiters(buffer, STANSignatures.MSG), out int payloadSize))
             {
-                MSGPacket.PayloadSize = payloadSize;
+                var Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, STANSignatures.MSG);
+
+                return DecodeMessagePacket(Subject, SubscribeId, ReplyTo, payloadSize, Payload);
             }
 
-            MSGPacket.Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, STANSignatures.MSG);
+            return null;
+        }
 
-            return MSGPacket;
+        static STANPacket DecodeMessagePacket(string subject, string subscribeId, string replyTo, int payloadSize, byte[] payload)
+        {
+            switch (GetInbox(subject))
+            {
+                case STANInboxs.ConnectResponse:
+                    return GetMessagePacket<ConnectResponsePacket, ConnectResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                case STANInboxs.SubscriptionResponse:
+                    return GetMessagePacket<SubscriptionResponsePacket, SubscriptionResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                case STANInboxs.PubAck:
+                    return GetMessagePacket<PubAckPacket, PubAck>(subject, subscribeId, replyTo, payloadSize, payload);
+                case STANInboxs.MsgProto:
+                    return GetMessagePacket<MsgProtoPacket, MsgProto>(subject, subscribeId, replyTo, payloadSize, payload);
+                case STANInboxs.CloseResponse:
+                    return GetMessagePacket<CloseResponsePacket, CloseResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                default:
+                    return null;
+            }
+        }
+
+        static STANPacket GetMessagePacket<TMessagePacket, TMessage>(string subject, string subscribeId, string replyTo, int payloadSize, byte[] payload)
+            where TMessagePacket : MessagePacket<TMessage>, new()
+            where TMessage : IMessage, new()
+        {
+            var Packet = new TMessagePacket();
+            Packet.Subject = subject;
+            Packet.SubscribeId = subscribeId;
+            Packet.ReplyTo = replyTo;
+            Packet.PayloadSize = payloadSize;
+
+            var Message = new TMessage();
+            Message.MergeFrom(payload);
+            Packet.Message = Message;
+
+            return Packet;
         }
 
         static STANPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)

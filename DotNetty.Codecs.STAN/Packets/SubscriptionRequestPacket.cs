@@ -7,11 +7,11 @@ namespace DotNetty.Codecs.STAN.Packets
 {
     public class SubscriptionRequestPacket : STANPacket<SubscriptionRequest>
     {
-        public SubscriptionRequestPacket(string subscriptionRequestSubject, string subscriptionRequestReplyTo, string clientID, string subject, string queueGroup, string inbox, int maxInFlight,
+        public SubscriptionRequestPacket(string inboxId, string subRequests, string clientID, string subject, string queueGroup, string inbox, int maxInFlight,
             int ackWaitInSeconds, string durableName, StartPosition startPosition)
         {
-            Subject = subscriptionRequestSubject;
-            ReplyTo = subscriptionRequestReplyTo;
+            Subject = subRequests;
+            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
             Message = new SubscriptionRequest
             {
                 ClientID = clientID,
@@ -25,11 +25,11 @@ namespace DotNetty.Codecs.STAN.Packets
             };
         }
 
-        public SubscriptionRequestPacket(string subscriptionRequestSubject, string subscriptionRequestReplyTo, string clientID, string subject, string queueGroup, string inbox, int maxInFlight,
+        public SubscriptionRequestPacket(string inboxId, string subRequests, string clientID, string subject, string queueGroup, string inbox, int maxInFlight,
             int ackWaitInSeconds, string durableName, ulong startSequence)
         {
-            Subject = subscriptionRequestSubject;
-            ReplyTo = subscriptionRequestReplyTo;
+            Subject = subRequests;
+            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
             Message = new SubscriptionRequest
             {
                 ClientID = clientID,
@@ -46,11 +46,11 @@ namespace DotNetty.Codecs.STAN.Packets
             };
         }
 
-        public SubscriptionRequestPacket(string subscriptionRequestSubject, string subscriptionRequestReplyTo, string clientID, string subject, string queueGroup, string inbox, int maxInFlight,
+        public SubscriptionRequestPacket(string inboxId, string subRequests, string clientID, string subject, string queueGroup, string inbox, int maxInFlight,
             int ackWaitInSeconds, string durableName, long startTimeDelta)
         {
-            Subject = subscriptionRequestSubject;
-            ReplyTo = subscriptionRequestReplyTo;
+            Subject = subRequests;
+            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
             Message = new SubscriptionRequest
             {
                 ClientID = clientID,

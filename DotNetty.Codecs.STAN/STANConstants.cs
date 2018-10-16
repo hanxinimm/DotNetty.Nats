@@ -14,16 +14,12 @@ namespace DotNetty.Codecs.STAN
 
         internal const byte NEWLINES_LF = 0x0A;
 
-        //TODO:增加内部访问限制
-        public const string InboxPrefix = "_INBOX.";
-        public const string ConnectResponseInboxPrefix = "_INBOX.ConnectResponse.";
-        public const string SubscriptionResponseInboxPrefix = "_INBOX.";
-        public const string CloseRespInboxPrefix = "_INBOX.";
+        #region 迁移到客户端版本
 
         /// <summary>
         /// NATS C# streaming client version.
         /// </summary>
-	    internal const string Version = "0.0.1";
+        internal const string Version = "0.0.1";
 
         /// <summary>
         /// NatsURL is the default URL the client connects to.
@@ -60,5 +56,7 @@ namespace DotNetty.Codecs.STAN
         /// MaxInflight indicates how many messages with outstanding ACKs the server can send.
         /// </summary>
         internal const int MaxInflight = 1024;
+
+        #endregion 迁移到客户端版本
     }
 }

@@ -71,9 +71,12 @@ namespace DotNetty.Codecs.STAN
                 case STANPacketType.SUB:
                     EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
                     break;
-                //case PacketType.UNSUB:
-                //    EncodeUnsubscribeMessage(bufferAllocator, (UnSubscribePacket)packet, output);
-                //    break;
+                case STANPacketType.INBOX:
+                    EncodeSubscribeMessage(bufferAllocator, (InboxPacket)packet, output);
+                    break;
+                case STANPacketType.PubMsg:
+                    EncodePublishMessage(bufferAllocator, (PubMsgPacket)packet, output);
+                    break;
                 //case PacketType.PING:
                 //    EncodePingMessage(bufferAllocator, (PingPacket)packet, output);
                 //    break;
