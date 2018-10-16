@@ -40,12 +40,6 @@ namespace DotNetty.Codecs.STAN.Packets
         [DataMember(Name = "sid")]
         public string SubscribeId { get; set; }
 
-        // <summary>
-        /// 负载数据长度
-        /// </summary>
-        [DataMember(Name = "payloadSize")]
-        public int PayloadSize { get; set; }
-
         /// <summary>
         /// 消息
         /// </summary>

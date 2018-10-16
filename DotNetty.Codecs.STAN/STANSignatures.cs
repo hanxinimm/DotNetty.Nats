@@ -12,6 +12,8 @@ namespace DotNetty.Codecs.STAN
         internal const string OK = "+OK";
         internal const string PING = "PING";
         internal const string PONG = "PONG";
+        internal const string ERR = "-ERR";
+
 
         internal const string ConnectRequest = "ConnectRequest";
         internal const string ConnectResponse = "ConnectResponse";

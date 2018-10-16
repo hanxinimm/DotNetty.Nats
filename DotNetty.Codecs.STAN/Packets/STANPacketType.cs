@@ -27,9 +27,17 @@ namespace DotNetty.Codecs.STAN.Packets
         /// </summary>
         PONG,
         /// <summary>
+        /// Server	Indicates a protocol error. May cause client disconnect.
+        /// </summary>
+        MINUS_ERR,
+        /// <summary>
         /// Client	Subscribe to a subject (or subject wildcard)
         /// </summary>
         SUB,
+        /// <summary>
+        /// Server	Delivers a message payload to a subscriber
+        /// </summary>
+        MSG,
         /// <summary>
         /// Client	Request to connect to the NATS Streaming Server
         /// </summary>

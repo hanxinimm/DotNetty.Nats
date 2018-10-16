@@ -5,13 +5,14 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace DotNetty.Codecs.NATS.Packets
+namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public class MessagePacket : NATSPacket
+    public class MessagePacket : STANPacket
     {
         [IgnoreDataMember]
-        public override NATSPacketType PacketType => NATSPacketType.MSG;
+        public override STANPacketType PacketType => STANPacketType.MSG;
+
         public MessagePacket() { }
 
         public MessagePacket(string subject, string subscribeId, string replyTo, int payloadSize, byte[] payload)
@@ -22,12 +23,6 @@ namespace DotNetty.Codecs.NATS.Packets
             Payload = payload;
             PayloadSize = payloadSize;
         }
-
-        /// <summary>
-        /// 要发布到的目标主题
-        /// </summary>
-        [DataMember(Name = "subject")]
-        public string Subject { get; set; }
 
         /// <summary>
         /// 主题的唯一字母数字订阅ID

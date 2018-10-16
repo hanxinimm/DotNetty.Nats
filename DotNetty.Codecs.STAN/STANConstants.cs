@@ -16,6 +16,9 @@ namespace DotNetty.Codecs.STAN
 
         //TODO:增加内部访问限制
         public const string InboxPrefix = "_INBOX.";
+        public const string ConnectResponseInboxPrefix = "_INBOX.ConnectResponse.";
+        public const string SubscriptionResponseInboxPrefix = "_INBOX.";
+        public const string CloseRespInboxPrefix = "_INBOX.";
 
         /// <summary>
         /// NATS C# streaming client version.

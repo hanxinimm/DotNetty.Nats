@@ -75,9 +75,7 @@ namespace DotNetty.Codecs.STAN
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
-                var byt = input.ReadByte();
-                Console.WriteLine(byt);
-                switch (byt)
+                switch (input.ReadByte())
                 {
                     case STANConstants.FIELDDELIMITER_SPACES:
                     case STANConstants.FIELDDELIMITER_TAB:
@@ -168,8 +166,8 @@ namespace DotNetty.Codecs.STAN
                     return DecodePingPacket(buffer, context);
                 case STANSignatures.PONG:
                     return DecodePongPacket(buffer, context);
-                //case Signatures.ERR:
-                //    return DecodeErrorPacket(buffer, context);
+                case STANSignatures.ERR:
+                    return DecodeErrorPacket(buffer, context);
                 default:
                     Console.WriteLine("--|{0}|--", packetSignature);
                     return null;
@@ -189,7 +187,7 @@ namespace DotNetty.Codecs.STAN
 
         static STANPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            var MSGPacket = new MsgProtoPacket
+            var MSGPacket = new MessagePacket
             {
                 Subject = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG),
                 SubscribeId = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG),
@@ -201,17 +199,15 @@ namespace DotNetty.Codecs.STAN
                 MSGPacket.PayloadSize = payloadSize;
             }
 
-            var Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, STANSignatures.MSG);
-
-            MSGPacket.Message.MergeFrom(Payload);
+            MSGPacket.Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, STANSignatures.MSG);
 
             return MSGPacket;
         }
 
-        //static Packet DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        //{
-        //    return new ErrorPacket(DecodeStringNew(buffer));
-        //}
+        static STANPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        {
+            return new ErrorPacket(DecodeStringNew(buffer));
+        }
 
         static STANPacket DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
         { 
@@ -242,6 +238,17 @@ namespace DotNetty.Codecs.STAN
             {
                 throw new DecoderException($"String value is longer than maximum allowed {maxBytes}. Advertised length: {size}");
             }
+
+            if (size <= 0)
+            {
+                return string.Empty;
+            }
+
+            return buffer.ReadBytes(size).ToString(Encoding.UTF8);
+        }
+        static string DecodeStringNew(IByteBuffer buffer)
+        {
+            int size = buffer.ReadableBytes;
 
             if (size <= 0)
             {
