@@ -9,19 +9,16 @@ namespace DotNetty.Handlers.STAN
 {
     public class MessagePacketHandler : SimpleChannelInboundHandler<MessagePacket>
     {
-        ManualResetEvent ConnectRequestCompleted;
         readonly ConcurrentDictionary<string, MessagePacket> MessageBoxs;
 
-        public MessagePacketHandler(ConcurrentDictionary<string, MessagePacket> messageBoxs, ManualResetEvent connectRequestCompleted)
+        public MessagePacketHandler(ConcurrentDictionary<string, MessagePacket> messageBoxs)
         {
             MessageBoxs = messageBoxs;
-            ConnectRequestCompleted = connectRequestCompleted;
         }
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
         {
-            MessageBoxs.AddOrUpdate(msg.Subject, msg, (k, v) => msg);
-            ConnectRequestCompleted.Set();
+            contex.FireChannelRead(msg);
             //Console.WriteLine("收到消息 主题 {0}  订阅唯一编号{1} 第 {2} 条", msg.Subject, msg.Message.Subject, Interlocked.Increment( ref MessageCount));
         }
 

@@ -26,7 +26,6 @@ namespace ConsoleSTANPush
         {
 
             var group = new MultithreadEventLoopGroup(12);
-
             X509Certificate2 cert = null;
             string targetHost = null;
             //if (ClientSettings.IsSsl)
@@ -38,7 +37,7 @@ namespace ConsoleSTANPush
             {
 
 
-                ManualResetEvent ConnectRequestCompleted = new ManualResetEvent(false);
+                //ManualResetEvent ConnectRequestCompleted = new ManualResetEvent(false);
                 var Values = new ConcurrentDictionary<string, MessagePacket>();
 
                 var bootstrap = new Bootstrap();
@@ -48,18 +47,33 @@ namespace ConsoleSTANPush
                     .Option(ChannelOption.TcpNodelay, false)
                     .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
-                        //IChannelPipeline pipeline = channel.Pipeline;
-
-                        //if (cert != null)
-                        //{
-                        //    pipeline.AddLast(new TlsHandler(stream => new SslStream(stream, true, (sender, certificate, chain, errors) => true), new ClientTlsSettings(targetHost)));
-                        //}
-                        //channel.Pipeline.AddLast(new STANDelimiterBasedFrameDecoder(1024));
-                        channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
-                        channel.Pipeline.AddLast(new InfoPacketHandler(),new ErrorPacketHandler(), new ConnectRequestPacketHandler(), new MessagePacketHandler(Values, ConnectRequestCompleted), new ConnectResponsePacketHandler());
+                        channel.Pipeline.AddFirst(STANEncoder.Instance, new STANDecoder());
+                        channel.Pipeline.AddLast(new InfoPacketHandler(),new ErrorPacketHandler(), new ConnectRequestPacketHandler());
+                        channel.Pipeline.AddLast(new MessagePacketHandler(Values));
                     }));
 
+
                 IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
+
+                await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
+
+                //设置请求响应回复的收件箱前缀
+                string ReplyMessageInbox = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+
+                //侦听连接请求响应消息
+                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyMessageInbox}.*"));
+
+                var spt = await ContentcAsync(bootstrapChannel, ReplyMessageInbox);
+
+                var subrt = await SubscriptionAsync(bootstrapChannel, spt.Message, ReplyMessageInbox);
+
+                Console.WriteLine("完成订阅");
+
+                return;
+
+
+
+                //IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
 
                 await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
 
@@ -79,7 +93,7 @@ namespace ConsoleSTANPush
                 //发布连接消息
                 await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher", ConnectRequestReplyTo));
 
-                ConnectRequestCompleted.WaitOne();
+                //ConnectRequestCompleted.WaitOne();
 
 
                 var s = new ConnectResponse();
@@ -88,13 +102,13 @@ namespace ConsoleSTANPush
 
                 Values.Clear();
 
-                ConnectRequestCompleted.Reset();
+                //ConnectRequestCompleted.Reset();
 
 
-                string Inbox = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+                //string Inbox = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
 
                 //订阅侦听消息
-                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), Inbox));
+                await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), ReplyMessageInbox));
 
                 string SubscribeReplyTo = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
 
@@ -108,9 +122,9 @@ namespace ConsoleSTANPush
 
                 //发送订阅请求
                 await bootstrapChannel.WriteAndFlushAsync(new SubscriptionRequestPacket(s.SubRequests, SubscriptionRequestReplyTo, "appname-publisher",
-                    "foo", string.Empty, Inbox, 1024, 30, null, StartPosition.NewOnly));
+                    "foo", string.Empty, ReplyMessageInbox, 1024, 30, null, StartPosition.NewOnly));
 
-                ConnectRequestCompleted.WaitOne();
+                //ConnectRequestCompleted.WaitOne();
 
                 if (Values.Count > 0)
                 {
@@ -180,32 +194,64 @@ namespace ConsoleSTANPush
             }
         }
 
-        public async Task<IChannel> ContentcAsync(Bootstrap bootstrap)
+        public static async Task<ConnectResponsePacket> ContentcAsync(IChannel bootstrapChannel,string replyMessageInbox)
         {
 
-            IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
-
-            await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
-
-
-
-            string ReplyTo = $"{STANConstants.ConnectResponseInboxPrefix}{Guid.NewGuid().ToString("N")}";
-
-            Console.WriteLine(ReplyTo);
-
-            //侦听连接请求响应消息
-            await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{ReplyTo}.*"));
-
-            var ConnectRequestReplyTo = $"{ReplyTo}.{DateTime.Now.Ticks}";
+            var ConnectRequestReplyTo = $"{replyMessageInbox}.{DateTime.Now.Ticks}";
 
             Console.WriteLine(ConnectRequestReplyTo);
+
+            var RequestSubReady = new TaskCompletionSource<ConnectResponsePacket>();
+
+            var Chal = new ConnectResponsePacketHandler(ConnectRequestReplyTo, RequestSubReady);
+
+            bootstrapChannel.Pipeline.AddLast(Chal);
 
             //发布连接消息
             await bootstrapChannel.WriteAndFlushAsync(new ConnectRequestPacket("main-cluster", "appname-publisher", ConnectRequestReplyTo));
 
-            ConnectRequestCompleted.WaitOne();
+            var Result = await RequestSubReady.Task;
 
-            return bootstrapChannel;
+            bootstrapChannel.Pipeline.Remove(Chal);
+
+            return Result;
         }
+
+        public static async Task<SubscriptionResponsePacket> SubscriptionAsync(IChannel bootstrapChannel, ConnectResponse connectResponse,string replyMessageInbox)
+        {
+            string SubscribeMessageInbox = $"{STANConstants.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+
+            //订阅侦听消息
+            await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), SubscribeMessageInbox));
+
+            var SubscriptionRequestReplyTo = $"{replyMessageInbox}.{DateTime.Now.Ticks}";
+
+            Console.WriteLine(SubscriptionRequestReplyTo);
+
+            var SubscriptionRequestReady = new TaskCompletionSource<SubscriptionResponsePacket>();
+
+            ////侦听订阅请求响应消息
+            //await bootstrapChannel.WriteAndFlushAsync(new SubscribePacket(DateTime.Now.Ticks.ToString(), $"{SubscribeReplyTo}.*"));
+
+            var Chal = new SubscriptionResponsePacketHandler(SubscriptionRequestReplyTo, SubscriptionRequestReady);
+
+            bootstrapChannel.Pipeline.AddLast(Chal);
+
+            //发送订阅请求
+            await bootstrapChannel.WriteAndFlushAsync(new SubscriptionRequestPacket(connectResponse.SubRequests, SubscriptionRequestReplyTo, "appname-publisher",
+                "foo", string.Empty, SubscribeMessageInbox, 1024, 30, null, StartPosition.NewOnly));
+
+            var Result = await SubscriptionRequestReady.Task;
+
+            bootstrapChannel.Pipeline.Remove(Chal);
+
+            return Result;
+        }
+
+    }
+
+    public class STANConnect
+    {
+        public IChannel Channel;
     }
 }
