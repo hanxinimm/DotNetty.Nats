@@ -95,10 +95,20 @@ namespace DotNetty.Codecs.STAN
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
         {
-            object obj = Decode(context, input);
-            if (obj != null)
+            try
             {
-                output.Add(obj);
+
+                DebugLogger.LogBaseMSG(input.GetString(input.ReaderIndex, input.ReadableBytes, System.Text.Encoding.UTF8));
+                object obj = Decode(context, input);
+                if (obj != null)
+                {
+                    DebugLogger.LogMSG(((IByteBuffer)obj).GetString(0, ((IByteBuffer)obj).ReadableBytes, System.Text.Encoding.UTF8));
+                    output.Add(obj);
+                }
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
@@ -178,11 +188,10 @@ namespace DotNetty.Codecs.STAN
 
         private int FindEndOfLine(IByteBuffer buffer)
         {
-
             int num = buffer.ForEachByte(ByteProcessor.FindLF);
             if (num > 0 && buffer.GetByte(num - 1) == 13)
             {
-                if (buffer.WriterIndex > (num + 1) && buffer.GetByte(num + 1) == 10)
+                if (buffer.GetByte(buffer.ReaderIndex) == 77)
                 {
                     return FindEndOfLine(buffer, num + 2, buffer.WriterIndex - (num + 2));
                 }
@@ -196,18 +205,10 @@ namespace DotNetty.Codecs.STAN
 
         private int FindEndOfLine(IByteBuffer buffer, int startIndex, int length)
         {
-
             int num = buffer.ForEachByte(startIndex, length, ByteProcessor.FindLF);
             if (num > 0 && buffer.GetByte(num - 1) == 13)
             {
-                if (buffer.WriterIndex > (num + 1) && buffer.GetByte(num + 1) == 10)
-                {
-                    return FindEndOfLine(buffer, num + 2, buffer.WriterIndex - (num + 3));
-                }
-                else
-                {
-                    return --num;
-                }
+                return --num;
             }
             return -1;
         }

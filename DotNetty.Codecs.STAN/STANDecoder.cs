@@ -35,6 +35,10 @@ namespace DotNetty.Codecs.STAN
                             return;
                         }
                         output.Add(packet);
+                        if (input.ReadableBytes > 0)
+                        {
+
+                        }
                         this.Checkpoint(ParseState.Ready);
                         break;
                     case ParseState.Failed:
@@ -57,17 +61,28 @@ namespace DotNetty.Codecs.STAN
 
         static bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out STANPacket packet)
         {
-            if (buffer.ReadableBytes == 0)
+            try
+            {
+
+                if (buffer.ReadableBytes == 0)
+                {
+                    packet = null;
+                    return false;
+                }
+
+                string signature = GetSignature(buffer);
+
+                DebugLogger.LogSignature(signature);
+
+                packet = DecodePacketInternal(buffer, signature, context);
+
+                return packet != null;
+            }
+            catch (Exception ex)
             {
                 packet = null;
                 return false;
             }
-
-            string signature = GetSignature(buffer);
-
-            packet = DecodePacketInternal(buffer, signature, context);
-
-            return packet != null;
         }
 
         static string GetSignature(IByteBuffer input)

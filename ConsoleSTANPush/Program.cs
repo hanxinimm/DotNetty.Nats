@@ -22,23 +22,17 @@ namespace ConsoleSTANPush
 {
     class Program
     {
+        static int MessageCount = 0;
+
         static async Task Main()
         {
 
             var group = new MultithreadEventLoopGroup(1);
             X509Certificate2 cert = null;
             string targetHost = null;
-            //if (ClientSettings.IsSsl)
-            //{
-            //    cert = new X509Certificate2(Path.Combine(ExampleHelper.ProcessDirectory, "dotnetty.com.pfx"), "password");
-            //    targetHost = cert.GetNameInfo(X509NameType.DnsName, false);
-            //}
+
             try
             {
-
-
-                //ManualResetEvent ConnectRequestCompleted = new ManualResetEvent(false);
-
                 var bootstrap = new Bootstrap();
                 bootstrap
                     .Group(group)
@@ -46,7 +40,7 @@ namespace ConsoleSTANPush
                     .Option(ChannelOption.TcpNodelay, false)
                     .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
-                        channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(40960));
+                        channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(4096));
                         channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                         channel.Pipeline.AddLast(new ErrorPacketHandler());
                         channel.Pipeline.AddLast(new MessagePacketHandler());
@@ -70,16 +64,31 @@ namespace ConsoleSTANPush
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start(); //  开始监视代码运行时间
 
-                for (int i = 0; i < 100; i++)
+
+                Console.WriteLine("请输入要运行的模式");
+                string Code = Console.ReadLine();
+
+                //for (int i = 0; i < 100; i++)
+                //{
+
+                if (Code == "1")
                 {
-                    await PublishAsync(bootstrapChannel, spt.Message, InboxId, msgbytes);
+                    var rps = await SubscriptionAsync(bootstrapChannel, spt.Message, InboxId);
                 }
+                else
+                {
+                    var pps = await PublishAsync(bootstrapChannel, spt.Message, InboxId, msgbytes);
+                }
+                //Console.WriteLine("收到消息确认 主题 {0}  第 {1} 条", rps.Subject, Interlocked.Increment(ref MessageCount));
+                //}
 
                 stopwatch.Stop(); //  停止监视  
 
-                TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
+                //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
 
-                Console.WriteLine("完成发布" + timespan.Milliseconds);
+                Console.WriteLine("完成订阅" + stopwatch.ElapsedMilliseconds);
+
+                Console.ReadLine();
 
                 return;
 
@@ -196,17 +205,21 @@ namespace ConsoleSTANPush
         public static async Task<PubAckPacket> PublishAsync(IChannel bootstrapChannel, ConnectResponse connectResponse, string inboxId, byte[] data)
         {
 
-            var Packet = new PubMsgPacket(inboxId, connectResponse.PubPrefix, "appname-publisher", "foo", data);
-
             var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
-            var Handler = new ReplyPacketHandler<PubAckPacket>(Packet.ReplyTo, PubAckReady);
+            var Handler = new ReplyPacketHandler<PubAckPacket>(string.Empty, PubAckReady);
 
             bootstrapChannel.Pipeline.AddLast(Handler);
 
-            //发送订阅请求
-            await bootstrapChannel.WriteAndFlushAsync(Packet);
 
+            for (int i = 0; i < 100; i++)
+            {
+                var Packet = new PubMsgPacket(inboxId, connectResponse.PubPrefix, "appname-publisher", "foo", data);
+
+                //发送订阅请求
+                await bootstrapChannel.WriteAndFlushAsync(Packet);
+
+            }
             var Result = await PubAckReady.Task;
 
             bootstrapChannel.Pipeline.Remove(Handler);

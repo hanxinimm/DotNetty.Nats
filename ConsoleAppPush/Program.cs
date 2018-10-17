@@ -18,7 +18,8 @@ namespace ConsoleAppPush
     {
         static async Task RunClientAsync()
         {
-            
+
+
             var group = new MultithreadEventLoopGroup(1);
 
             X509Certificate2 cert = null;

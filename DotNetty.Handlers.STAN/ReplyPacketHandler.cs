@@ -28,8 +28,17 @@ namespace DotNetty.Handlers.STAN
         {
             if (msg.Subject == _replyTo)
             {
-                Console.WriteLine("收到消息 主题 {0}  第 {1} 条", msg.Subject, Interlocked.Increment(ref MessageCount));
                 _completionSource.SetResult(msg);
+            }
+            else
+            {
+
+                Console.WriteLine("收到消息 主题 {0}  第 {1} 条", msg.Subject, Interlocked.Increment(ref MessageCount));
+                if (MessageCount == 100)
+                {
+
+                    _completionSource.SetResult(msg);
+                }
             }
         }
 

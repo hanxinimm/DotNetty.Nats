@@ -14,14 +14,14 @@ namespace DotNetty.Codecs.STAN.Packets
         public SubscribePacket(string id,string group)
         {
             Id = id;
-            Subject = $"{STANInboxs.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+            Subject = $"{STANInboxs.MsgProto}{Guid.NewGuid().ToString("N")}";
             Group = group;
         }
 
         public SubscribePacket(string id)
         {
             Id = id;
-            Subject = $"{STANInboxs.InboxPrefix}{Guid.NewGuid().ToString("N")}";
+            Subject = $"{STANInboxs.MsgProto}{Guid.NewGuid().ToString("N")}";
         }
     }
 }
