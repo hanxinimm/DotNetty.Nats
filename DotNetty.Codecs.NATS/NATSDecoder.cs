@@ -76,9 +76,7 @@ namespace DotNetty.Codecs.NATS
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
-                var byt = input.ReadByte();
-                Console.WriteLine(byt);
-                switch (byt)
+                switch (input.ReadByte())
                 {
                     case NATSConstants.FIELDDELIMITER_SPACES:
                     case NATSConstants.FIELDDELIMITER_TAB:
@@ -122,13 +120,10 @@ namespace DotNetty.Codecs.NATS
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
-                switch (input.ReadByte())
+                if (input.ReadByte() == NATSConstants.NEWLINES_CR)
                 {
-                    case NATSConstants.NEWLINES_CR:
-                        if (NATSConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-                    default:
-                        break;
+                    if (NATSConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
+                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
                 }
             }
             return string.Empty;
@@ -136,18 +131,25 @@ namespace DotNetty.Codecs.NATS
 
         static byte[] GetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature)
         {
+            if (payloadSize == 0)
+            {
+                if (input.ReadByte() == NATSConstants.NEWLINES_CR && input.ReadByte() == NATSConstants.NEWLINES_LF) return new byte[0];
+                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+            }
+
+
             var payload = new byte[payloadSize];
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
                 var currentByte = input.ReadByte();
-                switch (currentByte)
+                if (currentByte == NATSConstants.NEWLINES_CR)
                 {
-                    case NATSConstants.NEWLINES_CR:
-                        if (NATSConstants.NEWLINES_LF == input.ReadByte()) break;
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-                    default:
-                        payload[i] = currentByte;
-                        break;
+                    if (input.ReadByte() == NATSConstants.NEWLINES_LF) break;
+                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                }
+                else
+                {
+                    payload[i] = currentByte;
                 }
             }
             return payload;
@@ -193,12 +195,12 @@ namespace DotNetty.Codecs.NATS
 
             if (int.TryParse(GetStringFromNewlineDelimiters(buffer, NATSSignatures.MSG), out int payloadSize))
             {
-                MSGPacket.PayloadSize = payloadSize;
+                MSGPacket.Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.MSG);
+
+                return MSGPacket;
             }
 
-            MSGPacket.Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.MSG);
-
-            return MSGPacket;
+            return null;
 
         }
 

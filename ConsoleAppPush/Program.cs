@@ -45,12 +45,12 @@ namespace ConsoleAppPush
                         //    pipeline.AddLast(new TlsHandler(stream => new SslStream(stream, true, (sender, certificate, chain, errors) => true), new ClientTlsSettings(targetHost)));
                         //}
 
-                        channel.Pipeline.AddLast(new DelimiterBasedFrameDecoder(1024, Delimiters.LineDelimiter()));
+                        channel.Pipeline.AddLast(new NATSDelimiterBasedFrameDecoder(1024));
                         channel.Pipeline.AddLast(NATSEncoder.Instance, new NATSDecoder(true, 20480));
                         channel.Pipeline.AddLast(new PingPacketHandler(), new PongPacketHandler(), new OKPacketHandler(), new MessagePacketHandler(), new InfoPacketHandler(), new ErrorPacketHandler());
                     }));
 
-                IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4222));
+                IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4221));
 
                 //await bootstrapChannel.WriteAndFlushAsync(new ConnectPacket(false, false, false, null, null, "test-client", null));
 
@@ -84,7 +84,7 @@ namespace ConsoleAppPush
 
                         Stopwatch sw = new Stopwatch();
                         sw.Start();
-                        int j = 20;
+                        int j = 1;
 
                         Console.WriteLine("开发发送");
 
@@ -92,8 +92,8 @@ namespace ConsoleAppPush
                         {
                             //await bootstrapChannel.WriteAndFlushAsync(string.Format("PUB foo {1}\r\n{0}\r\n", json, bytes.Length));
                             //await bootstrapChannel.WriteAndFlushAsync("hello" + "\r\n");
-                            //var packet = new SubscribePacket("test1", "foo", string.Empty);
-                            var packet = new PublishPacket("foo", Unpooled.WrappedBuffer(bytes));
+                            var packet = new SubscribePacket("test1", "foo", string.Empty);
+                            //var packet = new PublishPacket("foo", Unpooled.WrappedBuffer(bytes));
                             await bootstrapChannel.WriteAndFlushAsync(packet);
                         }
 

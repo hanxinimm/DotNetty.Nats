@@ -89,7 +89,7 @@ namespace DotNetty.Codecs.STAN
                         return input.GetString(startIndex, i, Encoding.UTF8);
                     case STANConstants.NEWLINES_CR:
                         if (STANConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
-                        throw new FormatException($"NATS Newlines is invalid.");
+                        throw new FormatException($"STAN Newlines is invalid.");
                     default:
                         break;
                 }
@@ -113,7 +113,7 @@ namespace DotNetty.Codecs.STAN
                             input.SetReaderIndex(startIndex);
                             return string.Empty;
                         }
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
                     default:
                         break;
                 }
@@ -129,7 +129,7 @@ namespace DotNetty.Codecs.STAN
                 if (input.ReadByte() == STANConstants.NEWLINES_CR)
                 {
                     if (STANConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
-                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                    throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
                 }
             }
             return string.Empty;
@@ -140,7 +140,7 @@ namespace DotNetty.Codecs.STAN
             if (payloadSize == 0)
             {
                 if (input.ReadByte() == STANConstants.NEWLINES_CR && input.ReadByte() == STANConstants.NEWLINES_LF) return new byte[0];
-                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
             }
 
 
@@ -151,7 +151,7 @@ namespace DotNetty.Codecs.STAN
                 if (currentByte == STANConstants.NEWLINES_CR)
                 {
                     if (input.ReadByte() == STANConstants.NEWLINES_LF) break;
-                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                    throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
                 }
                 else
                 {
