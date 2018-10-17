@@ -5,6 +5,7 @@ namespace DotNetty.Codecs.STAN
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using DotNetty.Buffers;
     using DotNetty.Common.Utilities;
     using DotNetty.Transport.Channels;
@@ -60,7 +61,7 @@ namespace DotNetty.Codecs.STAN
         ///     the length of the frame exceeds this value.
         /// </param>
         public STANDelimiterBasedFrameDecoder(int maxLength)
-            : this(maxLength, true, false)
+            : this(maxLength, false, false)
         {
         }
 
@@ -94,10 +95,6 @@ namespace DotNetty.Codecs.STAN
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
         {
-            if (output.Count == 1)
-            {
-
-            }
             object obj = Decode(context, input);
             if (obj != null)
             {
@@ -118,10 +115,9 @@ namespace DotNetty.Codecs.STAN
                 if (num >= 0)
                 {
                     int num2 = num - buffer.ReaderIndex;
-                    int num3 = (buffer.GetByte(num) != 13) ? 1 : 2;
                     if (num2 > maxLength)
                     {
-                        buffer.SetReaderIndex(num + num3);
+                        buffer.SetReaderIndex(num + 2);
                         Fail(ctx, num2);
                         return null;
                     }
@@ -129,11 +125,11 @@ namespace DotNetty.Codecs.STAN
                     if (stripDelimiter)
                     {
                         byteBuffer = buffer.ReadSlice(num2);
-                        buffer.SkipBytes(num3);
+                        buffer.SkipBytes(2);
                     }
                     else
                     {
-                        byteBuffer = buffer.ReadSlice(num2 + num3);
+                        byteBuffer = buffer.ReadSlice(num2 + 2);
                     }
                     return byteBuffer.Retain();
                 }
@@ -182,12 +178,38 @@ namespace DotNetty.Codecs.STAN
 
         private int FindEndOfLine(IByteBuffer buffer)
         {
-            int num = buffer.ForEachByte(ByteProcessor.FindCrlf);
+
+            int num = buffer.ForEachByte(ByteProcessor.FindLF);
             if (num > 0 && buffer.GetByte(num - 1) == 13)
             {
-                num--;
+                if (buffer.WriterIndex > (num + 1) && buffer.GetByte(num + 1) == 10)
+                {
+                    return FindEndOfLine(buffer, num + 2, buffer.WriterIndex - (num + 2));
+                }
+                else
+                {
+                    return --num;
+                }
             }
-            return num;
+            return -1;
+        }
+
+        private int FindEndOfLine(IByteBuffer buffer, int startIndex, int length)
+        {
+
+            int num = buffer.ForEachByte(startIndex, length, ByteProcessor.FindLF);
+            if (num > 0 && buffer.GetByte(num - 1) == 13)
+            {
+                if (buffer.WriterIndex > (num + 1) && buffer.GetByte(num + 1) == 10)
+                {
+                    return FindEndOfLine(buffer, num + 2, buffer.WriterIndex - (num + 3));
+                }
+                else
+                {
+                    return --num;
+                }
+            }
+            return -1;
         }
     }
 }

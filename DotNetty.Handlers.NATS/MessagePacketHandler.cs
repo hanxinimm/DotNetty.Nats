@@ -13,7 +13,6 @@ namespace DotNetty.Handlers.NATS
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
         {
-
             Console.WriteLine("收到消息 主题 {0}  订阅唯一编号{1} 第 {2} 条", msg.Subject, msg.SubscribeId, Interlocked.Increment( ref MessageCount));
         }
 

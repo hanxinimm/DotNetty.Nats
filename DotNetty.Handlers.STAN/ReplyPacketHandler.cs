@@ -4,6 +4,7 @@
 namespace DotNetty.Handlers.STAN
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Codecs.STAN.Protocol;
@@ -13,6 +14,8 @@ namespace DotNetty.Handlers.STAN
     public class ReplyPacketHandler<TPacket> : SimpleChannelInboundHandler<TPacket>
         where TPacket : STANPacket
     {
+        static int MessageCount = 0;
+
         private readonly string _replyTo;
         private readonly TaskCompletionSource<TPacket> _completionSource;
         public ReplyPacketHandler(string replyTo, TaskCompletionSource<TPacket> completionSource)
@@ -25,6 +28,7 @@ namespace DotNetty.Handlers.STAN
         {
             if (msg.Subject == _replyTo)
             {
+                Console.WriteLine("收到消息 主题 {0}  第 {1} 条", msg.Subject, Interlocked.Increment(ref MessageCount));
                 _completionSource.SetResult(msg);
             }
         }

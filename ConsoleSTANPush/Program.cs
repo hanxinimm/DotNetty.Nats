@@ -25,7 +25,7 @@ namespace ConsoleSTANPush
         static async Task Main()
         {
 
-            var group = new MultithreadEventLoopGroup(12);
+            var group = new MultithreadEventLoopGroup(1);
             X509Certificate2 cert = null;
             string targetHost = null;
             //if (ClientSettings.IsSsl)
@@ -46,7 +46,8 @@ namespace ConsoleSTANPush
                     .Option(ChannelOption.TcpNodelay, false)
                     .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
-                        channel.Pipeline.AddFirst(STANEncoder.Instance, new STANDecoder());
+                        channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(40960));
+                        channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                         channel.Pipeline.AddLast(new ErrorPacketHandler());
                         channel.Pipeline.AddLast(new MessagePacketHandler());
                     }));
@@ -71,7 +72,7 @@ namespace ConsoleSTANPush
 
                 for (int i = 0; i < 100; i++)
                 {
-                    var subrt = await PublishAsync(bootstrapChannel, spt.Message, InboxId, msgbytes);
+                    await PublishAsync(bootstrapChannel, spt.Message, InboxId, msgbytes);
                 }
 
                 stopwatch.Stop(); //  停止监视  
@@ -134,6 +135,10 @@ namespace ConsoleSTANPush
                 Console.ReadLine();
 
                 await bootstrapChannel.CloseAsync();
+            }
+            catch (Exception ex)
+            {
+
             }
             finally
             {
@@ -207,6 +212,8 @@ namespace ConsoleSTANPush
             bootstrapChannel.Pipeline.Remove(Handler);
 
             return Result;
+
+            return null;
         }
 
     }

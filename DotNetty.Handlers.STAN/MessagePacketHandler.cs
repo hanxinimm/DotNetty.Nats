@@ -9,6 +9,8 @@ namespace DotNetty.Handlers.STAN
 {
     public class MessagePacketHandler : SimpleChannelInboundHandler<MsgProtoPacket>
     {
+        
+
         protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
             contex.FireChannelRead(msg);

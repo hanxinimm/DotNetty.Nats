@@ -119,13 +119,10 @@ namespace DotNetty.Codecs.STAN
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
-                switch (input.ReadByte())
+                if (input.ReadByte() == STANConstants.NEWLINES_CR)
                 {
-                    case STANConstants.NEWLINES_CR:
-                        if (STANConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-                    default:
-                        break;
+                    if (STANConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
+                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
                 }
             }
             return string.Empty;
@@ -133,20 +130,25 @@ namespace DotNetty.Codecs.STAN
 
         static byte[] GetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature)
         {
-            if (payloadSize == 0) return new byte[0];
+            if (payloadSize == 0)
+            {
+                if (input.ReadByte() == STANConstants.NEWLINES_CR && input.ReadByte() == STANConstants.NEWLINES_LF) return new byte[0];
+                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+            }
+
 
             var payload = new byte[payloadSize];
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
                 var currentByte = input.ReadByte();
-                switch (currentByte)
+                if (currentByte == STANConstants.NEWLINES_CR)
                 {
-                    case STANConstants.NEWLINES_CR:
-                        if (STANConstants.NEWLINES_LF == input.ReadByte()) break;
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-                    default:
-                        payload[i] = currentByte;
-                        break;
+                    if (input.ReadByte() == STANConstants.NEWLINES_LF) break;
+                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                }
+                else
+                {
+                    payload[i] = currentByte;
                 }
             }
             return payload;
@@ -188,11 +190,6 @@ namespace DotNetty.Codecs.STAN
         {
             return InfoPacket.CreateFromJson(DecodeString(buffer));
         }
-        static STANPacket DecodeConnectRequestPacket(IByteBuffer buffer, IChannelHandlerContext context)
-        {
-            return null;
-            //return ConnectResponsePacket.CreateFromJson(DecodeString(buffer));
-        }
 
         static STANPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
@@ -200,7 +197,6 @@ namespace DotNetty.Codecs.STAN
             var Subject = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG);
             var SubscribeId = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG);
             var ReplyTo = GetStringFromFieldDelimiters(buffer, STANSignatures.MSG);
-
 
             if (int.TryParse(GetStringFromNewlineDelimiters(buffer, STANSignatures.MSG), out int payloadSize))
             {
