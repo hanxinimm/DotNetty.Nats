@@ -10,10 +10,20 @@ namespace DotNetty.Handlers.STAN
     public class MessagePacketHandler : SimpleChannelInboundHandler<MsgProtoPacket>
     {
         static int MessageCount = 0;
+        private Func<IChannel, string, ulong,Task> _callback;
+
+        public MessagePacketHandler(Func<IChannel, string, ulong, Task> callback)
+        {
+            _callback = callback;
+        }
+
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
-            Console.WriteLine("收到消息 主题 {0}  订阅唯一编号{1} 第 {2} 条", msg.Subject, msg.Message.Subject, Interlocked.Increment( ref MessageCount));
+            Console.WriteLine("收到消息 主题 {0} Timestamp {1}  Redelivered {2} Sequence {3} 第 {4} 条 事件  {5}",
+                msg.Subject, msg.Message.Timestamp, msg.Message.Redelivered, msg.Message.Sequence, msg.Message.Data?.ToStringUtf8(), Interlocked.Increment(ref MessageCount));
+
+            _callback(contex.Channel, msg.Message.Subject, msg.Message.Sequence);
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)

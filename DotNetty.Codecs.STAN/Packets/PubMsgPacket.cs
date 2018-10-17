@@ -13,7 +13,7 @@ namespace DotNetty.Codecs.STAN.Packets
     public class PubMsgPacket : MessagePacket<PubMsg>
     {
         /// <summary>
-        /// 请求连接到NATS Streaming Server
+        /// 发布消息到服务器
         /// </summary>
         /// <param name="inboxId"></param>
         /// <param name="pubPrefix"></param>
@@ -28,7 +28,7 @@ namespace DotNetty.Codecs.STAN.Packets
         }
 
         /// <summary>
-        /// 请求连接到NATS Streaming Server
+        /// 发布消息到服务器
         /// </summary>
         /// <param name="inboxId"></param>
         /// <param name="pubPrefix"></param>

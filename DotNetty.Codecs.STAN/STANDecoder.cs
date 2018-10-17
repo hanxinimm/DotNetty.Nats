@@ -57,32 +57,24 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
-        
+
 
         static bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out STANPacket packet)
         {
-            try
-            {
 
-                if (buffer.ReadableBytes == 0)
-                {
-                    packet = null;
-                    return false;
-                }
-
-                string signature = GetSignature(buffer);
-
-                DebugLogger.LogSignature(signature);
-
-                packet = DecodePacketInternal(buffer, signature, context);
-
-                return packet != null;
-            }
-            catch (Exception ex)
+            if (buffer.ReadableBytes == 0)
             {
                 packet = null;
                 return false;
             }
+
+            string signature = GetSignature(buffer);
+
+            DebugLogger.LogSignature(signature);
+
+            packet = DecodePacketInternal(buffer, signature, context);
+
+            return packet != null;
         }
 
         static string GetSignature(IByteBuffer input)

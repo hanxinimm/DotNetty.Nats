@@ -23,20 +23,10 @@ namespace ConsoleSTANPush
     class Program
     {
         static int MessageCount = 0;
+        static string AckInbox = string.Empty;
 
         static async Task Main()
         {
-            PubMsg ssss = new PubMsg();
-
-            ssss.ClientID = "appname-publisher";
-            ssss.Guid = "T1HI5NQRQLNKY6POE2Z66U";
-            ssss.Subject = "foo";
-            ssss.Data = ByteString.CopyFrom(Encoding.UTF8.GetBytes("这是一条测试数据"));
-
-            //{{ "clientID": "appname-publisher", "guid": "0a9e361a-c8a2-4693-bf23-9cf49f718aae", "subject": "foo", "data": "6L+Z5piv5LiA5p2h5rWL6K+V5pWw5o2u" }}
-            var byte2s = ssss.ToByteArray();
-            //Console.WriteLine((char)ssss);
-
             var group = new MultithreadEventLoopGroup(1);
             X509Certificate2 cert = null;
             string targetHost = null;
@@ -53,7 +43,7 @@ namespace ConsoleSTANPush
                         channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(4096));
                         channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                         channel.Pipeline.AddLast(new ErrorPacketHandler());
-                        channel.Pipeline.AddLast(new MessagePacketHandler());
+                        channel.Pipeline.AddLast(new MessagePacketHandler(AckAsync));
                     }));
 
 
@@ -61,7 +51,7 @@ namespace ConsoleSTANPush
 
                 await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
 
-                string ClientId = Guid.NewGuid().ToString("N");
+                string ClientId = "TestClientId";
 
                 //设置请求响应回复的收件箱
                 string InboxId = Guid.NewGuid().ToString("N");
@@ -71,35 +61,44 @@ namespace ConsoleSTANPush
 
                 var spt = await ContentcAsync(bootstrapChannel, ClientId, InboxId);
 
-                var msgbytes = Encoding.UTF8.GetBytes("这是一条测试数据");
+                //var msgbytes = Encoding.UTF8.GetBytes("这是一条测试数据");
 
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start(); //  开始监视代码运行时间
-
-
-                Console.WriteLine("请输入要运行的模式");
-                string Code = Console.ReadLine();
+                //Stopwatch stopwatch = new Stopwatch();
+                //stopwatch.Start(); //  开始监视代码运行时间
 
 
+                //Console.WriteLine("请输入要运行的模式");
+                //string Code = Console.ReadLine();
 
-                if (Code == "1")
-                {
-                    var rps = await SubscriptionAsync(bootstrapChannel, ClientId, spt.Message, InboxId);
-                    //Console.WriteLine("收到消息确认 主题 {0}  第 {1} 条", rps.Subject, Interlocked.Increment(ref MessageCount));
-                }
-                else
-                {
-                    var pps = await PublishAsync(bootstrapChannel, spt.Message, ClientId, InboxId, msgbytes);
-                }
+
+
+                //if (Code == "1")
+                //{
+                //    var rps = await SubscriptionAsync(bootstrapChannel, ClientId, spt.Message, InboxId);
+
+                //    AckInbox = rps.Message.AckInbox;
+
+                //    //Console.WriteLine("收到消息确认 主题 {0}  第 {1} 条", rps.Subject, Interlocked.Increment(ref MessageCount));
+                //}
+                //else
+                //{
+                //    var pps = await PublishAsync(bootstrapChannel, spt.Message, ClientId, InboxId, msgbytes);
+                //}
 
                 
 
-                stopwatch.Stop(); //  停止监视  
+                //stopwatch.Stop(); //  停止监视  
 
-                //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
+                ////TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
 
-                Console.WriteLine("完成订阅" + stopwatch.ElapsedMilliseconds);
+                //Console.WriteLine("完成订阅" + stopwatch.ElapsedMilliseconds);
 
+                //Console.ReadLine();
+
+
+                await CloseRequestAsync(bootstrapChannel, spt.Message, ClientId, InboxId);
+
+                Console.WriteLine("关闭中...");
                 Console.ReadLine();
 
                 return;
@@ -195,7 +194,7 @@ namespace ConsoleSTANPush
             //订阅侦听消息
             await bootstrapChannel.WriteAndFlushAsync(SubscribePacket);
 
-            var Packet = new SubscriptionRequestPacket(inboxId, connectResponse.SubRequests, clientId, "foo", string.Empty, SubscribePacket.Subject, 1024, 30, null, StartPosition.NewOnly);
+            var Packet = new SubscriptionRequestPacket(inboxId, connectResponse.SubRequests, clientId, "foo", string.Empty, SubscribePacket.Subject, 1024, 3, "KeepLast", StartPosition.LastReceived);
 
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
@@ -238,6 +237,35 @@ namespace ConsoleSTANPush
             return Result;
 
             return null;
+        }
+
+        public static Task AckAsync(IChannel bootstrapChannel, string subject, ulong sequence)
+        {
+            var Packet = new AckPacket(AckInbox, subject, sequence);
+
+            //发送消息成功处理
+            return bootstrapChannel.WriteAndFlushAsync(Packet);
+        }
+
+        public static async Task<CloseResponsePacket> CloseRequestAsync(IChannel bootstrapChannel, ConnectResponse connectResponse, string clientId, string inboxId)
+        {
+
+            var Packet = new CloseRequestPacket(inboxId, connectResponse.CloseRequests, clientId);
+
+            var CloseRequestReady = new TaskCompletionSource<CloseResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<CloseResponsePacket>(Packet.ReplyTo, CloseRequestReady);
+
+            bootstrapChannel.Pipeline.AddLast(Handler);
+
+            //发送关闭
+            await bootstrapChannel.WriteAndFlushAsync(Packet);
+
+            var Result = await CloseRequestReady.Task;
+
+            bootstrapChannel.Pipeline.Remove(Handler);
+
+            return Result;
         }
 
     }

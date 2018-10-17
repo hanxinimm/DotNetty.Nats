@@ -77,9 +77,12 @@ namespace DotNetty.Codecs.STAN
                 case STANPacketType.PubMsg:
                     EncodePublishMessage(bufferAllocator, (PubMsgPacket)packet, output);
                     break;
-                //case PacketType.PING:
-                //    EncodePingMessage(bufferAllocator, (PingPacket)packet, output);
-                //    break;
+                case STANPacketType.Ack:
+                    EncodePublishMessage(bufferAllocator, (AckPacket)packet, output);
+                    break;
+                case STANPacketType.CloseRequest:
+                    EncodePublishMessage(bufferAllocator, (CloseRequestPacket)packet, output);
+                    break;
                 //case PacketType.PONG:
                 //    EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
                 //    break;

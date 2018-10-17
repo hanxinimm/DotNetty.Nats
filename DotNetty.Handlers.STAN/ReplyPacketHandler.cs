@@ -33,7 +33,7 @@ namespace DotNetty.Handlers.STAN
             else
             {
 
-                Console.WriteLine("收到消息 主题 {0}  第 {1} 条", msg.Subject, Interlocked.Increment(ref MessageCount));
+                Console.WriteLine("收到消息确认 主题 {0}  第 {1} 条", msg.Subject, Interlocked.Increment(ref MessageCount));
                 if (MessageCount == 100)
                 {
 
