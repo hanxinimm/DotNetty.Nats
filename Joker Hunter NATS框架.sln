@@ -19,9 +19,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Handlers.NATS", "D
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Codecs.STAN", "DotNetty.Codecs.STAN\DotNetty.Codecs.STAN.csproj", "{FBF1D840-08A3-4E81-BBA1-5005F7CF65E3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSTANPush", "ConsoleSTANPush\ConsoleSTANPush.csproj", "{9801A056-3FBF-4AF7-8752-A58E3113F3E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleSTANPush", "ConsoleSTANPush\ConsoleSTANPush.csproj", "{9801A056-3FBF-4AF7-8752-A58E3113F3E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotNetty.Handlers.STAN", "DotNetty.Handlers.STAN\DotNetty.Handlers.STAN.csproj", "{43BDD6A7-2052-40E9-876C-53BE8885429D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Handlers.STAN", "DotNetty.Handlers.STAN\DotNetty.Handlers.STAN.csproj", "{43BDD6A7-2052-40E9-876C-53BE8885429D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hunter.STAN.Client", "Hunter.STAN.Client\Hunter.STAN.Client.csproj", "{44C677FD-25C7-45BD-8671-C53AC1155628}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSTANClient", "TestSTANClient\TestSTANClient.csproj", "{5AB44343-DE6D-46AD-971D-3920F650EB4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +73,14 @@ Global
 		{43BDD6A7-2052-40E9-876C-53BE8885429D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43BDD6A7-2052-40E9-876C-53BE8885429D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43BDD6A7-2052-40E9-876C-53BE8885429D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44C677FD-25C7-45BD-8671-C53AC1155628}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44C677FD-25C7-45BD-8671-C53AC1155628}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44C677FD-25C7-45BD-8671-C53AC1155628}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44C677FD-25C7-45BD-8671-C53AC1155628}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AB44343-DE6D-46AD-971D-3920F650EB4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AB44343-DE6D-46AD-971D-3920F650EB4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AB44343-DE6D-46AD-971D-3920F650EB4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AB44343-DE6D-46AD-971D-3920F650EB4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

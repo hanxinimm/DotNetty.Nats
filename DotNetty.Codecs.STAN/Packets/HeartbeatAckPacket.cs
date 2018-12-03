@@ -4,14 +4,14 @@ using System.Text;
 
 namespace DotNetty.Codecs.STAN.Packets
 {
-    public class HeartbeatInboxPacket : STANSubscribePacket
+    public class HeartbeatAckPacket : STANSubscribePacket
     {
-        public HeartbeatInboxPacket(string subject)
+        public HeartbeatAckPacket(string subject)
         {
             Id = "Id" + Guid.NewGuid().ToString("N");
             Subject = subject;
         }
 
-        public override STANPacketType PacketType => STANPacketType.Heartbeat;
+        public override STANPacketType PacketType => STANPacketType.HeartbeatAck;
     }
 }

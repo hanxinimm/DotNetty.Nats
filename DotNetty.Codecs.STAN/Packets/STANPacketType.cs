@@ -15,6 +15,10 @@ namespace DotNetty.Codecs.STAN.Packets
         /// </summary>
         Heartbeat,
         /// <summary>
+        /// heartbeat inbox Ack
+        /// </summary>
+        HeartbeatAck,
+        /// <summary>
         /// Server	Acknowledges well-formed protocol message in verbose mode
         /// </summary>
         PLUS_OK,

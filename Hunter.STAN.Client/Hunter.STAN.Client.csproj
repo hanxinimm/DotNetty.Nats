@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotNetty.Codecs.STAN\DotNetty.Codecs.STAN.csproj" />
+    <ProjectReference Include="..\DotNetty.Handlers.STAN\DotNetty.Handlers.STAN.csproj" />
+  </ItemGroup>
+
+</Project>

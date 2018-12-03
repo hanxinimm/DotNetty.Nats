@@ -62,6 +62,9 @@ namespace DotNetty.Codecs.STAN
                 case STANPacketType.Heartbeat:
                     EncodeSubscribeMessage(bufferAllocator, (HeartbeatInboxPacket)packet, output);
                     break;
+                case STANPacketType.HeartbeatAck:
+                    EncodeHeartbeatAck(bufferAllocator, (HeartbeatAckPacket)packet, output);
+                    break;
                 case STANPacketType.ConnectRequest:
                     EncodePublishMessage(bufferAllocator, (ConnectRequestPacket)packet, output);
                     break;
@@ -111,6 +114,42 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
+        static void EncodeHeartbeatAck(IByteBufferAllocator bufferAllocator, HeartbeatAckPacket packet, List<object> output)
+        {
+            byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
+
+            int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
+
+            byte[] PayloadSize = EncodeStringInUtf8("0");
+
+            variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
+            variablePartSize += CRLF_BYTES.Length;
+
+            int fixedHeaderBufferSize = PUB_BYTES.Length + SPACES_BYTES.Length;
+
+            IByteBuffer buf = null;
+            try
+            {
+                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
+                buf.WriteBytes(PUB_BYTES);
+                buf.WriteBytes(SPACES_BYTES);
+                buf.WriteBytes(SubjectNameBytes);
+                buf.WriteBytes(SPACES_BYTES);
+
+                buf.WriteBytes(PayloadSize);
+                buf.WriteBytes(CRLF_BYTES);
+
+                buf.WriteBytes(CRLF_BYTES);
+
+                output.Add(buf);
+                buf = null;
+            }
+            finally
+            {
+                buf?.SafeRelease();
+            }
+        }
+
         static void EncodePublishMessage<TMessage>(IByteBufferAllocator bufferAllocator, STANPacket<TMessage> packet, List<object> output)
             where TMessage : IMessage
         {
@@ -157,8 +196,6 @@ namespace DotNetty.Codecs.STAN
                 buf?.SafeRelease();
             }
         }
-
-
 
         static void EncodeSubscribeMessage(IByteBufferAllocator bufferAllocator, STANSubscribePacket packet, List<object> output)
         {

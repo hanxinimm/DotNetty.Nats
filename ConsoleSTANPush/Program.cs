@@ -24,6 +24,7 @@ namespace ConsoleSTANPush
     {
         static int MessageCount = 0;
         static string AckInbox = string.Empty;
+        static string Subject = string.Empty;
 
         static async Task Main()
         {
@@ -49,19 +50,18 @@ namespace ConsoleSTANPush
 
                 IChannel bootstrapChannel = await bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
 
-                await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket());
-
-                string ClientId = "TestClientId";
-
                 //设置请求响应回复的收件箱
                 string InboxId = Guid.NewGuid().ToString("N");
+
+                await bootstrapChannel.WriteAndFlushAsync(new HeartbeatInboxPacket(InboxId));
+
+                string ClientId = "TestClientId";
 
                 //侦听连接请求响应消息
                 await bootstrapChannel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), InboxId));
 
                 var spt = await ContentcAsync(bootstrapChannel, ClientId, InboxId);
 
-                //var msgbytes = Encoding.UTF8.GetBytes("这是一条测试数据");
 
                 //Stopwatch stopwatch = new Stopwatch();
                 //stopwatch.Start(); //  开始监视代码运行时间
@@ -70,7 +70,8 @@ namespace ConsoleSTANPush
                 //Console.WriteLine("请输入要运行的模式");
                 //string Code = Console.ReadLine();
 
-
+                Console.WriteLine("请输入一条消息主题");
+                Subject = Console.ReadLine();
 
                 //if (Code == "1")
                 //{
@@ -82,10 +83,10 @@ namespace ConsoleSTANPush
                 //}
                 //else
                 //{
-                //    var pps = await PublishAsync(bootstrapChannel, spt.Message, ClientId, InboxId, msgbytes);
+                var pps = await PublishAsync(bootstrapChannel, spt.Message, ClientId, InboxId);
                 //}
 
-                
+
 
                 //stopwatch.Stop(); //  停止监视  
 
@@ -99,59 +100,6 @@ namespace ConsoleSTANPush
                 await CloseRequestAsync(bootstrapChannel, spt.Message, ClientId, InboxId);
 
                 Console.WriteLine("关闭中...");
-                Console.ReadLine();
-
-                return;
-
-                for (; ; )
-                {
-                    Console.WriteLine("请输入任意字符");
-                    string line = Console.ReadLine();
-
-
-
-                    if (string.IsNullOrEmpty(line))
-                    {
-                        string json = Newtonsoft.Json.JsonConvert.SerializeObject(new Order()
-                        {
-                            AccountId = 1000,
-                            PeriodNo = 23408,
-                            OrderNo = "14586413134678743131347",
-                            Amount = 23034.45M,
-                            BetCount = 230,
-                            MoneyUnit = 123,
-                            TotalAmount = 2313,
-                            Content = "231313123131313",
-                            GameId = 233131313,
-                            PlayItemId = 233131313,
-                            CreateTime = DateTime.Now
-                        });
-
-                        var bytes = System.Text.Encoding.UTF8.GetBytes(json);
-
-                        Stopwatch sw = new Stopwatch();
-                        sw.Start();
-                        int j = 20;
-
-                        Console.WriteLine("开发发送");
-
-                        for (int i = 0; i < j; i++)
-                        {
-                            //await bootstrapChannel.WriteAndFlushAsync(string.Format("PUB foo {1}\r\n{0}\r\n", json, bytes.Length));
-                            //await bootstrapChannel.WriteAndFlushAsync("hello" + "\r\n");
-                            //var packet = new SubscribePacket("test1", "foo." + Guid.NewGuid(), string.Empty);
-                            //var packet = new ("foo", Unpooled.WrappedBuffer(bytes));
-                            //await bootstrapChannel.WriteAndFlushAsync(packet);
-                        }
-
-                        sw.Stop();
-
-                        Console.WriteLine("{0} 条消息已经发送完毕,耗时 {1} 毫秒,请输入消息", j, sw.ElapsedMilliseconds);
-
-                        continue;
-                    }
-                }
-
                 Console.ReadLine();
 
                 await bootstrapChannel.CloseAsync();
@@ -212,7 +160,7 @@ namespace ConsoleSTANPush
             return Result;
         }
 
-        public static async Task<PubAckPacket> PublishAsync(IChannel bootstrapChannel, ConnectResponse connectResponse, string clientId, string inboxId, byte[] data)
+        public static async Task<PubAckPacket> PublishAsync(IChannel bootstrapChannel, ConnectResponse connectResponse, string clientId, string inboxId)
         {
 
             var PubAckReady = new TaskCompletionSource<PubAckPacket>();
@@ -222,9 +170,11 @@ namespace ConsoleSTANPush
             bootstrapChannel.Pipeline.AddLast(Handler);
 
 
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 2; i++)
             {
-                var Packet = new PubMsgPacket(inboxId, connectResponse.PubPrefix, clientId, "foo", data);
+                var msgbytes = Encoding.UTF8.GetBytes("这是一条测试数据 编号 " + i);
+
+                var Packet = new PubMsgPacket(inboxId, connectResponse.PubPrefix, clientId, Subject, msgbytes);
 
                 //发送订阅请求
                 await bootstrapChannel.WriteAndFlushAsync(Packet);
