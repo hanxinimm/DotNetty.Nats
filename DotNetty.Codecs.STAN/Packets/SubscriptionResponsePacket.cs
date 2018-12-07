@@ -11,7 +11,7 @@ namespace DotNetty.Codecs.STAN.Packets
     [DataContract]
     public class SubscriptionResponsePacket : MessagePacket<SubscriptionResponse>
     {
-        public override STANPacketType PacketType => STANPacketType.ConnectResponse;
+        public override STANPacketType PacketType => STANPacketType.SubscriptionResponse;
 
     }
 }

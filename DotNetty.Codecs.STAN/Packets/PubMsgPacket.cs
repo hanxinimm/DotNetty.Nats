@@ -12,6 +12,7 @@ namespace DotNetty.Codecs.STAN.Packets
     [DataContract]
     public class PubMsgPacket : MessagePacket<PubMsg>
     {
+        private readonly string GuidId = Guid.Parse("07C4824A-A4F6-A77F-5B6A-FB47D13AD6ED").ToString();
         /// <summary>
         /// 发布消息到服务器
         /// </summary>
@@ -24,7 +25,7 @@ namespace DotNetty.Codecs.STAN.Packets
         {
             Subject = $"{pubPrefix}.{subject}";
             ReplyTo = $"{STANInboxs.PubAck}{inboxId}.{Guid.NewGuid().ToString("N")}";
-            Message = new PubMsg() { ClientID = clientID, Guid = Guid.NewGuid().ToString(), Subject = subject, Data = ByteString.CopyFrom(data) };
+            Message = new PubMsg() { ClientID = clientID, Guid = GuidId, Subject = subject, Data = ByteString.CopyFrom(data) };
         }
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace DotNetty.Codecs.STAN.Packets
         {
             Subject = $"{pubPrefix}.{subject}";
             ReplyTo = $"{STANInboxs.PubAck}{inboxId}.{Guid.NewGuid().ToString("N")}";
-            Message = new PubMsg() { ClientID = clientID, Guid = Guid.NewGuid().ToString(), Subject = subject };
+            Message = new PubMsg() { ClientID = clientID, Guid = GuidId, Subject = subject };
         }
 
         public override STANPacketType PacketType => STANPacketType.PubMsg;

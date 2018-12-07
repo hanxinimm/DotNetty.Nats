@@ -83,7 +83,7 @@ namespace ConsoleSTANPush
                 //}
                 //else
                 //{
-                var pps = await PublishAsync(bootstrapChannel, spt.Message, ClientId, InboxId);
+                //var pps = await PublishAsync(bootstrapChannel, spt.Message, ClientId, InboxId);
                 //}
 
 
@@ -170,14 +170,18 @@ namespace ConsoleSTANPush
             bootstrapChannel.Pipeline.AddLast(Handler);
 
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 200; i++)
             {
+                Console.WriteLine("这是一条测试数据 编号 " + i);
+
                 var msgbytes = Encoding.UTF8.GetBytes("这是一条测试数据 编号 " + i);
 
                 var Packet = new PubMsgPacket(inboxId, connectResponse.PubPrefix, clientId, Subject, msgbytes);
 
                 //发送订阅请求
                 await bootstrapChannel.WriteAndFlushAsync(Packet);
+
+                Console.ReadLine();
 
             }
             var Result = await PubAckReady.Task;
