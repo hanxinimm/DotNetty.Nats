@@ -210,6 +210,10 @@ namespace DotNetty.Codecs.STAN
             {
                 return --num;
             }
+            if (length > 0)
+            {
+                return FindEndOfLine(buffer, num + 1, buffer.WriterIndex - (num + 1));
+            }
             return -1;
         }
     }

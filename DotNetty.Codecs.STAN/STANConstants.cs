@@ -10,7 +10,14 @@ namespace DotNetty.Codecs.STAN
 
         internal const byte FIELDDELIMITER_TAB = 0x09;
 
+        /// <summary>
+        /// \r
+        /// </summary>
         internal const byte NEWLINES_CR = 0x0D;
+
+        /// <summary>
+        /// \n
+        /// </summary>
 
         internal const byte NEWLINES_LF = 0x0A;
 

@@ -19,8 +19,12 @@ namespace TestSTANClient
 
             var client = new STANClient(options);
             await client.ContentcAsync("main-cluster", "TestClientId");
-            var s = client.Subscription("test3", string.Empty);
+            var s = client.Subscription("test33", string.Empty, (bytes) =>
+            {
+                Console.WriteLine(Encoding.UTF8.GetString(bytes));
+            });
             Console.WriteLine($"本地返回的订阅编号{s.SubscribeId}");
+
             //while (true)
             //{
             //    Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -32,7 +36,7 @@ namespace TestSTANClient
 
             //    for (int i = 0; i < 1; i++)
             //    {
-            //        client.Publish("test", Testbytes);
+            //        client.Publish("test3", Testbytes);
             //        //await client.PublishAsync("test", Testbytes);
             //    }
 

@@ -24,7 +24,6 @@ namespace DotNetty.Handlers.STAN
         {
             if (_waitPubAckTaskSchedule.TryRemove(msg.Subject,out var completionSource))
             {
-                //Console.WriteLine("收到发送消息确认 主题 {0}  消息编号 {1} 错误提示 {2}", msg.Subject, msg.Message.Guid, msg.Message.Error);
                 completionSource.SetResult(msg);
             }
             else

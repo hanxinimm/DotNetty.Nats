@@ -66,6 +66,11 @@ namespace Hunter.STAN.Client
         /// </summary>
         private ConcurrentDictionary<string, TaskCompletionSource<SubscriptionResponsePacket>> _waitSubResponseTaskSchedule;
 
+        /// <summary>
+        /// 本地订阅配置
+        /// </summary>
+        private ConcurrentDictionary<string, STANSubscriptionConfig> _localSubscriptionConfig;
+
         public STANClient(STANOptions options)
         {
             _options = options;
@@ -73,13 +78,15 @@ namespace Hunter.STAN.Client
             _replyInboxId = GenerateInboxId();
             _waitPubAckTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>>();
             _waitSubResponseTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<SubscriptionResponsePacket>>();
+            _localSubscriptionConfig = new ConcurrentDictionary<string, STANSubscriptionConfig>();
             _bootstrap = new Bootstrap()
                 .Group(new MultithreadEventLoopGroup())
                 .Channel<TcpSocketChannel>()
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
-                    channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(4096));
+                    //TODO:考虑移除分隔符，采用读取分析的方式返回消息内容
+                    channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(409600));
                     channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                     channel.Pipeline.AddLast(new ErrorPacketHandler());
                     channel.Pipeline.AddLast(new HeartbeatPacketHandler(_heartbeatInboxId, HeartbeatACKAsync));
@@ -149,7 +156,7 @@ namespace Hunter.STAN.Client
             await _channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
         }
 
-        public SubscriptionResponsePacket Subscription(string subject, string queueGroup)
+        public SubscriptionResponsePacket Subscription(string subject, string queueGroup, Action<byte[]> handler)
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
@@ -157,6 +164,9 @@ namespace Hunter.STAN.Client
             _channel.WriteAndFlushAsync(SubscribePacket).GetAwaiter().GetResult();
 
             var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _clientId, subject, queueGroup, SubscribePacket.Subject, 1024, 3, "KeepLast", StartPosition.LastReceived);
+
+            Console.WriteLine($"订阅命令消息回复的收件箱 {Packet.ReplyTo}");
+            Console.WriteLine($"订阅的消息收件箱 {Packet.Message.Inbox}");
 
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
@@ -166,6 +176,8 @@ namespace Hunter.STAN.Client
             _channel.WriteAndFlushAsync(Packet).GetAwaiter().GetResult();
 
             var SubscriptionResponseResult = SubscriptionResponseReady.Task.GetAwaiter().GetResult();
+
+            _localSubscriptionConfig[Packet.Message.Inbox] = new STANSubscriptionConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox, handler);
 
             return SubscriptionResponseResult;
         }
@@ -241,14 +253,20 @@ namespace Hunter.STAN.Client
             return bootstrapChannel.WriteAndFlushAsync(Packet);
         }
 
-        public Task AckAsync(string subject, ulong sequence)
+        public void AckAsync(IChannel channel, MsgProtoPacket msg)
         {
-            var AckInbox = string.Empty;
+            if (_localSubscriptionConfig.TryGetValue(msg.Subject, out var subscriptionConfig))
+            {
 
-            var Packet = new AckPacket(AckInbox, subject, sequence);
+                subscriptionConfig.Handler(msg.Message.Data.ToByteArray());
 
-            //发送消息成功处理
-            return _channel.WriteAndFlushAsync(Packet);
+                var Packet = new AckPacket(subscriptionConfig.AckInbox, msg.Message.Subject, msg.Message.Sequence);
+
+                //发送消息成功处理
+                _channel.WriteAndFlushAsync(Packet);
+
+                //channel.Pipeline.FireChannelReadComplete();
+            }
         }
 
         public async Task<CloseResponsePacket> CloseRequestAsync(string inboxId)

@@ -150,8 +150,15 @@ namespace DotNetty.Codecs.STAN
                 var currentByte = input.ReadByte();
                 if (currentByte == STANConstants.NEWLINES_CR)
                 {
-                    if (input.ReadByte() == STANConstants.NEWLINES_LF) break;
-                    throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+                    var nextByte = input.ReadByte();
+                    if (nextByte == STANConstants.NEWLINES_LF) break;
+                    //TODO:待分析,如果内容中包含了/r/n 如何处理,这里应该跳过继续寻找
+                    if (input.ReadableBytes < 2)
+                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+                    //TODO:如果不是结束字符,需要把字节流写入BYTE
+                    payload[i] = currentByte;
+                    payload[++i] = nextByte;
+
                 }
                 else
                 {
