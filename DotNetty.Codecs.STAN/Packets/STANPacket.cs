@@ -34,12 +34,6 @@ namespace DotNetty.Codecs.STAN.Packets
         [DataMember(Name = "replyTo")]
         public string ReplyTo { get; set; }
 
-        // <summary>
-        /// 主题回复标识
-        /// </summary>
-        [DataMember(Name = "sid")]
-        public string SubscribeId { get; set; }
-
         /// <summary>
         /// 消息
         /// </summary>

@@ -41,7 +41,6 @@ namespace ConsoleSTANPush
                     .Option(ChannelOption.TcpNodelay, false)
                     .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                     {
-                        channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(4096));
                         channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                         channel.Pipeline.AddLast(new ErrorPacketHandler());
                         //channel.Pipeline.AddLast(new MessagePacketHandler(AckAsync));

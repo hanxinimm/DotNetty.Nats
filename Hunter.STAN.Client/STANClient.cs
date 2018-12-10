@@ -86,7 +86,7 @@ namespace Hunter.STAN.Client
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
                     //TODO:考虑移除分隔符，采用读取分析的方式返回消息内容
-                    channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(409600));
+                    //channel.Pipeline.AddFirst(new STANDelimiterBasedFrameDecoder(409600));
                     channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                     channel.Pipeline.AddLast(new ErrorPacketHandler());
                     channel.Pipeline.AddLast(new HeartbeatPacketHandler(_heartbeatInboxId, HeartbeatACKAsync));

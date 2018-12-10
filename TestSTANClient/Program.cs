@@ -19,11 +19,19 @@ namespace TestSTANClient
 
             var client = new STANClient(options);
             await client.ContentcAsync("main-cluster", "TestClientId");
+            var lastValue = 0;
             var s = client.Subscription("test33", string.Empty, (bytes) =>
             {
-                Console.WriteLine(Encoding.UTF8.GetString(bytes));
+                var sss = Encoding.UTF8.GetString(bytes);
+                var nowValue = int.Parse(sss.Split(' ')[0]);
+                if (lastValue != 0 && (nowValue - lastValue) != 1)
+                {
+
+                }
+                lastValue = nowValue;
+                Console.WriteLine(nowValue);
             });
-            Console.WriteLine($"本地返回的订阅编号{s.SubscribeId}");
+            Console.WriteLine($"本地返回的订阅编号{s.ReplyTo}");
 
             //while (true)
             //{
