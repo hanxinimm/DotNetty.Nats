@@ -36,7 +36,6 @@ namespace DotNetty.Codecs.NATS
                             return;
                         }
                         output.Add(packet);
-                        this.Checkpoint(ParseState.Ready);
                         break;
                     case ParseState.Failed:
                         // read out data until connection is closed
@@ -66,6 +65,12 @@ namespace DotNetty.Codecs.NATS
 
             string signature = GetSignature(buffer);
 
+            if (string.IsNullOrWhiteSpace(signature))
+            {
+                packet = null;
+                return false;
+            }
+
             packet = DecodePacketInternal(buffer, signature, context);
 
             return packet != null;
@@ -82,8 +87,30 @@ namespace DotNetty.Codecs.NATS
                     case NATSConstants.FIELDDELIMITER_TAB:
                         return input.GetString(startIndex, i, Encoding.UTF8);
                     case NATSConstants.NEWLINES_CR:
-                        if (NATSConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
-                        throw new FormatException($"NATS Newlines is invalid.");
+                        if (NATSConstants.NEWLINES_LF == input.ReadByte())
+                        {
+                            //只有OK,PING,PONG支持换行符结尾
+                            switch (input.GetString(startIndex, i, Encoding.UTF8))
+                            {
+                                case NATSSignatures.OK:
+                                    return NATSSignatures.OK;
+                                case NATSSignatures.PING:
+                                    return NATSSignatures.PING;
+                                case NATSSignatures.PONG:
+                                    return NATSSignatures.PONG;
+                                default:
+#if DEBUG
+                                    throw new FormatException($"STAN Newlines is invalid.");
+#else
+                                    return string.Empty;
+#endif
+                            }
+                        }
+#if DEBUG
+                        throw new FormatException($"STAN Newlines is invalid.");
+#else
+                    break;
+#endif
                     default:
                         break;
                 }
@@ -91,7 +118,33 @@ namespace DotNetty.Codecs.NATS
             return string.Empty;
         }
 
-        static string GetStringFromFieldDelimiters(IByteBuffer input, string packetSignature)
+        static bool TryGetStringFromFieldDelimiter(IByteBuffer input, string packetSignature, out string value)
+        {
+            value = null;
+            int startIndex = input.ReaderIndex;
+            for (int i = 0; input.ReadableBytes > 0; i++)
+            {
+                switch (input.ReadByte())
+                {
+                    case NATSConstants.FIELDDELIMITER_SPACES:
+                    case NATSConstants.FIELDDELIMITER_TAB:
+                        value = input.GetString(startIndex, i, Encoding.UTF8);
+                        return true;
+                    case NATSConstants.NEWLINES_CR:
+                    case NATSConstants.NEWLINES_LF:
+#if DEBUG
+                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+#else
+                        return false;
+#endif
+                    default:
+                        break;
+                }
+            }
+            return false;
+        }
+
+        static string GetStringFromFieldDelimiter(IByteBuffer input, string packetSignature)
         {
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
@@ -107,7 +160,7 @@ namespace DotNetty.Codecs.NATS
                             input.SetReaderIndex(startIndex);
                             return string.Empty;
                         }
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
                     default:
                         break;
                 }
@@ -115,44 +168,66 @@ namespace DotNetty.Codecs.NATS
             return string.Empty;
         }
 
-        static string GetStringFromNewlineDelimiters(IByteBuffer input, string packetSignature)
+        static bool TryGetStringFromNewlineDelimiter(IByteBuffer input, string packetSignature, out string value)
         {
+            value = null;
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
                 if (input.ReadByte() == NATSConstants.NEWLINES_CR)
                 {
-                    if (NATSConstants.NEWLINES_LF == input.ReadByte()) return input.GetString(startIndex, i, Encoding.UTF8);
-                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                    if (NATSConstants.NEWLINES_LF == input.ReadByte())
+                    {
+                        value = input.GetString(startIndex, i, Encoding.UTF8);
+                        return true;
+                    }
+#if DEBUG
+                    throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+#else
+                    break;
+#endif
                 }
             }
-            return string.Empty;
+            return false;
         }
 
-        static byte[] GetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature)
+        static bool TryGetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature, out byte[] value)
         {
+            value = null;
+
+            if (input.ReadableBytes < payloadSize + 2)
+            {
+                return false;
+            }
+
             if (payloadSize == 0)
             {
-                if (input.ReadByte() == NATSConstants.NEWLINES_CR && input.ReadByte() == NATSConstants.NEWLINES_LF) return new byte[0];
-                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                if (input.ReadByte() == NATSConstants.NEWLINES_CR && input.ReadByte() == NATSConstants.NEWLINES_LF)
+                {
+                    value = new byte[0];
+                    return false;
+                }
+#if DEBUG
+                throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+#endif
             }
 
+            if (input.GetByte(input.ReaderIndex + payloadSize) != NATSConstants.NEWLINES_CR || input.GetByte(input.ReaderIndex + payloadSize + 1) != NATSConstants.NEWLINES_LF)
+#if DEBUG
+                throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+#else
+                    return false;
+#endif
 
-            var payload = new byte[payloadSize];
-            for (int i = 0; input.ReadableBytes > 0; i++)
+            value = new byte[payloadSize];
+            for (int i = 0; payloadSize > i; i++)
             {
-                var currentByte = input.ReadByte();
-                if (currentByte == NATSConstants.NEWLINES_CR)
-                {
-                    if (input.ReadByte() == NATSConstants.NEWLINES_LF) break;
-                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-                }
-                else
-                {
-                    payload[i] = currentByte;
-                }
+                value[i] = input.ReadByte();
             }
-            return payload;
+
+            //跳过消息结尾的NEWLINES_CR和NEWLINES_LF字符
+            input.SkipBytes(2);
+            return true;
         }
 
         static NATSPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
@@ -180,33 +255,50 @@ namespace DotNetty.Codecs.NATS
 
         static NATSPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            return InfoPacket.CreateFromJson(DecodeString(buffer));
+            if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.INFO, out var infoJson))
+            {
+                return InfoPacket.CreateFromJson(infoJson);
+            }
+            return null;
         }
 
         static NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
 
-            var MSGPacket = new MessagePacket
+            if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.MSG, out var subject))
             {
-                Subject = GetStringFromFieldDelimiters(buffer, NATSSignatures.MSG),
-                SubscribeId = GetStringFromFieldDelimiters(buffer, NATSSignatures.MSG),
-                ReplyTo = GetStringFromFieldDelimiters(buffer, NATSSignatures.MSG)
-            };
+                var ReplyTo = GetStringFromFieldDelimiter(buffer, NATSSignatures.MSG);
 
-            if (int.TryParse(GetStringFromNewlineDelimiters(buffer, NATSSignatures.MSG), out int payloadSize))
-            {
-                MSGPacket.Payload = GetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.MSG);
+                if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.MSG, out var payloadSizeString))
+                {
 
-                return MSGPacket;
+                    if (int.TryParse(payloadSizeString, out int payloadSize))
+                    {
+                        if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.MSG, out var payload))
+                        {
+
+                            return new MessagePacket
+                            {
+                                Subject = subject,
+                                ReplyTo = ReplyTo,
+                                PayloadSize = payloadSize,
+                                Payload = payload
+                            };
+                        }
+                    }
+                }
             }
 
             return null;
-
         }
 
         static NATSPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            return new ErrorPacket(DecodeStringNew(buffer));
+            if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.ERR, out var error))
+            {
+                return new ErrorPacket(error);
+            }
+            return null;
         }
 
         static NATSPacket DecodeOKPacket(IByteBuffer buffer, IChannelHandlerContext context)
@@ -219,44 +311,9 @@ namespace DotNetty.Codecs.NATS
             return new PingPacket();
         }
 
-        static PongPacket DecodePongPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        static NATSPacket DecodePongPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             return new PongPacket();
-        }
-
-        static string DecodeString(IByteBuffer buffer) => DecodeString(buffer, 0, 20480);
-
-        static string DecodeString(IByteBuffer buffer, int minBytes, int maxBytes)
-        {
-            int size = buffer.ReadableBytes;
-
-            if (size < minBytes)
-            {
-                throw new DecoderException($"String value is shorter than minimum allowed {minBytes}. Advertised length: {size}");
-            }
-            if (size > maxBytes)
-            {
-                throw new DecoderException($"String value is longer than maximum allowed {maxBytes}. Advertised length: {size}");
-            }
-
-            if (size <= 0)
-            {
-                return string.Empty;
-            }
-
-            return buffer.ReadBytes(size).ToString(Encoding.UTF8);
-        }
-
-        static string DecodeStringNew(IByteBuffer buffer)
-        {
-            int size = buffer.ReadableBytes;
-
-            if (size <= 0)
-            {
-                return string.Empty;
-            }
-
-            return buffer.ReadBytes(size).ToString(Encoding.UTF8);
         }
     }
 }

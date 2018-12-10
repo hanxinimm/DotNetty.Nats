@@ -27,8 +27,6 @@ namespace DotNetty.Codecs.STAN
         {
             try
             {
-                //重构增加容错性
-                //只要不符合解析规范就默认抛弃消息返回null
                 switch (this.State)
                 {
                     case ParseState.Ready:
@@ -39,6 +37,7 @@ namespace DotNetty.Codecs.STAN
                         }
                         output.Add(packet);
                         break;
+                    //TODO:待分析什么情况下是错误的
                     case ParseState.Failed:
                         // read out data until connection is closed
                         input.SkipBytes(input.ReadableBytes);
@@ -216,7 +215,7 @@ namespace DotNetty.Codecs.STAN
 #endif
             }
 
-            if (input.GetByte(payloadSize) != STANConstants.NEWLINES_CR || input.GetByte(payloadSize + 1) != STANConstants.NEWLINES_LF)
+            if (input.GetByte(input.ReaderIndex + payloadSize) != STANConstants.NEWLINES_CR || input.GetByte(input.ReaderIndex + payloadSize + 1) != STANConstants.NEWLINES_LF)
 #if DEBUG
                 throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
 #else
@@ -325,10 +324,12 @@ namespace DotNetty.Codecs.STAN
             where TMessagePacket : MessagePacket<TMessage>, new()
             where TMessage : IMessage, new()
         {
-            var Packet = new TMessagePacket();
-            Packet.Subject = subject;
-            Packet.ReplyTo = replyTo;
-            Packet.PayloadSize = payloadSize;
+            var Packet = new TMessagePacket
+            {
+                Subject = subject,
+                ReplyTo = replyTo,
+                PayloadSize = payloadSize
+            };
 
             var Message = new TMessage();
             Message.MergeFrom(payload);
