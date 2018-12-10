@@ -13,6 +13,8 @@ namespace DotNetty.Codecs.NATS
 
     public sealed class NATSDecoder : ReplayingDecoder<ParseState>
     {
+        public static readonly NATSDecoder Instance = new NATSDecoder();
+
         public NATSDecoder()
             : base(ParseState.Ready)
         {

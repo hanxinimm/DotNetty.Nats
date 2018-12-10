@@ -76,7 +76,7 @@ namespace Hunter.NATS.Client
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
-                    channel.Pipeline.AddLast(NATSEncoder.Instance, new NATSDecoder());
+                    channel.Pipeline.AddLast(NATSNewEncoder.Instance, NATSDecoder.Instance);
                     channel.Pipeline.AddLast(new ErrorPacketHandler());
                     channel.Pipeline.AddLast(new MessagePacketHandler(MessageAsync));
                     channel.Pipeline.AddLast(new PingPacketHandler());

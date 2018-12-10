@@ -18,13 +18,17 @@ namespace TestSTANClient
 
             var client = new NATSClient(options);
             await client.ContentcAsync("main-cluster", "TestClientId");
-            //await client.PublishAsync("test33", null);
 
-            var SubscribeId = await client.SubscriptionAsync("foo-test", string.Empty, (bytes) =>
-            {
-                var sss = Encoding.UTF8.GetString(bytes);
-                Console.WriteLine("收到消息: " +sss);
-            });
+            //for (int i = 0; i < 100000; i++)
+            //{
+            //    await client.PublishAsync("test33", null);
+            //}
+            Console.WriteLine("发送一万条");
+            //var SubscribeId = await client.SubscriptionAsync("foo-test", string.Empty, (bytes) =>
+            //{
+            //    var sss = Encoding.UTF8.GetString(bytes);
+            //    Console.WriteLine("收到消息: " + sss);
+            //});
 
             //await client.UnSubscriptionAsync(SubscribeId, 5);
 
