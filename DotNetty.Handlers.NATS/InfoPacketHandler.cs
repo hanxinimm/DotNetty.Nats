@@ -4,14 +4,21 @@
 namespace DotNetty.Handlers.NATS
 {
     using System;
+    using System.Threading.Tasks;
     using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Transport.Channels;
+    using Newtonsoft.Json;
 
     public class InfoPacketHandler : SimpleChannelInboundHandler<InfoPacket>
     {
+        private readonly Action<InfoPacket> _infoCallback;
+        public InfoPacketHandler(Action<InfoPacket> infoCallback)
+        {
+            _infoCallback = infoCallback;
+        }
         protected override void ChannelRead0(IChannelHandlerContext contex, InfoPacket msg)
         {
-            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
+            _infoCallback(msg);
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)

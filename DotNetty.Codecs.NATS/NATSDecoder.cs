@@ -13,14 +13,10 @@ namespace DotNetty.Codecs.NATS
 
     public sealed class NATSDecoder : ReplayingDecoder<ParseState>
     {
-        readonly bool isServer;
-        readonly int maxMessageSize;
-
-        public NATSDecoder(bool isServer, int maxMessageSize)
+        public NATSDecoder()
             : base(ParseState.Ready)
         {
-            this.isServer = isServer;
-            this.maxMessageSize = maxMessageSize;
+
         }
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
@@ -100,14 +96,14 @@ namespace DotNetty.Codecs.NATS
                                     return NATSSignatures.PONG;
                                 default:
 #if DEBUG
-                                    throw new FormatException($"STAN Newlines is invalid.");
+                                    throw new FormatException($"NATS Newlines is invalid.");
 #else
                                     return string.Empty;
 #endif
                             }
                         }
 #if DEBUG
-                        throw new FormatException($"STAN Newlines is invalid.");
+                        throw new FormatException($"NATS Newlines is invalid.");
 #else
                     break;
 #endif
@@ -133,7 +129,7 @@ namespace DotNetty.Codecs.NATS
                     case NATSConstants.NEWLINES_CR:
                     case NATSConstants.NEWLINES_LF:
 #if DEBUG
-                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
 #else
                         return false;
 #endif
@@ -160,7 +156,7 @@ namespace DotNetty.Codecs.NATS
                             input.SetReaderIndex(startIndex);
                             return string.Empty;
                         }
-                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
                     default:
                         break;
                 }
@@ -182,7 +178,7 @@ namespace DotNetty.Codecs.NATS
                         return true;
                     }
 #if DEBUG
-                    throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
 #else
                     break;
 #endif
@@ -205,16 +201,16 @@ namespace DotNetty.Codecs.NATS
                 if (input.ReadByte() == NATSConstants.NEWLINES_CR && input.ReadByte() == NATSConstants.NEWLINES_LF)
                 {
                     value = new byte[0];
-                    return false;
+                    return true;
                 }
 #if DEBUG
-                throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
 #endif
             }
 
             if (input.GetByte(input.ReaderIndex + payloadSize) != NATSConstants.NEWLINES_CR || input.GetByte(input.ReaderIndex + payloadSize + 1) != NATSConstants.NEWLINES_LF)
 #if DEBUG
-                throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
+                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
 #else
                     return false;
 #endif
@@ -267,23 +263,27 @@ namespace DotNetty.Codecs.NATS
 
             if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.MSG, out var subject))
             {
-                var ReplyTo = GetStringFromFieldDelimiter(buffer, NATSSignatures.MSG);
-
-                if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.MSG, out var payloadSizeString))
+                if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.MSG, out var subscribeId))
                 {
+                    var ReplyTo = GetStringFromFieldDelimiter(buffer, NATSSignatures.MSG);
 
-                    if (int.TryParse(payloadSizeString, out int payloadSize))
+                    if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.MSG, out var payloadSizeString))
                     {
-                        if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.MSG, out var payload))
-                        {
 
-                            return new MessagePacket
+                        if (int.TryParse(payloadSizeString, out int payloadSize))
+                        {
+                            if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.MSG, out var payload))
                             {
-                                Subject = subject,
-                                ReplyTo = ReplyTo,
-                                PayloadSize = payloadSize,
-                                Payload = payload
-                            };
+
+                                return new MessagePacket
+                                {
+                                    Subject = subject,
+                                    SubscribeId = subscribeId,
+                                    ReplyTo = ReplyTo,
+                                    PayloadSize = payloadSize,
+                                    Payload = payload
+                                };
+                            }
                         }
                     }
                 }

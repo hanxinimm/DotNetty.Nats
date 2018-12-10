@@ -1,39 +1,26 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace DotNetty.Handlers.STAN
+namespace DotNetty.Handlers.NATS
 {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using DotNetty.Codecs.STAN.Packets;
-    using DotNetty.Codecs.STAN.Protocol;
+    using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Transport.Channels;
-    using Google.Protobuf;
 
-    public class ReplyPacketHandler<TPacket> : SimpleChannelInboundHandler<TPacket>
-        where TPacket : STANPacket
+    public class WaitPacketHandler<TPacket> : SimpleChannelInboundHandler<TPacket>
+        //where TPacket : NATSPacket
     {
-        static int MessageCount = 0;
-
-        private readonly string _replyTo;
         private readonly TaskCompletionSource<TPacket> _completionSource;
-        public ReplyPacketHandler(string replyTo, TaskCompletionSource<TPacket> completionSource)
+        public WaitPacketHandler(TaskCompletionSource<TPacket> completionSource)
         {
-            _replyTo = replyTo;
             _completionSource = completionSource;
         }
 
         protected override void ChannelRead0(IChannelHandlerContext contex, TPacket msg)
         {
-            if (msg.Subject == _replyTo)
-            {
-                _completionSource.SetResult(msg);
-            }
-            else
-            {
-                contex.FireChannelRead(msg);
-            }
+            _completionSource.SetResult(msg);
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)

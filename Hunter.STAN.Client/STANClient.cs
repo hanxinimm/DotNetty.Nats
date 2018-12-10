@@ -267,8 +267,6 @@ namespace Hunter.STAN.Client
 
                 //发送消息成功处理
                 _channel.WriteAndFlushAsync(Packet);
-
-                //channel.Pipeline.FireChannelReadComplete();
             }
         }
 

@@ -18,13 +18,13 @@ namespace DotNetty.Codecs.NATS.Packets
             Subject = subject;
         }
 
-        public PublishPacket(string subject, IByteBuffer payload)
+        public PublishPacket(string subject, byte[] payload)
         {
             Subject = subject;
             Payload = payload;
         }
 
-        public PublishPacket(string subject, string replyTo, IByteBuffer payload)
+        public PublishPacket(string subject, string replyTo, byte[] payload)
         {
             Subject = subject;
             ReplyTo = replyTo;
@@ -47,12 +47,12 @@ namespace DotNetty.Codecs.NATS.Packets
         /// 以字节为单位的有效载荷大小
         /// </summary>
         [IgnoreDataMember]
-        public int PayloadLength { get { return this.Payload.WritableBytes; } }
+        public int PayloadLength { get { return this.Payload?.Length ?? 0; } }
 
         /// <summary>
         /// 消息有效载荷数据
         /// </summary>
         [DataMember(Name = "payload")]
-        public IByteBuffer Payload { get; set; }
+        public byte[] Payload { get; set; }
     }
 }

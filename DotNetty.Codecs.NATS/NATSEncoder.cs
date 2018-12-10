@@ -103,13 +103,11 @@ namespace DotNetty.Codecs.NATS
 
             int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
             variablePartSize += (ReplyToBytes.Length > 0 ? ReplyToBytes.Length + SPACES_BYTES.Length : 0);
-            
-            IByteBuffer Payload = packet.Payload ?? Unpooled.Empty;
 
-            byte[] PayloadSize = EncodeStringInUtf8(Payload.ReadableBytes.ToString());
+            byte[] PayloadSize = EncodeStringInUtf8(packet.PayloadLength.ToString());
 
             variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
-            variablePartSize += Payload.ReadableBytes + CRLF_BYTES.Length;
+            variablePartSize += packet.PayloadLength + CRLF_BYTES.Length;
 
             int fixedHeaderBufferSize = PUB_BYTES.Length + SPACES_BYTES.Length;
 
@@ -130,7 +128,7 @@ namespace DotNetty.Codecs.NATS
                 buf.WriteBytes(CRLF_BYTES);
                 if (packet.Payload != null)
                 {
-                    buf.WriteBytes(Payload);
+                    buf.WriteBytes(packet.Payload);
                 }
                 buf.WriteBytes(CRLF_BYTES);
 

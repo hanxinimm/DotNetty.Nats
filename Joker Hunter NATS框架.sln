@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.27703.2018
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hunter.NATS.Client", "Hunter.NATS.Client\Hunter.NATS.Client.csproj", "{31559577-D23B-4FB9-B366-06F1135D31A7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hunter.NATS.Client.Abstractions", "Hunter.NATS.Client.Abstractions\Hunter.NATS.Client.Abstractions.csproj", "{288D5941-CC61-483E-AADE-24BBE5D80F1D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Codecs.NATS", "DotNetty.Codecs.NATS\DotNetty.Codecs.NATS.csproj", "{AF964607-E817-4A5E-A907-24F90FBFC030}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleNATSPush", "ConsoleAppPush\ConsoleNATSPush.csproj", "{3653D8C2-08F4-43B7-B1BF-060AD397779D}"
@@ -33,10 +31,6 @@ Global
 		{31559577-D23B-4FB9-B366-06F1135D31A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{31559577-D23B-4FB9-B366-06F1135D31A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{31559577-D23B-4FB9-B366-06F1135D31A7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{288D5941-CC61-483E-AADE-24BBE5D80F1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{288D5941-CC61-483E-AADE-24BBE5D80F1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{288D5941-CC61-483E-AADE-24BBE5D80F1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{288D5941-CC61-483E-AADE-24BBE5D80F1D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AF964607-E817-4A5E-A907-24F90FBFC030}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AF964607-E817-4A5E-A907-24F90FBFC030}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF964607-E817-4A5E-A907-24F90FBFC030}.Release|Any CPU.ActiveCfg = Release|Any CPU

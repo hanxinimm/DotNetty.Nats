@@ -208,7 +208,7 @@ namespace DotNetty.Codecs.STAN
                 if (input.ReadByte() == STANConstants.NEWLINES_CR && input.ReadByte() == STANConstants.NEWLINES_LF)
                 {
                     value = new byte[0];
-                    return false;
+                    return true;
                 }
 #if DEBUG
                 throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
