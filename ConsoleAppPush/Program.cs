@@ -45,7 +45,6 @@ namespace ConsoleAppPush
                         //    pipeline.AddLast(new TlsHandler(stream => new SslStream(stream, true, (sender, certificate, chain, errors) => true), new ClientTlsSettings(targetHost)));
                         //}
 
-                        channel.Pipeline.AddLast(new NATSDelimiterBasedFrameDecoder(1024));
                         channel.Pipeline.AddLast(NATSEncoder.Instance, new NATSDecoder(true, 20480));
                         channel.Pipeline.AddLast(new PingPacketHandler(), new PongPacketHandler(), new OKPacketHandler(), new MessagePacketHandler(), new InfoPacketHandler(), new ErrorPacketHandler());
                     }));

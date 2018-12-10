@@ -6,12 +6,13 @@ namespace DotNetty.Handlers.STAN
     using System;
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Transport.Channels;
+    using Newtonsoft.Json;
 
     public class InfoPacketHandler : SimpleChannelInboundHandler<InfoPacket>
     {
         protected override void ChannelRead0(IChannelHandlerContext contex, InfoPacket msg)
         {
-            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(msg));
+            Console.WriteLine(JsonConvert.SerializeObject(msg));
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)

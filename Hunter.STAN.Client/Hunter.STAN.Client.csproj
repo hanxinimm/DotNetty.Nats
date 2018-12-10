@@ -1,12 +1,42 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+
   <ItemGroup>
-    <ProjectReference Include="..\DotNetty.Codecs.STAN\DotNetty.Codecs.STAN.csproj" />
-    <ProjectReference Include="..\DotNetty.Handlers.STAN\DotNetty.Handlers.STAN.csproj" />
+    <Compile Include="..\DotNetty.Codecs.STAN\*.cs">
+      <Link>Codecs\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.STAN\Packets\*.cs">
+      <Link>Codecs\Packets\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.STAN\Protocol\*.cs">
+      <Link>Codecs\Protocol\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Handlers.STAN\*.cs">
+      <Link>Handlers\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATS\NATSSignatures.cs" Link="NATSSignatures.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetty.Codecs" Version="0.6.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.6.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
   </ItemGroup>
 
 </Project>
