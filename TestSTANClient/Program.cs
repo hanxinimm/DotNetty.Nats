@@ -19,10 +19,25 @@ namespace TestSTANClient
             var client = new NATSClient(options);
             await client.ContentcAsync("main-cluster", "TestClientId");
 
-            //for (int i = 0; i < 100000; i++)
-            //{
-            //    await client.PublishAsync("test33", null);
-            //}
+            for (int j = 0; j < 5; j++)
+            {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start(); //  开始监视代码运行时间
+
+                for (int i = 0; i < 10; i++)
+                {
+                    await client.PublishAsync("test33", null);
+                }
+
+
+                stopwatch.Stop(); //  停止监视  
+
+                //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
+                Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
+
+            }
+
+
             Console.WriteLine("发送一万条");
             //var SubscribeId = await client.SubscriptionAsync("foo-test", string.Empty, (bytes) =>
             //{

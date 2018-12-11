@@ -67,7 +67,7 @@ namespace DotNetty.Codecs.NATS.Packets
         /// <summary>
         /// 客户端可以连接到的服务器URL的可选列表。
         /// </summary>
-        [DataMember]
+        [DataMember(Name = "connect_urls")]
         public string[] ClusterRoutes { get; set; }
 
         public static InfoPacket CreateFromJson(string json)
