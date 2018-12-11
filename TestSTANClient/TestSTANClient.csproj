@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Hunter.NATS.Client\Hunter.NATS.Client.csproj" />
+    <PackageReference Include="Hunter.NATS.Client" Version="1.0.1.435" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Hunter.STAN.Client\Hunter.STAN.Client.csproj" />
   </ItemGroup>
 

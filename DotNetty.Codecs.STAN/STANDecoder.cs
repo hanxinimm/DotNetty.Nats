@@ -71,8 +71,6 @@ namespace DotNetty.Codecs.STAN
                 return false;
             }
 
-            DebugLogger.LogSignature(signature);
-
             packet = DecodePacketInternal(buffer, signature, context);
 
             return packet != null;

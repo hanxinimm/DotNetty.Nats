@@ -24,7 +24,7 @@ namespace TestSTANClient
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start(); //  开始监视代码运行时间
 
-                for (int i = 0; i < 10; i++)
+                for (int i = 0; i < 200000; i++)
                 {
                     await client.PublishAsync("test33", null);
                 }
