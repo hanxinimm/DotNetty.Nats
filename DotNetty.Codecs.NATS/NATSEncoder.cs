@@ -147,16 +147,12 @@ namespace DotNetty.Codecs.NATS
             byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
             byte[] GroupBytes = EncodeStringInUtf8(packet.Group);
 
-            int variablePartSize = IdBytes.Length + SPACES_BYTES.Length;
+            int variablePartSize = IdBytes.Length + CRLF_BYTES.Length;
             variablePartSize += SubjectNameBytes.Length + SPACES_BYTES.Length;
 
             if (GroupBytes.Length > 0)
             {
                 variablePartSize += GroupBytes.Length + SPACES_BYTES.Length;
-            }
-            else
-            {
-                variablePartSize += SPACES_BYTES.Length;
             }
 
             int fixedHeaderBufferSize = SUB_BYTES.Length + SPACES_BYTES.Length;
@@ -172,10 +168,6 @@ namespace DotNetty.Codecs.NATS
                 if (GroupBytes.Length > 0)
                 {
                     buf.WriteBytes(GroupBytes);
-                    buf.WriteBytes(SPACES_BYTES);
-                }
-                else
-                {
                     buf.WriteBytes(SPACES_BYTES);
                 }
                 buf.WriteBytes(IdBytes);
@@ -195,11 +187,11 @@ namespace DotNetty.Codecs.NATS
             byte[] IdBytes = EncodeStringInUtf8(packet.Id);
             byte[] WaitMessagesBytes = EncodeStringInUtf8(packet.WaitMessages?.ToString() ?? string.Empty);
 
-            int variablePartSize = IdBytes.Length + SPACES_BYTES.Length;
+            int variablePartSize = IdBytes.Length + CRLF_BYTES.Length;
 
             if (WaitMessagesBytes.Length > 0)
             {
-                variablePartSize += WaitMessagesBytes.Length + SPACES_BYTES.Length;
+                variablePartSize += SPACES_BYTES.Length + WaitMessagesBytes.Length;
             }
 
             int fixedHeaderBufferSize = UNSUB_BYTES.Length + SPACES_BYTES.Length;
@@ -232,7 +224,7 @@ namespace DotNetty.Codecs.NATS
             IByteBuffer buf = null;
             try
             {
-                buf = bufferAllocator.Buffer(PING_BYTES.Length);
+                buf = bufferAllocator.Buffer(PING_BYTES.Length + CRLF_BYTES.Length);
                 buf.WriteBytes(PING_BYTES);
                 buf.WriteBytes(CRLF_BYTES);
 
@@ -250,7 +242,7 @@ namespace DotNetty.Codecs.NATS
             IByteBuffer buf = null;
             try
             {
-                buf = bufferAllocator.Buffer(PONG_BYTES.Length);
+                buf = bufferAllocator.Buffer(PONG_BYTES.Length + CRLF_BYTES.Length);
                 buf.WriteBytes(PONG_BYTES);
                 buf.WriteBytes(CRLF_BYTES);
 

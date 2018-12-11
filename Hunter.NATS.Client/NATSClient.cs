@@ -100,7 +100,7 @@ namespace Hunter.NATS.Client
         private async Task<InfoPacket> ConnectAsync()
         {
 
-            var Packet = new ConnectPacket(false, false, false, null, null, "test-client", null);
+            var Packet = new ConnectPacket(true, false, false, null, null, _clientId, null);
 
             _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
 
@@ -114,7 +114,7 @@ namespace Hunter.NATS.Client
 
         public async Task<string> SubscriptionAsync(string subject, string queueGroup, Action<byte[]> handler)
         {
-            var SubscribeId = $"SUB{Interlocked.Increment(ref _subscribeId)}";
+            var SubscribeId = $"sid{Interlocked.Increment(ref _subscribeId)}";
 
             _localSubscriptionConfig[SubscribeId] = new NATSSubscriptionConfig(subject, SubscribeId, handler);
 
@@ -136,10 +136,12 @@ namespace Hunter.NATS.Client
             }
         }
 
-        public async Task UnSubscriptionAsync(string subscribeId, int max_msgs)
+        public async Task AutoUnSubscriptionAsync(string subscribeId, int max_msgs)
         {
-            if (_localSubscriptionConfig.Remove(subscribeId))
+            if (_localSubscriptionConfig.TryGetValue(subscribeId, out var subscriptionConfig))
             {
+                subscriptionConfig.MaxProcessed = max_msgs;
+
                 var UnSubscribePacket = new UnSubscribePacket(subscribeId, max_msgs);
 
                 await _channel.WriteAndFlushAsync(UnSubscribePacket);
@@ -159,6 +161,21 @@ namespace Hunter.NATS.Client
             return _channel.WriteAndFlushAsync(Packet);
         }
 
+
+        public Task PingAsync()
+        {
+            var Packet = new PingPacket();
+
+            return _channel.WriteAndFlushAsync(Packet);
+        }
+
+        public Task PongAsync()
+        {
+            var Packet = new PongPacket();
+
+            return _channel.WriteAndFlushAsync(Packet);
+        }
+
         protected void InfoAsync(InfoPacket info)
         {
             _infoTaskCompletionSource.TrySetResult(info);
@@ -168,6 +185,14 @@ namespace Hunter.NATS.Client
         {
             if (_localSubscriptionConfig.TryGetValue(message.SubscribeId, out var subscriptionConfig))
             {
+                if (subscriptionConfig.MaxProcessed.HasValue)
+                {
+                    subscriptionConfig.MaxProcessed--;
+
+                    if (subscriptionConfig.MaxProcessed <= 0)
+                        _localSubscriptionConfig.Remove(message.SubscribeId);
+                }
+
                 subscriptionConfig.Handler(message.Payload);
             }
         }

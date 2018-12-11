@@ -21,6 +21,11 @@ namespace Hunter.NATS.Client
         /// 订阅编号
         /// </summary>
         public string SubscribeId { get; }
+
+        /// <summary>
+        /// 等待处理的最大消息数
+        /// </summary>
+        public int? MaxProcessed { get; set; }
         /// <summary>
         /// 处理程序
         /// </summary>

@@ -19,33 +19,50 @@ namespace TestSTANClient
             var client = new NATSClient(options);
             await client.ContentcAsync("main-cluster", "TestClientId");
 
-            for (int j = 0; j < 5; j++)
-            {
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start(); //  开始监视代码运行时间
-
-                for (int i = 0; i < 200000; i++)
-                {
-                    await client.PublishAsync("test33", null);
-                }
-
-
-                stopwatch.Stop(); //  停止监视  
-
-                //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
-                Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
-
-            }
-
-
-            Console.WriteLine("发送一万条");
-            //var SubscribeId = await client.SubscriptionAsync("foo-test", string.Empty, (bytes) =>
+            //for (int j = 0; j < 8; j++)
             //{
-            //    var sss = Encoding.UTF8.GetString(bytes);
-            //    Console.WriteLine("收到消息: " + sss);
+            //    Stopwatch stopwatch = new Stopwatch();
+            //    stopwatch.Start(); //  开始监视代码运行时间
+
+            //    await client.PublishAsync("test33", Encoding.UTF8.GetBytes("测试消息"));
+
+            //    stopwatch.Stop(); //  停止监视  
+
+            //    //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
+            //    Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
+
+            //    Console.ReadLine();
+
+            //}
+
+            //await client.PongAsync();
+
+            //Console.WriteLine("发送一万条");
+            var SubscribeId = await client.SubscriptionAsync("foo-test", string.Empty, (bytes) =>
+            {
+                var sss = Encoding.UTF8.GetString(bytes);
+                Console.WriteLine("收到消息: " + sss);
+            });
+
+            //await Task.Factory.StartNew(async () =>
+            //{
+            //    await Task.Delay(TimeSpan.FromSeconds(5));
+
+            //    Console.WriteLine("取消订阅");
+
+            //    await client.UnSubscriptionAsync(SubscribeId);
             //});
 
-            //await client.UnSubscriptionAsync(SubscribeId, 5);
+            await Task.Factory.StartNew(async () =>
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                Console.WriteLine("收到5条消息取消订阅");
+
+                await client.AutoUnSubscriptionAsync(SubscribeId, 5);
+            });
+
+
 
             Console.ReadLine();
         }
