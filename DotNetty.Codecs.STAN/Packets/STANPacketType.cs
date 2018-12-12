@@ -67,6 +67,10 @@ namespace DotNetty.Codecs.STAN.Packets
         /// </summary>
         UnsubscribeRequest,
         /// <summary>
+        /// Server	Result of a Unsubscribe request
+        /// </summary>
+        UnsubscribeResponse,
+        /// <summary>
         /// Client	Publish a message to a subject, with optional reply subject
         /// </summary>
         PubMsg,

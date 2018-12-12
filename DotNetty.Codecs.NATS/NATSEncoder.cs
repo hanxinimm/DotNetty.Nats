@@ -95,9 +95,6 @@ namespace DotNetty.Codecs.NATS
 
         static void EncodePublishMessage(IByteBufferAllocator bufferAllocator, PublishPacket packet, List<object> output)
         {
-
-            packet.ValidateTopicName();
-
             byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
             byte[] ReplyToBytes = EncodeStringInUtf8(packet.ReplyTo);
 

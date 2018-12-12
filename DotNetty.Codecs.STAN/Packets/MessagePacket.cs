@@ -9,9 +9,31 @@ using System.Text;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public abstract class MessagePacket<TMessage> : STANPacket<TMessage>
+    public abstract class MessagePacket<TMessage> : MessagePacket
         where TMessage : IMessage
     {
+        /// <summary>
+        /// 消息
+        /// </summary>
+        [DataMember(Name = "message")]
+        public TMessage Message { get; set; }
+    }
+
+    [DataContract]
+    public abstract class MessagePacket : STANPacket
+    {
+        // <summary>
+        /// 主题
+        /// </summary>
+        [DataMember(Name = "subject")]
+        public string Subject { get; set; }
+
+        // <summary>
+        /// 主题回复标识
+        /// </summary>
+        [DataMember(Name = "replyTo")]
+        public string ReplyTo { get; set; }
+
         [IgnoreDataMember]
         public override STANPacketType PacketType => STANPacketType.MSG;
 

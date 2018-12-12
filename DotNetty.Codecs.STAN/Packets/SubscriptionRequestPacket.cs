@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DotNetty.Codecs.STAN.Packets
 {
-    public class SubscriptionRequestPacket : STANPacket<SubscriptionRequest>
+    public class SubscriptionRequestPacket : MessagePacket<SubscriptionRequest>
     {
         public SubscriptionRequestPacket(string inboxId, string subRequests, string clientID, string subject, string queueGroup, string inbox, int maxInFlight,
             int ackWaitInSeconds, string durableName, StartPosition startPosition)

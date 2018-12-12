@@ -13,12 +13,6 @@ namespace DotNetty.Codecs.STAN.Packets
         [IgnoreDataMember]
         public abstract STANPacketType PacketType { get; }
 
-        // <summary>
-        /// 主题
-        /// </summary>
-        [DataMember(Name = "subject")]
-        public string Subject { get; set; }
-
         public override string ToString()
         {
             return $"{this.GetType().Name}[Type={this.PacketType}]";
@@ -26,26 +20,14 @@ namespace DotNetty.Codecs.STAN.Packets
     }
 
     [DataContract]
-    public abstract class STANPacket<TMessage> : STANPacket where TMessage : IMessage
-    {
-        // <summary>
-        /// 主题回复标识
-        /// </summary>
-        [DataMember(Name = "replyTo")]
-        public string ReplyTo { get; set; }
-
-        /// <summary>
-        /// 消息
-        /// </summary>
-        [DataMember(Name = "message")]
-        public TMessage Message { get; set; }
-
-    }
-
-
-    [DataContract]
     public abstract class STANSubscribePacket : STANPacket
     {
+        // <summary>
+        /// 主题
+        /// </summary>
+        [DataMember(Name = "subject")]
+        public string Subject { get; set; }
+
         /// <summary>
         /// 唯一的字母数字订阅ID
         /// </summary>

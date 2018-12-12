@@ -12,10 +12,8 @@ namespace DotNetty.Handlers.STAN
     using Google.Protobuf;
 
     public class ReplyPacketHandler<TPacket> : SimpleChannelInboundHandler<TPacket>
-        where TPacket : STANPacket
+        where TPacket : MessagePacket
     {
-        static int MessageCount = 0;
-
         private readonly string _replyTo;
         private readonly TaskCompletionSource<TPacket> _completionSource;
         public ReplyPacketHandler(string replyTo, TaskCompletionSource<TPacket> completionSource)

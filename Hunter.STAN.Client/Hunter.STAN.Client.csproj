@@ -18,6 +18,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.STAN\Packets\Error\*.cs">
+      <Link>Codecs\Packets\Error\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.STAN\Packets\Error\DeadEnd\*.cs">
+      <Link>Codecs\Packets\Error\DeadEnd\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.STAN\Packets\Error\KeepAlive\*.cs">
+      <Link>Codecs\Packets\Error\KeepAlive\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\DotNetty.Codecs.STAN\Protocol\*.cs">
       <Link>Codecs\Protocol\%(RecursiveDir)%(FileName)</Link>
     </Compile>
@@ -30,6 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATS\NATSErrors.cs" Link="NATSErrors.cs" />
     <Compile Include="..\DotNetty.Codecs.NATS\NATSSignatures.cs" Link="NATSSignatures.cs" />
   </ItemGroup>
 

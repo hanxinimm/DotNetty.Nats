@@ -7,9 +7,9 @@ namespace DotNetty.Handlers.NATS
     using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Transport.Channels;
 
-    public class ErrorPacketHandler : SimpleChannelInboundHandler<ErrorPacket>
+    public class ErrorPacketHandler : SimpleChannelInboundHandler<UnknownErrorPacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext contex, ErrorPacket msg)
+        protected override void ChannelRead0(IChannelHandlerContext contex, UnknownErrorPacket msg)
         {
             Console.WriteLine(msg.Message);
         }

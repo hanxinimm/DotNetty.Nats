@@ -9,7 +9,7 @@ using System.Text;
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public class ConnectRequestPacket : STANPacket<ConnectRequest>
+    public class ConnectRequestPacket : MessagePacket<ConnectRequest>
     {
 
         /// <summary>

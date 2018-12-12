@@ -298,7 +298,52 @@ namespace DotNetty.Codecs.NATS
         {
             if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.ERR, out var error))
             {
-                return new ErrorPacket(error);
+                switch (error)
+                {
+                    case NATSErrors.UnknownProtocolOperation:
+                        return new UnknownProtocolOperationErrorPacket();
+                    case NATSErrors.AttemptedToConnectToRoutePort:
+                        return new AttemptedToConnectToRoutePortErrorPacket();
+                    case NATSErrors.AuthorizationViolation:
+                        return new AuthorizationViolationErrorPacket();
+                    case NATSErrors.AuthorizationTimeout:
+                        return new AuthorizationTimeoutErrorPacket();
+                    case NATSErrors.InvalidClientProtocol:
+                        return new InvalidClientProtocolErrorPacket();
+                    case NATSErrors.MaximumControlLineExceeded:
+                        return new MaximumControlLineExceededErrorPacket();
+                    case NATSErrors.ParserError:
+                        return new ParserErrorPacket();
+                    case NATSErrors.SecureConnection_TLSRequired:
+                        return new SecureConnectionTLSRequiredErrorPacket();
+                    case NATSErrors.StaleConnection:
+                        return new StaleConnectionErrorPacket();
+                    case NATSErrors.MaximumConnectionsExceeded:
+                        return new MaximumConnectionsExceededErrorPacket();
+                    case NATSErrors.SlowConsumer:
+                        return new SlowConsumerErrorPacket();
+                    case NATSErrors.MaximumPayloadViolation:
+                        return new MaximumPayloadViolationErrorPacket();
+
+                    case NATSErrors.InvalidSubject:
+                        return new InvalidSubjectErrorPacket();
+                    default:
+
+                        break;
+                }
+
+                var PublishSubjectError = NATSErrors.PermissionsViolationForPublish.Match(error);
+                if (PublishSubjectError.Success)
+                {
+                    return new PermissionsViolationForPublishErrorPacket(PublishSubjectError.Groups[1].Value);
+                }
+                var SubscriptionSubjectError = NATSErrors.PermissionsViolationForSubscription.Match(error);
+                if (SubscriptionSubjectError.Success)
+                {
+                    return new PermissionsViolationForSubscriptionErrorPacket(PublishSubjectError.Groups[1].Value);
+                }
+
+                return new UnknownErrorPacket(error);
             }
             return null;
         }

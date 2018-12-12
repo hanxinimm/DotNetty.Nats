@@ -9,7 +9,7 @@ namespace DotNetty.Handlers.STAN
 {
     public class MessagePacketHandler : SimpleChannelInboundHandler<MsgProtoPacket>
     {
-        private Action<IChannel,MsgProtoPacket> _messageAckCallback;
+        private readonly Action<IChannel,MsgProtoPacket> _messageAckCallback;
 
         public MessagePacketHandler(Action<IChannel, MsgProtoPacket> messageAckCallback)
         {

@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATS\NATSErrors.cs" Link="NATSErrors.cs" />
     <Compile Include="..\DotNetty.Codecs.NATS\NATSSignatures.cs" Link="NATSSignatures.cs" />
   </ItemGroup>
 

@@ -9,6 +9,7 @@ namespace DotNetty.Codecs.STAN
     using System.Runtime.CompilerServices;
     using System.Text;
     using DotNetty.Buffers;
+    using DotNetty.Codecs.NATS;
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Codecs.STAN.Protocol;
     using DotNetty.Transport.Channels;
@@ -87,7 +88,7 @@ namespace DotNetty.Codecs.STAN
                     case STANConstants.FIELDDELIMITER_TAB:
                         return input.GetString(startIndex, i, Encoding.UTF8);
                     case STANConstants.NEWLINES_CR:
-                        if (STANConstants.NEWLINES_LF == input.ReadByte())
+                        if (input.ReadableBytes > 0 && STANConstants.NEWLINES_LF == input.ReadByte())
                         {
                             //只有OK,PING,PONG支持换行符结尾
                             switch (input.GetString(startIndex, i, Encoding.UTF8))
@@ -102,7 +103,7 @@ namespace DotNetty.Codecs.STAN
 #if DEBUG
                                     throw new FormatException($"STAN Newlines is invalid.");
 #else
-                                    return string.Empty;;
+                                    return string.Empty;
 #endif
 
                             }
@@ -307,6 +308,8 @@ namespace DotNetty.Codecs.STAN
                     return GetMessagePacket<ConnectResponsePacket, ConnectResponse>(subject, replyTo, payloadSize, payload);
                 case STANInboxs.SubscriptionResponse:
                     return GetMessagePacket<SubscriptionResponsePacket, SubscriptionResponse>(subject, replyTo, payloadSize, payload);
+                case STANInboxs.UnSubscriptionResponse:
+                    return GetMessagePacket<UnSubscriptionResponsePacket>(subject, replyTo, payloadSize, payload);
                 case STANInboxs.PubAck:
                     return GetMessagePacket<PubAckPacket, PubAck>(subject, replyTo, payloadSize, payload);
                 case STANInboxs.MsgProto:
@@ -336,11 +339,66 @@ namespace DotNetty.Codecs.STAN
             return Packet;
         }
 
+        static STANPacket GetMessagePacket<TMessagePacket>(string subject, string replyTo, int payloadSize, byte[] payload)
+            where TMessagePacket : MessagePacket, new()
+        {
+            var Packet = new TMessagePacket
+            {
+                Subject = subject,
+                ReplyTo = replyTo
+            };
+            return Packet;
+        }
+
         static STANPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             if (TryGetStringFromNewlineDelimiter(buffer, STANSignatures.ERR, out var error))
             {
-                return new ErrorPacket(error);
+                switch (error)
+                {
+                    case NATSErrors.UnknownProtocolOperation:
+                        return new UnknownProtocolOperationErrorPacket();
+                    case NATSErrors.AttemptedToConnectToRoutePort:
+                        return new AttemptedToConnectToRoutePortErrorPacket();
+                    case NATSErrors.AuthorizationViolation:
+                        return new AuthorizationViolationErrorPacket();
+                    case NATSErrors.AuthorizationTimeout:
+                        return new AuthorizationTimeoutErrorPacket();
+                    case NATSErrors.InvalidClientProtocol:
+                        return new InvalidClientProtocolErrorPacket();
+                    case NATSErrors.MaximumControlLineExceeded:
+                        return new MaximumControlLineExceededErrorPacket();
+                    case NATSErrors.ParserError:
+                        return new ParserErrorPacket();
+                    case NATSErrors.SecureConnection_TLSRequired:
+                        return new SecureConnectionTLSRequiredErrorPacket();
+                    case NATSErrors.StaleConnection:
+                        return new StaleConnectionErrorPacket();
+                    case NATSErrors.MaximumConnectionsExceeded:
+                        return new MaximumConnectionsExceededErrorPacket();
+                    case NATSErrors.SlowConsumer:
+                        return new SlowConsumerErrorPacket();
+                    case NATSErrors.MaximumPayloadViolation:
+                        return new MaximumPayloadViolationErrorPacket();
+
+                    case NATSErrors.InvalidSubject:
+                        return new InvalidSubjectErrorPacket();
+                    default:
+
+                        break;
+                }
+
+                var PublishSubjectError = NATSErrors.PermissionsViolationForPublish.Match(error);
+                if (PublishSubjectError.Success)
+                {
+                    return new PermissionsViolationForPublishErrorPacket(PublishSubjectError.Groups[1].Value);
+                }
+                var SubscriptionSubjectError = NATSErrors.PermissionsViolationForSubscription.Match(error);
+                if (SubscriptionSubjectError.Success)
+                {
+                    return new PermissionsViolationForSubscriptionErrorPacket(PublishSubjectError.Groups[1].Value);
+                }
+                return new UnknownErrorPacket(error);
             }
             return null;
         }
