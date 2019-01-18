@@ -112,6 +112,20 @@ namespace Hunter.NATS.Client
 
         }
 
+        public async Task<string> SubscriptionAsync(string subject, string queueGroup, Action<byte[]> handler, string subscribeId = null)
+        {
+            var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
+
+            _localSubscriptionConfig[SubscribeId] = new NATSSubscriptionConfig(subject, SubscribeId, handler);
+
+            var SubscribePacket = new SubscribePacket(SubscribeId, subject, queueGroup);
+
+            await _channel.WriteAndFlushAsync(SubscribePacket);
+
+            return SubscribeId;
+
+        }
+
         public async Task<string> SubscriptionAsync(string subject, string queueGroup, Action<byte[]> handler)
         {
             var SubscribeId = $"sid{Interlocked.Increment(ref _subscribeId)}";

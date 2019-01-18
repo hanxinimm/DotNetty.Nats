@@ -164,19 +164,19 @@ namespace Hunter.STAN.Client
             await _channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
         }
 
-        public string Subscribe(string subject, string queueGroup, Action<byte[]> handler)
+        public string Subscribe(string subject, string queueGroup, string durableName, Action<byte[]> handler)
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
             //订阅侦听消息
             _channel.WriteAndFlushAsync(SubscribePacket).GetAwaiter().GetResult();
 
-            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _clientId, subject, queueGroup, SubscribePacket.Subject, 1024, 3, "KeepLast", StartPosition.LastReceived);
+            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _clientId, subject, queueGroup, SubscribePacket.Subject, 1024, 30, durableName, StartPosition.LastReceived);
 
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
             _waitSubResponseTaskSchedule[Packet.ReplyTo] = SubscriptionResponseReady;
-            
+
             //发送订阅请求
             _channel.WriteAndFlushAsync(Packet).GetAwaiter().GetResult();
 

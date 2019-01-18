@@ -1,12 +1,9 @@
 ﻿using Hunter.STAN.Client;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Text;
+using System.Threading.Tasks;
+using System.Net.Http;
 using System.Diagnostics;
-using Hunter.NATS.Client;
-using System.Threading;
-using System.Text.RegularExpressions;
 
 namespace TestSTANClient
 {
@@ -76,16 +73,28 @@ namespace TestSTANClient
 
         static async Task Main(string[] args)
         {
-             Regex _subjectRegex = new Regex(@"^[a-zA-Z\d]+(\.[a-zA-Z\d]+)*$", RegexOptions.Compiled);
 
-            var mh = _subjectRegex.Match("foo.1");
+            ////http://192.168.0.226:8221/subz
 
-            if (mh.Success)
-            {
-                Console.WriteLine(mh.Value);
-            }
+            //HttpClient hpclient = new HttpClient();
+            //hpclient.BaseAddress = new Uri("http://192.168.0.226:8221");
 
-            return;
+            //var result = await hpclient.GetStringAsync("/subsz");
+
+            //Console.WriteLine(result);
+
+            //return;
+
+            //Regex _subjectRegex = new Regex(@"^[a-zA-Z\d]+(\.[a-zA-Z\d]+)*$", RegexOptions.Compiled);
+
+            //var mh = _subjectRegex.Match("foo.1");
+
+            //if (mh.Success)
+            //{
+            //    Console.WriteLine(mh.Value);
+            //}
+
+            //return;
 
             //Timer PingTimer = new Timer(pingTimerCallback, null, 120000, Timeout.Infinite);
 
@@ -101,71 +110,75 @@ namespace TestSTANClient
 
             #region 订阅测试
 
-            var lastValue = 0;
-            var s = client.Subscribe("test33", string.Empty, (bytes) =>
-            {
-                var sss = Encoding.UTF8.GetString(bytes);
-                var nowValue = int.Parse(sss.Split(' ')[0]);
-                if (lastValue != 0 && (nowValue - lastValue) != 1)
-                {
-                    Console.WriteLine("ERROR ==========================================================");
-                }
-                lastValue = nowValue;
-                Console.WriteLine(nowValue);
-            });
+            //var lastValue = 0;
+            ////"KeepLast"
+            //var s = client.Subscribe("OrderPlaced", string.Empty, string.Empty, (bytes) =>
+            //{
+            //    var sss = Encoding.UTF8.GetString(bytes);
+            //    //var nowValue = int.Parse(sss.Split(' ')[0]);
+            //    //if (lastValue != 0 && (nowValue - lastValue) != 1)
+            //    //{
+            //    //    Console.WriteLine("ERROR ==========================================================");
+            //    //}
+            //    //lastValue = nowValue;
+            //    Console.WriteLine(sss);
+            //});
 
-            Console.WriteLine("按任意键取消订阅");
+            //// 防止此主机进程终止，以使服务保持运行。
 
-            Console.ReadLine();
 
-            client.UnSubscribe(s);
+            //Console.WriteLine("按任意键取消订阅");
 
-            Console.WriteLine("按任意再次订阅");
+            //Console.ReadLine();
 
-            Console.ReadLine();
+            //client.UnSubscribe(s);
 
-            var s1 = client.Subscribe("test33", string.Empty, (bytes) =>
-            {
-                var sss = Encoding.UTF8.GetString(bytes);
-                var nowValue = int.Parse(sss.Split(' ')[0]);
-                if (lastValue != 0 && (nowValue - lastValue) != 1)
-                {
-                    Console.WriteLine("ERROR ==========================================================");
-                }
-                lastValue = nowValue;
-                Console.WriteLine(nowValue);
-            });
+            //Console.WriteLine("按任意再次订阅");
+
+            //Console.ReadLine();
+
+            //var s1 = client.Subscribe("test33", string.Empty, string.Empty, (bytes) =>
+            //{
+            //    var sss = Encoding.UTF8.GetString(bytes);
+            //    var nowValue = int.Parse(sss.Split(' ')[0]);
+            //    if (lastValue != 0 && (nowValue - lastValue) != 1)
+            //    {
+            //        Console.WriteLine("ERROR ==========================================================");
+            //    }
+            //    lastValue = nowValue;
+            //    Console.WriteLine(nowValue);
+            //});
 
 
             #endregion
 
             #region  发布测试
 
-            //while (true)
-            //{
-            //    Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            while (true)
+            {
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-            //    Stopwatch stopwatch = new Stopwatch();
-            //    stopwatch.Start(); //  开始监视代码运行时间
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start(); //  开始监视代码运行时间
 
-            //    var Testbytes = Encoding.UTF8.GetBytes("这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                var Testbytes = Encoding.UTF8.GetBytes("这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-            //    for (int i = 0; i < 10000; i++)
-            //    {
-            //        //client.Publish("test3", Testbytes);
-            //        await client.PublishAsync("test", Testbytes);
-            //    }
+                for (int i = 0; i < 10000; i++)
+                {
+                    //client.Publish("test3", Testbytes);
+                    await client.PublishAsync("test", Testbytes);
+                }
 
-            //    stopwatch.Stop(); //  停止监视  
+                stopwatch.Stop(); //  停止监视  
 
-            //    //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
-            //    Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
+                //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
+                Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
 
-            //    Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-            //    Console.WriteLine("输入任意字符串开始新一轮发送");
-            //    Console.ReadLine();
-            //}
+                Console.WriteLine("输入任意字符串开始新一轮发送");
+                Console.ReadLine();
+            }
 
             #endregion;
 
