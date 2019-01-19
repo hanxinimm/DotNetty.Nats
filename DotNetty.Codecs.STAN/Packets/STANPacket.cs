@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using DotNetty.Buffers;
+using DotNetty.Codecs.Protocol;
 using Google.Protobuf;
 using System.Runtime.Serialization;
 
 namespace DotNetty.Codecs.STAN.Packets
 {
     [DataContract]
-    public abstract class STANPacket
+    public abstract class STANPacket : ProtocolPacket
     {
         [IgnoreDataMember]
         public abstract STANPacketType PacketType { get; }

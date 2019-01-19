@@ -11,7 +11,7 @@ namespace DotNetty.Handlers.NATS
     {
         protected override void ChannelRead0(IChannelHandlerContext contex, PingPacket msg)
         {
-            Console.WriteLine("PingPacket-PONG");
+            //Console.WriteLine("PingPacket-PONG");
             contex.WriteAndFlushAsync(new PongPacket());
         }
 

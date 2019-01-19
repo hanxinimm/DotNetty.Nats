@@ -3,233 +3,24 @@
 
 namespace DotNetty.Codecs.STAN
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Runtime.CompilerServices;
-    using System.Text;
     using DotNetty.Buffers;
     using DotNetty.Codecs.NATS;
+    using DotNetty.Codecs.Protocol;
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Codecs.STAN.Protocol;
     using DotNetty.Transport.Channels;
     using Google.Protobuf;
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
 
-    public sealed class STANDecoder : ReplayingDecoder<ParseState>
+    public sealed class STANDecoder : ZeroAllocationByteDecoder
     {
+        public static readonly STANDecoder Instance = new STANDecoder();
 
-        public STANDecoder()
-            : base(ParseState.Ready)
+        protected override ProtocolPacket DecodePacket(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
-
-        }
-
-        protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
-        {
-            try
-            {
-                switch (this.State)
-                {
-                    case ParseState.Ready:
-                        if (!TryDecodePacket(input, context, out STANPacket packet))
-                        {
-                            this.RequestReplay();
-                            return;
-                        }
-                        output.Add(packet);
-                        break;
-                    //TODO:待分析什么情况下是错误的
-                    case ParseState.Failed:
-                        // read out data until connection is closed
-                        input.SkipBytes(input.ReadableBytes);
-                        return;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-            catch (DecoderException)
-            {
-                input.SkipBytes(input.ReadableBytes);
-                this.Checkpoint(ParseState.Failed);
-                throw;
-            }
-        }
-
-        static bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out STANPacket packet)
-        {
-
-            if (buffer.ReadableBytes == 0)
-            {
-                packet = null;
-                return false;
-            }
-
-            string signature = GetSignature(buffer);
-
-            if (string.IsNullOrWhiteSpace(signature))
-            {
-                packet = null;
-                return false;
-            }
-
-            packet = DecodePacketInternal(buffer, signature, context);
-
-            return packet != null;
-        }
-
-        static string GetSignature(IByteBuffer input)
-        {
-            int startIndex = input.ReaderIndex;
-            for (int i = 0; input.ReadableBytes > 0; i++)
-            {
-                switch (input.ReadByte())
-                {
-                    case STANConstants.FIELDDELIMITER_SPACES:
-                    case STANConstants.FIELDDELIMITER_TAB:
-                        return input.GetString(startIndex, i, Encoding.UTF8);
-                    case STANConstants.NEWLINES_CR:
-                        if (input.ReadableBytes > 0 && STANConstants.NEWLINES_LF == input.ReadByte())
-                        {
-                            //只有OK,PING,PONG支持换行符结尾
-                            switch (input.GetString(startIndex, i, Encoding.UTF8))
-                            {
-                                case STANSignatures.OK:
-                                    return STANSignatures.OK;
-                                case STANSignatures.PING:
-                                    return STANSignatures.PING;
-                                case STANSignatures.PONG:
-                                    return STANSignatures.PONG;
-                                default:
-#if DEBUG
-                                    throw new FormatException($"STAN Newlines is invalid.");
-#else
-                                    return string.Empty;
-#endif
-
-                            }
-                        }
-#if DEBUG
-                        throw new FormatException($"STAN Newlines is invalid.");
-#else
-                    break;
-#endif
-                    default:
-                        break;
-                }
-            }
-            return string.Empty;
-        }
-
-        static bool TryGetStringFromFieldDelimiter(IByteBuffer input, string packetSignature, out string value)
-        {
-            value = null;
-            int startIndex = input.ReaderIndex;
-            for (int i = 0; input.ReadableBytes > 0; i++)
-            {
-                switch (input.ReadByte())
-                {
-                    case STANConstants.FIELDDELIMITER_SPACES:
-                    case STANConstants.FIELDDELIMITER_TAB:
-                        value = input.GetString(startIndex, i, Encoding.UTF8);
-                        return true;
-                    case STANConstants.NEWLINES_CR:
-                    case STANConstants.NEWLINES_LF:
-#if DEBUG
-                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
-#else
-                        return false;
-#endif
-                    default:
-                        break;
-                }
-            }
-            return false;
-        }
-
-        static string GetStringFromFieldDelimiter(IByteBuffer input, string packetSignature)
-        {
-            int startIndex = input.ReaderIndex;
-            for (int i = 0; input.ReadableBytes > 0; i++)
-            {
-                switch (input.ReadByte())
-                {
-                    case STANConstants.FIELDDELIMITER_SPACES:
-                    case STANConstants.FIELDDELIMITER_TAB:
-                        return input.GetString(startIndex, i, Encoding.UTF8);
-                    case STANConstants.NEWLINES_CR:
-                        if (STANConstants.NEWLINES_LF == input.ReadByte())
-                        {
-                            input.SetReaderIndex(startIndex);
-                            return string.Empty;
-                        }
-                        throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
-                    default:
-                        break;
-                }
-            }
-            return string.Empty;
-        }
-
-        static bool TryGetStringFromNewlineDelimiter(IByteBuffer input, string packetSignature, out string value)
-        {
-            value = null;
-            int startIndex = input.ReaderIndex;
-            for (int i = 0; input.ReadableBytes > 0; i++)
-            {
-                if (input.ReadByte() == STANConstants.NEWLINES_CR)
-                {
-                    if (STANConstants.NEWLINES_LF == input.ReadByte())
-                    {
-                        value = input.GetString(startIndex, i, Encoding.UTF8);
-                        return true;
-                    }
-#if DEBUG
-                    throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
-#else
-                    break;
-#endif
-                }
-            }
-            return false;
-        }
-
-        static bool TryGetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature, out byte[] value)
-        {
-            value = null;
-
-            if (input.ReadableBytes < payloadSize + 2)
-            {
-                return false;
-            }
-
-            if (payloadSize == 0)
-            {
-                if (input.ReadByte() == STANConstants.NEWLINES_CR && input.ReadByte() == STANConstants.NEWLINES_LF)
-                {
-                    value = new byte[0];
-                    return true;
-                }
-#if DEBUG
-                throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
-#endif
-            }
-
-            if (input.GetByte(input.ReaderIndex + payloadSize) != STANConstants.NEWLINES_CR || input.GetByte(input.ReaderIndex + payloadSize + 1) != STANConstants.NEWLINES_LF)
-#if DEBUG
-                throw new FormatException($"STAN protocol name of `{packetSignature}` is invalid.");
-#else
-                    return false;
-#endif
-
-            value = new byte[payloadSize];
-            for (int i = 0; payloadSize > i; i++)
-            {
-                value[i] = input.ReadByte();
-            }
-
-            //跳过消息结尾的NEWLINES_CR和NEWLINES_LF字符
-            input.SkipBytes(2);
-            return true;
+            return DecodePacketInternal(buffer, packetSignature, context);
         }
 
         static string GetInbox(string subject)

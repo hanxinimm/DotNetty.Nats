@@ -15,4 +15,6 @@
     <PackageReference Include="Google.Protobuf.Tools" Version="3.6.1" />
   </ItemGroup>
 
+  <Import Project="..\DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems" Label="Shared" />
+
 </Project>

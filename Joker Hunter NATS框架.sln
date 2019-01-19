@@ -17,9 +17,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hunter.STAN.Client", "Hunte
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSTANClient", "TestSTANClient\TestSTANClient.csproj", "{5AB44343-DE6D-46AD-971D-3920F650EB4F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestNATSClient", "TestNATSClient\TestNATSClient.csproj", "{BBAE3379-5548-417A-B4B5-9043515B0C25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNATSClient", "TestNATSClient\TestNATSClient.csproj", "{BBAE3379-5548-417A-B4B5-9043515B0C25}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DotNetty.Codecs.Protocol", "DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.shproj", "{2775FC7F-EC86-4D6B-8727-086D007AED27}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{2775fc7f-ec86-4d6b-8727-086d007aed27}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU

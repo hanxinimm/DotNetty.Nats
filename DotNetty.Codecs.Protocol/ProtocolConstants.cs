@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DotNetty.Codecs.STAN
+namespace DotNetty.Codecs.Protocol
 {
     public class ProtocolConstants
     {

@@ -10,7 +10,6 @@ namespace DotNetty.Handlers.NATS
     using DotNetty.Transport.Channels;
 
     public class WaitPacketHandler<TPacket> : SimpleChannelInboundHandler<TPacket>
-        //where TPacket : NATSPacket
     {
         private readonly TaskCompletionSource<TPacket> _completionSource;
         public WaitPacketHandler(TaskCompletionSource<TPacket> completionSource)

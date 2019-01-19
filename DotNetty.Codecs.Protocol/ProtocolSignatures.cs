@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DotNetty.Codecs.NATS
+namespace DotNetty.Codecs.Protocol
 {
     public class ProtocolSignatures
     {

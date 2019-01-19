@@ -58,4 +58,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
   </ItemGroup>
 
+  <Import Project="..\DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems" Label="Shared" />
+
 </Project>

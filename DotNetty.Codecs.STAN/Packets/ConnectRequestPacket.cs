@@ -19,7 +19,7 @@ namespace DotNetty.Codecs.STAN.Packets
         /// <param name="clusterID"></param>
         /// <param name="clientID"></param>
         /// <param name="discoverPrefix"></param>
-        public ConnectRequestPacket(string inboxId, string clusterID, string clientID, string discoverPrefix = STANConstants.DiscoverPrefix)
+        public ConnectRequestPacket(string inboxId, string clusterID, string clientID, string discoverPrefix = ProtocolConstants.DiscoverPrefix)
         {
             Subject = $"{discoverPrefix}.{clusterID}";
             ReplyTo = $"{STANInboxs.ConnectResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";

@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>2775fc7f-ec86-4d6b-8727-086d007aed27</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>DotNetty.Codecs.Protocol</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ByteBufferExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProtocolSignatures.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ParseState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProtocolPacket.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProtocolConstants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ZeroAllocationByteDecoder.cs" />
+  </ItemGroup>
+</Project>
