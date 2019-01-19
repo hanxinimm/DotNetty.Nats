@@ -32,7 +32,6 @@ namespace DotNetty.Codecs.Protocol
                         break;
                     case ParseState.Failed:
                         //可以将Failed解释为当消息体内容不符合正确的字节解析流时，跳出当前解析
-                        // read out data until connection is closed
                         input.SkipBytes(input.ReadableBytes);
                         return;
                     default:
@@ -193,9 +192,14 @@ namespace DotNetty.Codecs.Protocol
         {
             value = null;
 
+            if (input.ReadableBytes < payloadSize + 2)
+            {
+                return false;
+            }
+
             if (payloadSize == 0)
             {
-                if (ProtocolConstants.NEWLINES_CR == input.SafeReadByte() && ProtocolConstants.NEWLINES_LF == input.SafeReadByte())
+                if (ProtocolConstants.NEWLINES_CR == input.ReadByte() && ProtocolConstants.NEWLINES_LF == input.ReadByte())
                 {
                     value = new byte[0];
                     return true;
