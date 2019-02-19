@@ -24,20 +24,12 @@ namespace DotNetty.Handlers.STAN
         {
             if (_waitUbSubResponseTaskSchedule.TryRemove(msg.Subject, out var completionSource))
             {
-                Console.WriteLine("收到取消订阅响应 主题 {0}  消息确认收件箱 {1}", msg.Subject, msg.ReplyTo);
                 completionSource.SetResult(msg);
             }
             else
             {
                 contex.FireChannelRead(msg);
             }
-        }
-
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
-        {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
-            contex.CloseAsync();
         }
     }
 }

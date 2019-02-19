@@ -16,6 +16,23 @@ namespace TestNATSClient
             var client = new NATSClient(options);
             await client.ContentcAsync("main-cluster", "TestClientId");
 
+            int SValue = 0;
+
+
+
+            var s = await client.SubscriptionAsync("OrderPlaced", string.Empty, (bytes) =>
+            {
+                SValue++;
+
+                if (SValue >= 10000) {
+                    var sss = Encoding.UTF8.GetString(bytes);
+                    Console.WriteLine(sss);
+                    Console.WriteLine(SValue);
+                    SValue = 0;
+                }
+            });
+
+
             #region  发布测试
 
             while (true)
@@ -30,7 +47,7 @@ namespace TestNATSClient
                 for (int i = 0; i < 10000; i++)
                 {
                     //client.Publish("test3", Testbytes);
-                    await client.PublishAsync("test", Testbytes);
+                    await client.PublishAsync("OrderPlaced", Testbytes);
                 }
 
                 stopwatch.Stop(); //  停止监视  

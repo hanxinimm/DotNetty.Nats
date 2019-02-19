@@ -12,14 +12,7 @@ namespace DotNetty.Handlers.STAN
     {
         protected override void ChannelRead0(IChannelHandlerContext contex, InfoPacket msg)
         {
-            Console.WriteLine(JsonConvert.SerializeObject(msg));
-        }
-
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
-        {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
-            contex.CloseAsync();
+            
         }
     }
 }

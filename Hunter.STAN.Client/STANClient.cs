@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Hunter.STAN.Client.Handlers;
 
 namespace Hunter.STAN.Client
 {
@@ -92,12 +93,13 @@ namespace Hunter.STAN.Client
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
+                    channel.Pipeline.AddLast(new ReconnectChannelHandler());
                     channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder());
                     channel.Pipeline.AddLast(new ErrorPacketHandler());
                     channel.Pipeline.AddLast(new HeartbeatPacketHandler(_heartbeatInboxId, HeartbeatACKAsync));
                     channel.Pipeline.AddLast(new MessagePacketHandler(AckAsync));
                     channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
-                    channel.Pipeline.AddLast(new PubAckPacketAsynHandler((ack) => { }));
+                    channel.Pipeline.AddLast(new PubAckPacketAsynHandler(PubAckCallback));
                     channel.Pipeline.AddLast(new SubscriptionResponsePacketSyncHandler(_waitSubResponseTaskSchedule));
                     channel.Pipeline.AddLast(new SubscriptionResponsePacketAsynHandler((subReps) => { }));
                     channel.Pipeline.AddLast(new UnSubscriptionResponsePacketSyncHandler(_waitUnSubResponseTaskSchedule));
@@ -261,6 +263,63 @@ namespace Hunter.STAN.Client
             return AckResult;
         }
 
+
+        //TODO:待优化同时发布多个消息
+        /// <summary>
+        /// 同步发送
+        /// </summary>
+        /// <param name="subject">主体</param>
+        /// <param name="datas">数据</param>
+        /// <returns></returns>
+        public PubAckPacket Publish(string subject,IEnumerable< byte[]> datas)
+        {
+
+            foreach (var data in datas)
+            {
+                var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+
+                var PubAckReady = new TaskCompletionSource<PubAckPacket>();
+
+                _waitPubAckTaskSchedule[Packet.ReplyTo] = PubAckReady;
+
+                //发送订阅请求
+                _channel.WriteAsync(Packet).GetAwaiter().GetResult();
+            }
+
+            _channel.Flush();
+
+            return null;
+
+            //var AckResult = PubAckReady.Task.GetAwaiter().GetResult();
+
+            //return AckResult;
+        }
+
+        /// <summary>
+        /// 同步发送
+        /// </summary>
+        /// <param name="subject">主体</param>
+        /// <param name="data">数据</param>
+        /// <returns></returns>
+        public async Task<PubAckPacket> PublishWaitAckAsync(string subject, byte[] data)
+        {
+
+            if (!_channel.Open) return null;
+
+            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+
+            var PubAckReady = new TaskCompletionSource<PubAckPacket>();
+
+            _waitPubAckTaskSchedule[Packet.ReplyTo] = PubAckReady;
+
+            var PublishTask = _channel.WriteAndFlushAsync(Packet);
+
+            //发送订阅请求
+            await PublishTask.ContinueWith(task => { if (task.Status != TaskStatus.RanToCompletion) PubAckReady.SetResult(null); });
+
+            return await PubAckReady.Task;
+        }
+
         /// <summary>
         /// 异步发送
         /// </summary>
@@ -272,6 +331,11 @@ namespace Hunter.STAN.Client
             var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
 
             return _channel.WriteAndFlushAsync(Packet);
+        }
+
+        public void PubAckCallback(PubAckPacket pubAck)
+        {
+            //Console.WriteLine($"GUID = {pubAck.Message.Guid} Error = {pubAck.Message.Error}");
         }
 
         public Task AckAsync(IChannel bootstrapChannel, string subject, ulong sequence)

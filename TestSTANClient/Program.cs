@@ -108,6 +108,17 @@ namespace TestSTANClient
             var client = new STANClient(options);
             await client.ContentcAsync("main-cluster", "TestClientId");
 
+            //for (int i = 0; i < 100; i++)
+            //{
+            //    var client = new STANClient(options);
+            //    await client.ContentcAsync("main-cluster", "TestClientId" + i);
+            //}
+
+            //Console.WriteLine("完成创建");
+            //Console.ReadLine();
+
+            //return;
+
             #region 订阅测试
 
             //var lastValue = 0;
@@ -137,16 +148,16 @@ namespace TestSTANClient
 
             //Console.ReadLine();
 
-            //var s1 = client.Subscribe("test33", string.Empty, string.Empty, (bytes) =>
+            //var s1 = client.Subscribe("Sales@DESKTOP-EMDRLGS", string.Empty, string.Empty, (bytes) =>
             //{
             //    var sss = Encoding.UTF8.GetString(bytes);
-            //    var nowValue = int.Parse(sss.Split(' ')[0]);
-            //    if (lastValue != 0 && (nowValue - lastValue) != 1)
-            //    {
-            //        Console.WriteLine("ERROR ==========================================================");
-            //    }
-            //    lastValue = nowValue;
-            //    Console.WriteLine(nowValue);
+            //    //var nowValue = int.Parse(sss.Split(' ')[0]);
+            //    //if (lastValue != 0 && (nowValue - lastValue) != 1)
+            //    //{
+            //    //    Console.WriteLine("ERROR ==========================================================");
+            //    //}
+            //    //lastValue = nowValue;
+            //    Console.WriteLine(sss);
             //});
 
 
@@ -158,18 +169,34 @@ namespace TestSTANClient
             {
                 Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
+                var Testbytes = Encoding.UTF8.GetBytes("这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start(); //  开始监视代码运行时间
 
-                var Testbytes = Encoding.UTF8.GetBytes("这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                //System.Collections.Generic.List<byte[]> lt = new System.Collections.Generic.List<byte[]>(10000);
+                //for (int i = 0; i < 10000; i++)
+                //{
+                //    lt.Add(Testbytes);
+                //    //client.Publish("test", Testbytes);
+                //}
 
-                for (int i = 0; i < 10000; i++)
+                ////await client.PublishAsync("test3", lt);
+
+                //stopwatch.Stop(); //  停止监视  
+
+                //Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
+
+                //stopwatch.Restart();
+
+                for (int i = 0; i < 1; i++)
                 {
                     //client.Publish("test3", Testbytes);
-                    await client.PublishAsync("test", Testbytes);
+                    var Rlt = await client.PublishWaitAckAsync("test", Testbytes);
+                    if (Rlt == null) Console.WriteLine("发送失败");
                 }
 
-                stopwatch.Stop(); //  停止监视  
+                stopwatch.Stop(); //停止监视  
 
                 //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
                 Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);

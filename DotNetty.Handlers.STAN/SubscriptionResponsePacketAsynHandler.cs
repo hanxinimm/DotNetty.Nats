@@ -24,12 +24,5 @@ namespace DotNetty.Handlers.STAN
         {
             _pubAckCallback(msg);
         }
-
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
-        {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
-            contex.CloseAsync();
-        }
     }
 }

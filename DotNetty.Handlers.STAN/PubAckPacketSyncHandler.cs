@@ -22,7 +22,8 @@ namespace DotNetty.Handlers.STAN
 
         protected override void ChannelRead0(IChannelHandlerContext contex, PubAckPacket msg)
         {
-            if (_waitPubAckTaskSchedule.TryRemove(msg.Subject,out var completionSource))
+
+            if (_waitPubAckTaskSchedule.TryRemove(msg.Subject, out var completionSource))
             {
                 completionSource.SetResult(msg);
             }
@@ -30,13 +31,6 @@ namespace DotNetty.Handlers.STAN
             {
                 contex.FireChannelRead(msg);
             }
-        }
-
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
-        {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
-            contex.CloseAsync();
         }
     }
 }

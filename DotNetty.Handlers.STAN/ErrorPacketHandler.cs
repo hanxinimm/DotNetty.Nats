@@ -4,6 +4,7 @@
 namespace DotNetty.Handlers.STAN
 {
     using System;
+    using System.Net.Sockets;
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Transport.Channels;
 
@@ -11,14 +12,18 @@ namespace DotNetty.Handlers.STAN
     {
         protected override void ChannelRead0(IChannelHandlerContext contex, UnknownErrorPacket msg)
         {
-            Console.WriteLine(msg.Message);
+            
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
-        {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
-            contex.CloseAsync();
-        }
+        //public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
+        //{
+        //    if (e is SocketException ex)
+        //    {
+
+        //    }
+        //    Console.WriteLine(DateTime.Now.Millisecond);
+        //    Console.WriteLine("{0}", e.StackTrace);
+        //    //contex.CloseAsync();
+        //}
     }
 }
