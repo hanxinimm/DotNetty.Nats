@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestNATSClient", "TestNATSC
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DotNetty.Codecs.Protocol", "DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.shproj", "{2775FC7F-EC86-4D6B-8727-086D007AED27}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSTANSubscription", "TestSTANSubscription\TestSTANSubscription.csproj", "{BE6F479B-318D-46F3-B041-296811CA42B0}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{2775fc7f-ec86-4d6b-8727-086d007aed27}*SharedItemsImports = 13
@@ -62,6 +64,10 @@ Global
 		{BBAE3379-5548-417A-B4B5-9043515B0C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BBAE3379-5548-417A-B4B5-9043515B0C25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BBAE3379-5548-417A-B4B5-9043515B0C25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE6F479B-318D-46F3-B041-296811CA42B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE6F479B-318D-46F3-B041-296811CA42B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE6F479B-318D-46F3-B041-296811CA42B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE6F479B-318D-46F3-B041-296811CA42B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

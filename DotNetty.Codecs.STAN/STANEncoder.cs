@@ -55,6 +55,9 @@ namespace DotNetty.Codecs.STAN
                 case STANPacketType.PubMsg:
                     EncodePublishMessage(bufferAllocator, (PubMsgPacket)packet, output);
                     break;
+                case STANPacketType.MultiplePubMsg:
+                    EncodePublishMessages(bufferAllocator, (PubMultipleMsgPacket)packet, output);
+                    break;
                 case STANPacketType.Ack:
                     EncodePublishMessage(bufferAllocator, (AckPacket)packet, output);
                     break;
@@ -173,6 +176,14 @@ namespace DotNetty.Codecs.STAN
             finally
             {
                 buf?.SafeRelease();
+            }
+        }
+
+        static void EncodePublishMessages(IByteBufferAllocator bufferAllocator, PubMultipleMsgPacket packet, List<object> output)
+        {
+            foreach (var msgPacket in packet.MessagePackets)
+            {
+                EncodePublishMessage(bufferAllocator, msgPacket, output);
             }
         }
 

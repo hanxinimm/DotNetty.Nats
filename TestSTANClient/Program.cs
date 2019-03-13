@@ -106,7 +106,7 @@ namespace TestSTANClient
             options.ClusterNodes.Add("192.168.0.226");
 
             var client = new STANClient(options);
-            await client.ContentcAsync("main-cluster", "TestClientId");
+            await client.ContentcAsync("main-cluster", "TestClientIdSender");
 
             //for (int i = 0; i < 100; i++)
             //{
@@ -165,36 +165,21 @@ namespace TestSTANClient
 
             #region  发布测试
 
+            int i = 0;
+
             while (true)
             {
                 Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                var Testbytes = Encoding.UTF8.GetBytes("这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start(); //  开始监视代码运行时间
 
-                //System.Collections.Generic.List<byte[]> lt = new System.Collections.Generic.List<byte[]>(10000);
-                //for (int i = 0; i < 10000; i++)
-                //{
-                //    lt.Add(Testbytes);
-                //    //client.Publish("test", Testbytes);
-                //}
 
-                ////await client.PublishAsync("test3", lt);
-
-                //stopwatch.Stop(); //  停止监视  
-
-                //Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
-
-                //stopwatch.Restart();
-
-                for (int i = 0; i < 1; i++)
-                {
-                    //client.Publish("test3", Testbytes);
-                    var Rlt = await client.PublishWaitAckAsync("test", Testbytes);
-                    if (Rlt == null) Console.WriteLine("发送失败");
-                }
+                var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                //client.Publish("test3", Testbytes);
+                await client.PublishWaitAckAsync("Security-App", Testbytes, Testbytes);
+                //if (Rlt == null) Console.WriteLine("发送失败");
+                
 
                 stopwatch.Stop(); //停止监视  
 
@@ -205,6 +190,8 @@ namespace TestSTANClient
 
                 Console.WriteLine("输入任意字符串开始新一轮发送");
                 Console.ReadLine();
+
+                i++;
             }
 
             #endregion;

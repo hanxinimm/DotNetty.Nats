@@ -42,10 +42,13 @@ namespace TestNATSClient
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.Start(); //  开始监视代码运行时间
 
-                var Testbytes = Encoding.UTF8.GetBytes("这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+              
 
                 for (int i = 0; i < 10000; i++)
                 {
+
+                    var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
                     //client.Publish("test3", Testbytes);
                     await client.PublishAsync("OrderPlaced", Testbytes);
                 }

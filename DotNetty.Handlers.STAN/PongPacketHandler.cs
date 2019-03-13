@@ -11,6 +11,7 @@ namespace DotNetty.Handlers.STAN
     {
         protected override void ChannelRead0(IChannelHandlerContext contex, PongPacket msg)
         {
+            Console.WriteLine("PongPacket => PingPacket");
             contex.WriteAndFlushAsync(new PingPacket());
         }
     }

@@ -93,7 +93,11 @@ namespace DotNetty.Codecs.STAN.Packets
         /// <summary>
         /// Server	Result of the close request
         /// </summary>
-        CloseResp
+        CloseResp,
+        /// <summary>
+        /// Client	Publish more messages
+        /// </summary>
+        MultiplePubMsg,
 
     }
 }
