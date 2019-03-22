@@ -9,9 +9,9 @@ namespace DotNetty.Codecs.STAN.Packets
         public HeartbeatInboxPacket(string subject)
         {
             Id = "Id" + Guid.NewGuid().ToString("N");
-            Subject = subject;
+            Subject = $"{STANInboxs.Heartbeat}{subject}";
         }
 
-        public override STANPacketType PacketType => STANPacketType.Heartbeat;
+        public override STANPacketType PacketType => STANPacketType.HeartbeatInbox;
     }
 }

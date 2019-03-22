@@ -7,6 +7,7 @@ namespace DotNetty.Codecs.STAN
     public class STANInboxs
     {
         public const string InboxPrefix = "_INBOX.";
+        public const string Heartbeat = "_INBOX.HTBT.";
         public const string ConnectResponse = "_INBOX.CTRE.";
         public const string SubscriptionResponse = "_INBOX.SNRE.";
         public const string UnSubscriptionResponse = "_INBOX.USRE.";

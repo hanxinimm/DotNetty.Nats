@@ -72,17 +72,19 @@ namespace DotNetty.Codecs.STAN
 
             if (TryGetStringFromFieldDelimiter(buffer, STANSignatures.MSG, out var subject))
             {
-                var ReplyTo = GetStringFromFieldDelimiter(buffer, STANSignatures.MSG);
-
-                if (TryGetStringFromNewlineDelimiter(buffer, STANSignatures.MSG, out var payloadSizeString))
+                if (TryGetStringFromFieldDelimiter(buffer, STANSignatures.MSG, out var subscribeId))
                 {
+                    var ReplyTo = GetStringFromFieldDelimiter(buffer, STANSignatures.MSG);
 
-                    if (int.TryParse(payloadSizeString, out int payloadSize))
+                    if (TryGetStringFromNewlineDelimiter(buffer, STANSignatures.MSG, out var payloadSizeString))
                     {
-                        if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, STANSignatures.MSG, out var payload))
-                        {
 
-                            return DecodeMessagePacket(subject, ReplyTo, payloadSize, payload);
+                        if (int.TryParse(payloadSizeString, out int payloadSize))
+                        {
+                            if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, STANSignatures.MSG, out var payload))
+                            {
+                                return DecodeMessagePacket(subject, ReplyTo, payloadSize, payload);
+                            }
                         }
                     }
                 }
@@ -95,6 +97,8 @@ namespace DotNetty.Codecs.STAN
         {
             switch (GetInbox(subject))
             {
+                case STANInboxs.Heartbeat:
+                    return GetMessagePacket<HeartbeatPacket>(subject, replyTo, payloadSize, payload);
                 case STANInboxs.ConnectResponse:
                     return GetMessagePacket<ConnectResponsePacket, ConnectResponse>(subject, replyTo, payloadSize, payload);
                 case STANInboxs.SubscriptionResponse:

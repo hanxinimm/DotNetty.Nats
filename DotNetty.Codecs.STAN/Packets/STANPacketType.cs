@@ -11,9 +11,13 @@ namespace DotNetty.Codecs.STAN.Packets
         /// </summary>
         INFO,
         /// <summary>
-        /// heartbeat inbox
+        /// heartbeat
         /// </summary>
         Heartbeat,
+        /// <summary>
+        /// heartbeat inbox
+        /// </summary>
+        HeartbeatInbox,
         /// <summary>
         /// heartbeat inbox Ack
         /// </summary>

@@ -17,7 +17,7 @@ namespace TestSTANSubscription
             await client.ContentcAsync("main-cluster", "TestClientIdSubscription");
 
             //"KeepLast"
-            var s = await client.SubscribeAsync("Security-App", string.Empty, "keep", (bytes) =>
+            var s = client.Subscribe("Security-App-1", "TestSubscription", "keep", (bytes) =>
             {
                 var sss = Encoding.UTF8.GetString(bytes);
                 //var nowValue = int.Parse(sss.Split(' ')[0]);

@@ -96,7 +96,7 @@ namespace Hunter.STAN.Client
                     channel.Pipeline.AddLast(new ReconnectChannelHandler());
                     channel.Pipeline.AddLast(STANEncoder.Instance, STANDecoder.Instance);
                     channel.Pipeline.AddLast(new ErrorPacketHandler());
-                    channel.Pipeline.AddLast(new HeartbeatPacketHandler(_heartbeatInboxId, HeartbeatACKAsync));
+                    channel.Pipeline.AddLast(new HeartbeatPacketHandler());
                     channel.Pipeline.AddLast(new MessagePacketHandler(AckAsync));
                     channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
                     channel.Pipeline.AddLast(new PubAckPacketAsynHandler(PubAckCallback));
@@ -126,7 +126,7 @@ namespace Hunter.STAN.Client
         private async Task<STANConnectionConfig> ConnectRequestAsync()
         {
 
-            var Packet = new ConnectRequestPacket(_replyInboxId, _clusterId, _clientId);
+            var Packet = new ConnectRequestPacket(_replyInboxId, _clusterId, _clientId, _heartbeatInboxId);
 
             var ConnectResponseReady = new TaskCompletionSource<ConnectResponsePacket>();
 
@@ -154,11 +154,6 @@ namespace Hunter.STAN.Client
             var Packet = new HeartbeatInboxPacket(_heartbeatInboxId);
 
             await _channel.WriteAndFlushAsync(Packet);
-        }
-
-        private void HeartbeatACKAsync(MsgProtoPacket packet)
-        {
-            _channel.WriteAndFlushAsync(new HeartbeatAckPacket(packet.Message.Reply));
         }
 
         private async Task SubscribeReplyInboxAsync()

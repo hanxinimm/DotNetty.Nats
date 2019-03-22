@@ -61,7 +61,7 @@ namespace DotNetty.Codecs.STAN
                 case STANPacketType.Ack:
                     EncodePublishMessage(bufferAllocator, (AckPacket)packet, output);
                     break;
-                case STANPacketType.Heartbeat:
+                case STANPacketType.HeartbeatInbox:
                     EncodeSubscribeMessage(bufferAllocator, (HeartbeatInboxPacket)packet, output);
                     break;
                 case STANPacketType.HeartbeatAck:

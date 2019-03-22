@@ -14,16 +14,5 @@ namespace DotNetty.Handlers.STAN
         {
             
         }
-
-        //public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
-        //{
-        //    if (e is SocketException ex)
-        //    {
-
-        //    }
-        //    Console.WriteLine(DateTime.Now.Millisecond);
-        //    Console.WriteLine("{0}", e.StackTrace);
-        //    //contex.CloseAsync();
-        //}
     }
 }
