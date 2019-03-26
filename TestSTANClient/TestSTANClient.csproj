@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetCore.NPOI" Version="1.2.1" />
+    <PackageReference Include="Hunter.Message.SMS.Twilio" Version="1.2.0.16" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>

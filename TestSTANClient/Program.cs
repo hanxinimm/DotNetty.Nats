@@ -4,68 +4,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Hunter.Message.SMS.Abstractions;
 
 namespace TestSTANClient
 {
     class Program
     {
-
-        //static async Task Main(string[] args)
-        //{
-        //    var options = new NATSOptions();
-        //    options.ClusterNodes.Add("192.168.0.226");
-
-        //    var client = new NATSClient(options);
-        //    await client.ContentcAsync("main-cluster", "TestClientId");
-
-        //    //for (int j = 0; j < 8; j++)
-        //    //{
-        //    //    Stopwatch stopwatch = new Stopwatch();
-        //    //    stopwatch.Start(); //  开始监视代码运行时间
-
-        //    //    await client.PublishAsync("test33", Encoding.UTF8.GetBytes("测试消息"));
-
-        //    //    stopwatch.Stop(); //  停止监视  
-
-        //    //    //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
-        //    //    Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
-
-        //    //    Console.ReadLine();
-
-        //    //}
-
-        //    //await client.PongAsync();
-
-        //    //Console.WriteLine("发送一万条");
-        //    var SubscribeId = await client.SubscriptionAsync("foo-test", string.Empty, (bytes) =>
-        //    {
-        //        var sss = Encoding.UTF8.GetString(bytes);
-        //        Console.WriteLine("收到消息: " + sss);
-        //    });
-
-        //    //await Task.Factory.StartNew(async () =>
-        //    //{
-        //    //    await Task.Delay(TimeSpan.FromSeconds(5));
-
-        //    //    Console.WriteLine("取消订阅");
-
-        //    //    await client.UnSubscriptionAsync(SubscribeId);
-        //    //});
-
-        //    await Task.Factory.StartNew(async () =>
-        //    {
-        //        await Task.Delay(TimeSpan.FromSeconds(5));
-
-        //        Console.WriteLine("收到5条消息取消订阅");
-
-        //        await client.AutoUnSubscriptionAsync(SubscribeId, 5);
-        //    });
-
-
-
-        //    Console.ReadLine();
-        //}
-
         private static void pingTimerCallback(object state)
         {
             Console.WriteLine("我已执行发送Ping");
@@ -73,6 +18,22 @@ namespace TestSTANClient
 
         static async Task Main(string[] args)
         {
+
+            var services = new ServiceCollection();
+
+            services.AddTwilioSmsSender(testoptions =>
+            {
+                testoptions.AccountSid = "AC7424c95c7be55450b36307514359d410";
+                testoptions.AuthToken = "OhPCBk1SG3ioVIIsAkBY41HUorXUeo9A";
+                testoptions.FromPhoneNumber = "12028462874";
+            });
+
+            var serviceSP = services.BuildServiceProvider();
+            var smsSender = serviceSP.GetRequiredService<ISmsSender>();
+
+            await smsSender.SendAsync("8618166772526", "上琪开15你仲了吗? 迦我薇信qq同号：28739347 就有晚上的一肖③馬，另外时时菜PK⑩计划");
+
+            return;
 
             ////http://192.168.0.226:8221/subz
 
