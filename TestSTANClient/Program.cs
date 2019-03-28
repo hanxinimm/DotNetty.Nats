@@ -19,22 +19,6 @@ namespace TestSTANClient
         static async Task Main(string[] args)
         {
 
-            var services = new ServiceCollection();
-
-            services.AddTwilioSmsSender(testoptions =>
-            {
-                testoptions.AccountSid = "AC7424c95c7be55450b36307514359d410";
-                testoptions.AuthToken = "OhPCBk1SG3ioVIIsAkBY41HUorXUeo9A";
-                testoptions.FromPhoneNumber = "12028462874";
-            });
-
-            var serviceSP = services.BuildServiceProvider();
-            var smsSender = serviceSP.GetRequiredService<ISmsSender>();
-
-            await smsSender.SendAsync("8618166772526", "上琪开15你仲了吗? 迦我薇信qq同号：28739347 就有晚上的一肖③馬，另外时时菜PK⑩计划");
-
-            return;
-
             ////http://192.168.0.226:8221/subz
 
             //HttpClient hpclient = new HttpClient();
@@ -65,9 +49,12 @@ namespace TestSTANClient
 
             var options = new STANOptions();
             options.ClusterNodes.Add("192.168.0.226");
+            options.ClusterID = "main-cluster";
+            options.ClientId = "TestClientIdSender";
 
-            var client = new STANClient(options);
-            await client.ContentcAsync("main-cluster", "TestClientIdSender");
+
+            var client = new STANClientFactory(options);
+            await client.ConnectionAsync();
 
             //for (int i = 0; i < 100; i++)
             //{

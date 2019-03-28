@@ -12,6 +12,21 @@ namespace Hunter.STAN.Client
         }
 
         /// <summary>
+        /// 集群编号
+        /// </summary>
+        public string ClusterID { get; set; }
+
+        /// <summary>
+        /// 客户端编号
+        /// </summary>
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// 集群节点地址
+        /// </summary>
+        public List<string> ClusterNodes { get; set; }
+
+        /// <summary>
         /// 链接超时时间
         /// </summary>
         public TimeSpan ConnectTimeout { get; set; }
@@ -31,9 +46,5 @@ namespace Hunter.STAN.Client
         /// </summary>
         public int MaxPubAckInFlight { get; set; }
 
-        /// <summary>
-        /// 集群节点地址
-        /// </summary>
-        public List<string> ClusterNodes { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using DotNetty.Transport.Channels;
+﻿using DotNetty.Transport.Bootstrapping;
+using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Generic;
 using System.Net;
@@ -9,11 +10,17 @@ namespace Hunter.STAN.Client.Handlers
 {
     public class ReconnectChannelHandler : ChannelHandlerAdapter
     {
+        public readonly Func<EndPoint,Task> _reconnectHandler;
+        public ReconnectChannelHandler(Func<EndPoint,Task> reconnectHandler)
+        {
+            _reconnectHandler = reconnectHandler;
+        }
+
         public override void ChannelInactive(IChannelHandlerContext context)
         {
-            Console.WriteLine("ReconnectChannelHandler");
-            Task.Run(() => context.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222)));
-            //base.ChannelInactive(context);
+            base.ChannelInactive(context);
+            Console.WriteLine("ChannelInactive connected to {0}", context.Channel.RemoteAddress);
+            context.Channel.EventLoop.Schedule(_ => _reconnectHandler((EndPoint)_), context.Channel.RemoteAddress, TimeSpan.FromMilliseconds(1000));
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)

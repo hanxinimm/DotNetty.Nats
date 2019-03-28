@@ -12,9 +12,11 @@ namespace TestSTANSubscription
         {
             var options = new STANOptions();
             options.ClusterNodes.Add("192.168.0.226");
+            options.ClusterID = "main-cluster";
+            options.ClientId = "TestClientIdSender";
 
             var client = new STANClient(options);
-            await client.ContentcAsync("main-cluster", "TestClientIdSubscription");
+            await client.ContentcAsync();
 
             //"KeepLast"
             var s = client.Subscribe("Security-App-1", "TestSubscription", "keep", (bytes) =>

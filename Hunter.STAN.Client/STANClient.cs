@@ -24,11 +24,6 @@ namespace Hunter.STAN.Client
         private readonly STANOptions _options;
 
         /// <summary>
-        /// 通道引导
-        /// </summary>
-        private readonly Bootstrap _bootstrap;
-
-        /// <summary>
         /// 心跳收件箱
         /// </summary>
         private readonly string _heartbeatInboxId;
@@ -38,15 +33,20 @@ namespace Hunter.STAN.Client
         /// </summary>
         private readonly string _replyInboxId;
 
-        /// <summary>
-        /// 集群编号
-        /// </summary>
-        private string _clusterId;
+        ///// <summary>
+        ///// 通道引导
+        ///// </summary>
+        private Bootstrap _bootstrap;
 
-        /// <summary>
-        /// 客户端编号
-        /// </summary>
-        private string _clientId;
+        ///// <summary>
+        ///// 集群编号
+        ///// </summary>
+        //private string _clusterId;
+
+        ///// <summary>
+        ///// 客户端编号
+        ///// </summary>
+        //private string _clientId;
 
         /// <summary>
         /// 连接通道
@@ -87,34 +87,80 @@ namespace Hunter.STAN.Client
             _waitSubResponseTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<SubscriptionResponsePacket>>();
             _waitUnSubResponseTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<UnSubscriptionResponsePacket>>();
             _localSubscriptionConfig = new ConcurrentDictionary<string, STANSubscriptionConfig>();
-            _bootstrap = new Bootstrap()
-                .Group(new MultithreadEventLoopGroup())
-                .Channel<TcpSocketChannel>()
-                .Option(ChannelOption.TcpNodelay, false)
-                .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
-                {
-                    channel.Pipeline.AddLast(new ReconnectChannelHandler());
-                    channel.Pipeline.AddLast(STANEncoder.Instance, STANDecoder.Instance);
-                    channel.Pipeline.AddLast(new ErrorPacketHandler());
-                    channel.Pipeline.AddLast(new HeartbeatPacketHandler());
-                    channel.Pipeline.AddLast(new MessagePacketHandler(AckAsync));
-                    channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
-                    channel.Pipeline.AddLast(new PubAckPacketAsynHandler(PubAckCallback));
-                    channel.Pipeline.AddLast(new SubscriptionResponsePacketSyncHandler(_waitSubResponseTaskSchedule));
-                    channel.Pipeline.AddLast(new SubscriptionResponsePacketAsynHandler((subReps) => { }));
-                    channel.Pipeline.AddLast(new UnSubscriptionResponsePacketSyncHandler(_waitUnSubResponseTaskSchedule));
-                    channel.Pipeline.AddLast(new PingPacketHandler());
-                    channel.Pipeline.AddLast(new PongPacketHandler());
-                }));
+            _bootstrap = InitBootstrap();
 
         }
 
-        public async Task ContentcAsync(string clusterID, string clientId)
-        {
-            _channel = await _bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
+        public bool IsOpen => _channel?.Open ?? false;
 
-            _clusterId = clusterID;
-            _clientId = clientId;
+        private Bootstrap InitBootstrap()
+        {
+            return new Bootstrap()
+            .Group(new MultithreadEventLoopGroup())
+            .Channel<TcpSocketChannel>()
+            .Option(ChannelOption.TcpNodelay, false)
+            .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
+            {
+                channel.Pipeline.AddLast(new ReconnectChannelHandler(ReconnectIfNeedAsync));
+                channel.Pipeline.AddLast(STANEncoder.Instance, STANDecoder.Instance);
+                channel.Pipeline.AddLast(new ErrorPacketHandler());
+                channel.Pipeline.AddLast(new HeartbeatPacketHandler());
+                channel.Pipeline.AddLast(new MessagePacketHandler(AckAsync));
+                channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
+                channel.Pipeline.AddLast(new PubAckPacketAsynHandler(PubAckCallback));
+                channel.Pipeline.AddLast(new SubscriptionResponsePacketSyncHandler(_waitSubResponseTaskSchedule));
+                channel.Pipeline.AddLast(new SubscriptionResponsePacketAsynHandler((subReps) => { }));
+                channel.Pipeline.AddLast(new UnSubscriptionResponsePacketSyncHandler(_waitUnSubResponseTaskSchedule));
+                channel.Pipeline.AddLast(new PingPacketHandler());
+                channel.Pipeline.AddLast(new PongPacketHandler());
+            }));
+        }
+
+        private bool IsChannelInactive
+        {
+            get
+            {
+                return !_channel.Active;
+            }
+        }
+
+        private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
+        {
+            if (this.IsChannelInactive)
+            {
+                //await this.semaphoreSlim.WaitAsync();
+                try
+                {
+                    if (this.IsChannelInactive)
+                    {
+                        while (true)
+                        {
+                            try
+                            {
+                                _channel = await _bootstrap.ConnectAsync(socketAddress);
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                await Task.Delay(TimeSpan.FromSeconds(3));
+                            }
+                        }
+                       // this.clientRpcHandler = channel.Pipeline.Get<RpcClientHandler>();
+                    }
+                }
+                finally
+                {
+                    //this.semaphoreSlim.Release();
+                }
+            }
+        }
+
+
+        public async Task ContentcAsync()
+        {
+            //var _bootstrap = InitBootstrap();
+
+            _channel = await _bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
 
             await SubscribeHeartBeatInboxAsync();
 
@@ -126,7 +172,7 @@ namespace Hunter.STAN.Client
         private async Task<STANConnectionConfig> ConnectRequestAsync()
         {
 
-            var Packet = new ConnectRequestPacket(_replyInboxId, _clusterId, _clientId, _heartbeatInboxId);
+            var Packet = new ConnectRequestPacket(_replyInboxId, _options.ClusterID, _options.ClientId, _heartbeatInboxId);
 
             var ConnectResponseReady = new TaskCompletionSource<ConnectResponsePacket>();
 
@@ -168,7 +214,7 @@ namespace Hunter.STAN.Client
             //订阅侦听消息
             _channel.WriteAndFlushAsync(SubscribePacket).GetAwaiter().GetResult();
 
-            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _clientId, subject, queueGroup, SubscribePacket.Subject, 1024, 30, durableName, StartPosition.LastReceived);
+            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _options.ClientId, subject, queueGroup, SubscribePacket.Subject, 1024, 30, durableName, StartPosition.LastReceived);
 
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
@@ -191,7 +237,7 @@ namespace Hunter.STAN.Client
             //订阅侦听消息
             await _channel.WriteAndFlushAsync(SubscribePacket);
 
-            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _clientId, subject, queueGroup, SubscribePacket.Subject, 1024, 3, durableName, StartPosition.LastReceived);
+            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _options.ClientId, subject, queueGroup, SubscribePacket.Subject, 1024, 3, durableName, StartPosition.LastReceived);
 
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
@@ -207,7 +253,7 @@ namespace Hunter.STAN.Client
             return Packet.Message.Inbox;
         }
 
-        public void UnSubscribe(string subscribeInbox)
+        public void UnSubscribe(string subscribeInbox,string durableName)
         {
             if (_localSubscriptionConfig.TryGetValue(subscribeInbox, out var subscriptionConfig))
             {
@@ -216,7 +262,7 @@ namespace Hunter.STAN.Client
                 ////订阅侦听消息
                 //_channel.WriteAndFlushAsync(SubscribePacket).GetAwaiter().GetResult();
 
-                var Packet = new UnsubscribeRequestPacket(_replyInboxId, _config.UnsubRequests, _clientId, subscriptionConfig.Subject, subscriptionConfig.AckInbox, "KeepLast");
+                var Packet = new UnsubscribeRequestPacket(_replyInboxId, _config.UnsubRequests, _options.ClientId, subscriptionConfig.Subject, subscriptionConfig.AckInbox, durableName);
 
                 var UnSubscriptionRequestReady = new TaskCompletionSource<UnSubscriptionResponsePacket>();
 
@@ -242,7 +288,7 @@ namespace Hunter.STAN.Client
         public PubAckPacket Publish(string subject, byte[] data)
         {
 
-            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, data);
 
             var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
@@ -269,7 +315,7 @@ namespace Hunter.STAN.Client
 
             foreach (var data in datas)
             {
-                var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+                var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, data);
 
                 var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
@@ -297,9 +343,9 @@ namespace Hunter.STAN.Client
         public async Task<PubAckPacket> PublishWaitAckAsync(string subject, byte[] data)
         {
 
-            if (!_channel.Open) return null;
+            //if (!_channel.Open) return null;
 
-            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, data);
 
             var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
@@ -319,7 +365,7 @@ namespace Hunter.STAN.Client
         /// <param name="subject">主体</param>
         /// <param name="data">数据</param>
         /// <returns></returns>
-        public async Task PublishWaitAckAsync(string subject, params byte[][] datas)
+        public void PublishWaitAck(string subject, params byte[][] datas)
         {
 
             if (!_channel.Open) return;
@@ -331,7 +377,7 @@ namespace Hunter.STAN.Client
             {
                 var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
-                var MsgPacket = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+                var MsgPacket = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, data);
 
                 _waitPubAckTaskSchedule[MsgPacket.ReplyTo] = PubAckReady;
 
@@ -357,7 +403,7 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public Task PublishAsync(string subject, byte[] data)
         {
-            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, data);
 
             return _channel.WriteAndFlushAsync(Packet);
         }
@@ -394,7 +440,7 @@ namespace Hunter.STAN.Client
         public async Task<CloseResponsePacket> CloseRequestAsync(string inboxId)
         {
 
-            var Packet = new CloseRequestPacket(inboxId, _config.CloseRequests, _clientId);
+            var Packet = new CloseRequestPacket(inboxId, _config.CloseRequests, _options.ClientId);
 
             var CloseRequestReady = new TaskCompletionSource<CloseResponsePacket>();
 
