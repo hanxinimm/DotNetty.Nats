@@ -99,7 +99,7 @@ namespace Hunter.NATS.Client
 
         }
 
-        public async Task<string> SubscriptionAsync(string subject, string queueGroup, Action<byte[]> handler, string subscribeId = null)
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<byte[]> handler, string subscribeId = null)
         {
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -113,7 +113,7 @@ namespace Hunter.NATS.Client
 
         }
 
-        public async Task<string> SubscriptionAsync(string subject, string queueGroup, Action<byte[]> handler)
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<byte[]> handler)
         {
             var SubscribeId = $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -127,7 +127,7 @@ namespace Hunter.NATS.Client
 
         }
 
-        public async Task UnSubscriptionAsync(string subscribeId)
+        public async Task UnSubscribeAsync(string subscribeId)
         {
             if (_localSubscriptionConfig.Remove(subscribeId))
             {
@@ -137,7 +137,7 @@ namespace Hunter.NATS.Client
             }
         }
 
-        public async Task AutoUnSubscriptionAsync(string subscribeId, int max_msgs)
+        public async Task AutoUnSubscribeAsync(string subscribeId, int max_msgs)
         {
             if (_localSubscriptionConfig.TryGetValue(subscribeId, out var subscriptionConfig))
             {

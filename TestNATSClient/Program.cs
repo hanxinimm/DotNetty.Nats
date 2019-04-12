@@ -22,7 +22,7 @@ namespace TestNATSClient
 
 
 
-            var s = await client.SubscriptionAsync("OrderPlaced", string.Empty, (bytes) =>
+            var s = await client.SubscribeAsync("OrderPlaced", string.Empty, (bytes) =>
             {
                 SValue++;
 
