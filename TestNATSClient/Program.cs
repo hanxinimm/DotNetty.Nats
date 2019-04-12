@@ -11,10 +11,12 @@ namespace TestNATSClient
         static async Task Main(string[] args)
         {
             var options = new NATSOptions();
+            options.ClusterID = "main-cluster";
+            options.ClientId = "TestClientId";
             options.ClusterNodes.Add("192.168.0.226");
 
             var client = new NATSClient(options);
-            await client.ContentcAsync("main-cluster", "TestClientId");
+            await client.ContentcAsync();
 
             int SValue = 0;
 

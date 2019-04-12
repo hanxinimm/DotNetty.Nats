@@ -34,16 +34,6 @@ namespace Hunter.NATS.Client
         private int _subscribeId;
 
         /// <summary>
-        /// 集群编号
-        /// </summary>
-        private string _clusterId;
-
-        /// <summary>
-        /// 客户端编号
-        /// </summary>
-        private string _clientId;
-
-        /// <summary>
         /// 连接通道
         /// </summary>
         private IChannel _channel;
@@ -87,12 +77,9 @@ namespace Hunter.NATS.Client
 
         }
 
-        public async Task ContentcAsync(string clusterID, string clientId)
+        public async Task ContentcAsync()
         {
             _channel = await _bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4221));
-
-            _clusterId = clusterID;
-            _clientId = clientId;
 
             _info = await ConnectAsync();
         }
@@ -100,7 +87,7 @@ namespace Hunter.NATS.Client
         private async Task<InfoPacket> ConnectAsync()
         {
 
-            var Packet = new ConnectPacket(true, false, false, null, null, _clientId, null);
+            var Packet = new ConnectPacket(true, false, false, null, null, _options.ClientId, null);
 
             _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
 
