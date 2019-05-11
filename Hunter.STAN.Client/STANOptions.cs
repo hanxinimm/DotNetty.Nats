@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace Hunter.STAN.Client
@@ -8,7 +9,7 @@ namespace Hunter.STAN.Client
     {
         public STANOptions()
         {
-            ClusterNodes = new List<string>();
+            ClusterNodes = new List<EndPoint>();
         }
 
         /// <summary>
@@ -24,7 +25,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 集群节点地址
         /// </summary>
-        public List<string> ClusterNodes { get; set; }
+        public List<EndPoint> ClusterNodes { get; set; }
 
         /// <summary>
         /// 链接超时时间

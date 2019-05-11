@@ -38,16 +38,6 @@ namespace Hunter.STAN.Client
         ///// </summary>
         private Bootstrap _bootstrap;
 
-        ///// <summary>
-        ///// 集群编号
-        ///// </summary>
-        //private string _clusterId;
-
-        ///// <summary>
-        ///// 客户端编号
-        ///// </summary>
-        //private string _clientId;
-
         /// <summary>
         /// 连接通道
         /// </summary>
