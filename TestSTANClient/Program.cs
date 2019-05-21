@@ -1,11 +1,9 @@
 ﻿using Hunter.STAN.Client;
 using System;
+using System.Diagnostics;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Http;
-using System.Diagnostics;
-using Microsoft.Extensions.DependencyInjection;
-using Hunter.Message.SMS.Abstractions;
 
 namespace TestSTANClient
 {
@@ -48,7 +46,7 @@ namespace TestSTANClient
             //return;
 
             var options = new STANOptions();
-            options.ClusterNodes.Add("192.168.0.226");
+            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientIdSender";
 

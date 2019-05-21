@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using DotNetty.Buffers;
 using System.Threading;
+using System.Linq;
 
 namespace Hunter.NATS.Client
 {
@@ -79,7 +80,9 @@ namespace Hunter.NATS.Client
 
         public async Task ContentcAsync()
         {
-            _channel = await _bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4221));
+            var ClusterNode = _options.ClusterNodes.First();
+
+            _channel = await _bootstrap.ConnectAsync(ClusterNode);
 
             _info = await ConnectAsync();
         }

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using Hunter.STAN.Client.Handlers;
+using System.Linq;
 
 namespace Hunter.STAN.Client
 {
@@ -150,7 +151,9 @@ namespace Hunter.STAN.Client
         {
             //var _bootstrap = InitBootstrap();
 
-            _channel = await _bootstrap.ConnectAsync(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
+            var ClusterNode = _options.ClusterNodes.First();
+
+            _channel = await _bootstrap.ConnectAsync(ClusterNode);
 
             await SubscribeHeartBeatInboxAsync();
 

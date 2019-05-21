@@ -1,6 +1,7 @@
 ﻿using Hunter.NATS.Client;
 using System;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace TestNATSClient
             var options = new NATSOptions();
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientId";
-            options.ClusterNodes.Add("192.168.0.226");
+            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4221));
 
             var client = new NATSClient(options);
             await client.ContentcAsync();

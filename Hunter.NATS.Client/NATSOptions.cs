@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 
 namespace Hunter.NATS.Client
@@ -8,7 +9,7 @@ namespace Hunter.NATS.Client
     {
         public NATSOptions()
         {
-            ClusterNodes = new List<string>();
+            ClusterNodes = new List<EndPoint>();
         }
 
         /// <summary>
@@ -44,6 +45,6 @@ namespace Hunter.NATS.Client
         /// <summary>
         /// 集群节点地址
         /// </summary>
-        public List<string> ClusterNodes { get; set; }
+        public List<EndPoint> ClusterNodes { get; set; }
     }
 }
