@@ -151,6 +151,12 @@ namespace Hunter.STAN.Client
         {
             //var _bootstrap = InitBootstrap();
 
+            if (!_options.ClusterNodes.Any())
+            {
+                IPHostEntry hostInfo = Dns.GetHostEntry(_options.Host);
+                _options.ClusterNodes.AddRange(hostInfo.AddressList.Select(v => new IPEndPoint(v, _options.Port)));
+            }
+
             var ClusterNode = _options.ClusterNodes.First();
 
             _channel = await _bootstrap.ConnectAsync(ClusterNode);

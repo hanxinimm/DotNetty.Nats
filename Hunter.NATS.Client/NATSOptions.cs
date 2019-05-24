@@ -46,5 +46,15 @@ namespace Hunter.NATS.Client
         /// 集群节点地址
         /// </summary>
         public List<EndPoint> ClusterNodes { get; set; }
+
+        /// <summary>
+        /// 集群主机地址
+        /// </summary>
+        public string Host { get; set; }
+
+        /// <summary>
+        /// 通讯端口
+        /// </summary>
+        public int Port { get; set; }
     }
 }

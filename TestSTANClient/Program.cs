@@ -1,5 +1,8 @@
 ﻿using Hunter.STAN.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
@@ -45,14 +48,30 @@ namespace TestSTANClient
 
             //return;
 
-            var options = new STANOptions();
-            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
-            options.ClusterID = "main-cluster";
-            options.ClientId = "TestClientIdSender";
+            IPHostEntry hostInfo = Dns.GetHostEntry("www.contoso.com");
+
+            var Services = new ServiceCollection();
+            
+            Services.Configure<STANOptions>(options =>
+            {
+                options.ClusterID = "main-cluster";
+                options.ClientId = "Security-StatefulManagerService";
+                options.Host = "mq.stan.yidujob.com";
+                options.Port = 4222;
+                //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
+            });
 
 
-            var client = new STANClientFactory(options);
+            var _serviceProvider = Services.BuildServiceProvider();
+
+
+            var opts = _serviceProvider.GetRequiredService<IOptions<STANOptions>>();
+            var client = new STANClientFactory(opts.Value);
             await client.ConnectionAsync();
+
+            Console.WriteLine("连接成功");
+
+            return;
 
             //for (int i = 0; i < 100; i++)
             //{
