@@ -3,14 +3,18 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TestNATSClient
 {
     class Program
     {
+        private static readonly Regex _clientIdReplacer = new Regex("\\W\\D");
         static async Task Main(string[] args)
         {
+            var ss = Guid.NewGuid().ToString("N");
+
             var options = new NATSOptions();
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientId";
