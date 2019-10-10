@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace Hunter.STAN.Client
 {
-    public class STANSubscriptionConfig
+    public class STANSubscriptionAsyncConfig
     {
-        public STANSubscriptionConfig(string subject,string inbox,string ackInbox, Func<STANMsgContent, bool> handler)
+        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             Subject = subject;
             Inbox = inbox;
@@ -15,14 +15,14 @@ namespace Hunter.STAN.Client
             Handler = handler;
         }
 
-        public STANSubscriptionConfig(string subject, string inbox, string ackInbox, int maxMsg, string durableName, Func<STANMsgContent, bool> handler)
+        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, int maxMsg,string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             Subject = subject;
             Inbox = inbox;
             AckInbox = ackInbox;
-            Handler = handler;
             MaxMsg = maxMsg;
             DurableName = durableName;
+            Handler = handler;
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Hunter.STAN.Client
         public string AckInbox { get; }
 
         /// <summary>
-        /// 等待处理的最大消息数
+        /// 处理的最大消息数量
         /// </summary>
         public int? MaxMsg { get; set; }
 
@@ -51,7 +51,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 处理程序
         /// </summary>
-        public Func<STANMsgContent, bool> Handler { get; }
+        public Func<STANMsgContent, ValueTask<bool>> Handler { get; }
 
     }
 }

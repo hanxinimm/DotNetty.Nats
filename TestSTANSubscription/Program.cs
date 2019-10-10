@@ -1,5 +1,7 @@
-﻿using Hunter.STAN.Client;
+﻿using DotNetty.Codecs.STAN.Protocol;
+using Hunter.STAN.Client;
 using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -9,29 +11,73 @@ namespace TestSTANSubscription
 {
     class Program
     {
+        public class TextA
+        { 
+            public string name { get; set; }
+
+            public int? age { get; set; }
+        }
+
+        public class TestB : TextA
+        { 
+            
+        }
+
+        public class TestC : TestB
+        {
+
+        }
+
+        public static void Test(TextA textA)
+        {
+            Console.WriteLine("TextA");
+        }
+        public static void Test(TestB textA)
+        {
+            TestAp(textA);
+        }
+
+        public static void TestAp(dynamic dynamicAp)
+        {
+            TestHandle(dynamicAp);
+        }
+
+        public static void TestHandle(TestC textA)
+        {
+            Console.WriteLine("TestC");
+        }
+
+        public static void TestHandle(dynamic dynamicAp)
+        {
+            Console.WriteLine("TestHandle");
+        }
+
         static async Task Main(string[] args)
         {
             var options = new STANOptions();
-            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.0.226"), 4222));
+            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.1.226"), 4222));
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientIdSender";
 
             var client = new STANClient(options);
             await client.ContentcAsync();
 
-            //"KeepLast"
-            var s = client.Subscribe("Security-App-1", "TestSubscription", "keep", (bytes) =>
-            {
-                var sss = Encoding.UTF8.GetString(bytes);
-                //var nowValue = int.Parse(sss.Split(' ')[0]);
-                //if (lastValue != 0 && (nowValue - lastValue) != 1)
-                //{
-                //    Console.WriteLine("ERROR ==========================================================");
-                //}
-                //lastValue = nowValue;
-                Console.WriteLine(sss);
-            });
 
+            //var s = await client.ReadAsync("Labor-Enterprise-Account",
+            //    2,
+            //    (content) =>
+            //{
+            //    var data = Encoding.UTF8.GetString(content.Data);
+            //    Console.WriteLine($"sequence={content.Sequence} data={data}");
+            //    return new ValueTask<bool>(true);
+            //});
+
+            var content = await client.ReadAsync("Labor-Enterprise-Account", 2);
+
+            var data = Encoding.UTF8.GetString(content.Data);
+            Console.WriteLine($"sequence={content.Sequence} data={data}");
+
+            var contents = await client.ReadAsync("Labor-Enterprise-Account", 2, 3);
 
             Console.WriteLine("订阅成功");
 

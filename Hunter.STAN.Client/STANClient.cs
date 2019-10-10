@@ -34,6 +34,11 @@ namespace Hunter.STAN.Client
         /// </summary>
         private readonly string _replyInboxId;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private readonly ValueTask<bool> _ackSuccessResult = new ValueTask<bool>(true);
+
         ///// <summary>
         ///// 通道引导
         ///// </summary>
@@ -69,6 +74,11 @@ namespace Hunter.STAN.Client
         /// </summary>
         private ConcurrentDictionary<string, STANSubscriptionConfig> _localSubscriptionConfig;
 
+        /// <summary>
+        /// 本地异步订阅配置
+        /// </summary>
+        private ConcurrentDictionary<string, STANSubscriptionAsyncConfig> _localSubscriptionAsyncConfig;
+
         public STANClient(STANOptions options)
         {
             _options = options;
@@ -78,6 +88,7 @@ namespace Hunter.STAN.Client
             _waitSubResponseTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<SubscriptionResponsePacket>>();
             _waitUnSubResponseTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<UnSubscriptionResponsePacket>>();
             _localSubscriptionConfig = new ConcurrentDictionary<string, STANSubscriptionConfig>();
+            _localSubscriptionAsyncConfig = new ConcurrentDictionary<string, STANSubscriptionAsyncConfig>();
             _bootstrap = InitBootstrap();
 
         }
@@ -102,6 +113,7 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new SubscriptionResponsePacketSyncHandler(_waitSubResponseTaskSchedule));
                 channel.Pipeline.AddLast(new SubscriptionResponsePacketAsynHandler((subReps) => { }));
                 channel.Pipeline.AddLast(new UnSubscriptionResponsePacketSyncHandler(_waitUnSubResponseTaskSchedule));
+                channel.Pipeline.AddLast(new UnSubscriptionResponsePacketAsynHandler((unSubReps) => { }));
                 channel.Pipeline.AddLast(new PingPacketHandler());
                 channel.Pipeline.AddLast(new PongPacketHandler());
             }));
@@ -206,14 +218,51 @@ namespace Hunter.STAN.Client
             await _channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
         }
 
-        public string Subscribe(string subject, string queueGroup, string durableName, Action<byte[]> handler)
+        #region 订阅
+
+        public string Subscribe(string subject, string queueGroup, string durableName, Func<STANMsgContent, bool> handler)
+        {
+            return Subscribe(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+        }
+
+        public string Subscribe(string subject, string queueGroup, Func<STANMsgContent, bool> handler)
+        {
+            return Subscribe(subject, queueGroup, string.Empty, handler);
+        }
+
+        public string Subscribe(string subject, string queueGroup, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
+        {
+            return Subscribe(subject, queueGroup, string.Empty, subscribeOptions, handler);
+        }
+
+        public string Subscribe(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
             //订阅侦听消息
             _channel.WriteAndFlushAsync(SubscribePacket).GetAwaiter().GetResult();
 
-            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _options.ClientId, subject, queueGroup, SubscribePacket.Subject, 1024, 30, durableName, StartPosition.LastReceived);
+            var Packet = new SubscriptionRequestPacket(
+                    _replyInboxId,
+                    _config.SubRequests,
+                    _options.ClientId,
+                    subject,
+                    queueGroup,
+                    SubscribePacket.Subject,
+                    subscribeOptions.MaxInFlight ?? 1024,
+                    subscribeOptions.AckWaitInSecs ?? 30,
+                    durableName,
+                    subscribeOptions.Position);
+
+            if (subscribeOptions.StartSequence.HasValue)
+            {
+                Packet.Message.StartSequence = subscribeOptions.StartSequence.Value;
+            }
+
+            if (subscribeOptions.StartTimeDelta.HasValue)
+            {
+                Packet.Message.StartTimeDelta = subscribeOptions.StartTimeDelta.Value;
+            }
 
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
@@ -229,14 +278,53 @@ namespace Hunter.STAN.Client
             return Packet.Message.Inbox;
         }
 
-        public async Task<string> SubscribeAsync(string subject, string queueGroup, string durableName, Action<byte[]> handler)
+        #endregion;
+
+        #region; 异步订阅
+
+        public Task<string> SubscribeAsync(string subject, string queueGroup, string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+        }
+
+        public Task<string> SubscribeAsync(string subject, string queueGroup, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, queueGroup, string.Empty, handler);
+        }
+
+        public Task<string> SubscribeAsync(string subject, string queueGroup, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
+        }
+
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
             //订阅侦听消息
             await _channel.WriteAndFlushAsync(SubscribePacket);
 
-            var Packet = new SubscriptionRequestPacket(_replyInboxId, _config.SubRequests, _options.ClientId, subject, queueGroup, SubscribePacket.Subject, 1024, 3, durableName, StartPosition.LastReceived);
+            var Packet = new SubscriptionRequestPacket(
+                    _replyInboxId,
+                    _config.SubRequests,
+                    _options.ClientId,
+                    subject,
+                    queueGroup,
+                    SubscribePacket.Subject,
+                    subscribeOptions.MaxInFlight ?? 1024,
+                    subscribeOptions.AckWaitInSecs ?? 30,
+                    durableName,
+                    subscribeOptions.Position);
+
+            if (subscribeOptions.StartSequence.HasValue)
+            {
+                Packet.Message.StartSequence = subscribeOptions.StartSequence.Value;
+            }
+
+            if (subscribeOptions.StartTimeDelta.HasValue)
+            {
+                Packet.Message.StartTimeDelta = subscribeOptions.StartTimeDelta.Value;
+            }
 
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
 
@@ -247,14 +335,131 @@ namespace Hunter.STAN.Client
 
             var SubscriptionResponseResult = await SubscriptionResponseReady.Task;
 
-            _localSubscriptionConfig[Packet.Message.Inbox] = new STANSubscriptionConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox, handler);
+            _localSubscriptionAsyncConfig[Packet.Message.Inbox] = new STANSubscriptionAsyncConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox, handler);
 
             return Packet.Message.Inbox;
         }
 
+
+
+        #endregion;
+
+        #region; 订阅指定消息数量自动取消订阅
+
+        public Task<string> SubscribeAsync(string subject, int maxMsg, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, string.Empty, string.Empty, maxMsg, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+        }
+
+        public Task<string> SubscribeAsync(string subject, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, string.Empty, string.Empty, maxMsg, subscribeOptions, handler);
+        }
+
+        public Task<string> SubscribeAsync(string subject, string queueGroup, int maxMsg, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, queueGroup, string.Empty, maxMsg, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+        }
+
+        public Task<string> SubscribeAsync(string subject, string queueGroup, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, queueGroup, string.Empty, maxMsg, subscribeOptions, handler);
+        }
+
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, string durableName, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
+
+            //订阅侦听消息
+            await _channel.WriteAndFlushAsync(SubscribePacket);
+
+            var Packet = new SubscriptionRequestPacket(
+                    _replyInboxId,
+                    _config.SubRequests,
+                    _options.ClientId,
+                    subject,
+                    queueGroup,
+                    SubscribePacket.Subject,
+                    subscribeOptions.MaxInFlight ?? 1024,
+                    subscribeOptions.AckWaitInSecs ?? 30,
+                    durableName,
+                    subscribeOptions.Position);
+
+            if (subscribeOptions.StartSequence.HasValue)
+            {
+                Packet.Message.StartSequence = subscribeOptions.StartSequence.Value;
+            }
+
+            if (subscribeOptions.StartTimeDelta.HasValue)
+            {
+                Packet.Message.StartTimeDelta = subscribeOptions.StartTimeDelta.Value;
+            }
+
+            var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
+
+            _waitSubResponseTaskSchedule[Packet.ReplyTo] = SubscriptionResponseReady;
+
+            //发送订阅请求
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var SubscriptionResponseResult = await SubscriptionResponseReady.Task;
+
+            _localSubscriptionAsyncConfig[Packet.Message.Inbox] = new STANSubscriptionAsyncConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox, maxMsg, durableName, handler);
+
+            return Packet.Message.Inbox;
+        }
+
+        #endregion;
+
+        #region; 读取消息
+
+        public Task<string> ReadAsync(string subject, long sequence, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, 1, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(sequence < 1 ? 1 : sequence), MaxInFlight = 1 }, handler);
+        }
+
+        public Task<string> ReadAsync(string subject, long start, int count, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, count, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start), MaxInFlight = count }, handler);
+        }
+
+        public Task<STANMsgContent> ReadAsync(string subject, long sequence)
+        {
+            var MessageReady = new TaskCompletionSource<STANMsgContent>();
+
+            SubscribeAsync(subject, 1, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(sequence < 1 ? 1 : sequence), MaxInFlight = 1 },
+                (msg) =>
+                {
+                    MessageReady.SetResult(msg);
+                    return _ackSuccessResult;
+                });
+
+            return MessageReady.Task;
+        }
+
+        public async Task<IEnumerable<STANMsgContent>> ReadAsync(string subject, long start, int count)
+        {
+            var MessageReady = new TaskCompletionSource<string>();
+            var MessageList = new List<STANMsgContent>();
+
+            await SubscribeAsync(subject, count, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start), MaxInFlight = count },
+                (msg) =>
+                {
+                    MessageList.Add(msg);
+                    if (MessageList.Count >= count) MessageReady.SetResult(string.Empty);
+                    return _ackSuccessResult;
+                });
+
+            await MessageReady.Task;
+
+            return MessageList;
+        }
+
+        #endregion;
+
         public void UnSubscribe(string subscribeInbox,string durableName)
         {
-            if (_localSubscriptionConfig.TryGetValue(subscribeInbox, out var subscriptionConfig))
+            if (_localSubscriptionConfig.TryRemove(subscribeInbox, out var subscriptionConfig))
             {
                 //var SubscribePacket = new UnsubscribeRequestPacket( _config.UnsubRequests,_clientId,subject, _replyInboxId,durableName);
 
@@ -277,6 +482,18 @@ namespace Hunter.STAN.Client
             }
         }
 
+        public Task UnSubscribeAsync(string subscribeInbox, string durableName)
+        {
+            if (_localSubscriptionAsyncConfig.TryRemove(subscribeInbox, out var subscriptionConfig))
+            {
+                var Packet = new UnsubscribeRequestPacket(_replyInboxId, _config.UnsubRequests, _options.ClientId, subscriptionConfig.Subject, subscriptionConfig.AckInbox, durableName);
+
+                //发送取消订阅请求
+                return _channel.WriteAndFlushAsync(Packet);
+            }
+
+            return Task.CompletedTask;
+        }
 
         /// <summary>
         /// 同步发送
@@ -301,7 +518,6 @@ namespace Hunter.STAN.Client
             return AckResult;
         }
 
-
         //TODO:待优化同时发布多个消息
         /// <summary>
         /// 同步发送
@@ -309,16 +525,20 @@ namespace Hunter.STAN.Client
         /// <param name="subject">主体</param>
         /// <param name="datas">数据</param>
         /// <returns></returns>
-        public PubAckPacket Publish(string subject,IEnumerable< byte[]> datas)
+        public IEnumerable<PubAckPacket> Publish(string subject, IEnumerable<byte[]> datas)
         {
+            var MessageLength = datas.Count();
+            var WaitPubAckTaskSchedules = new Task<PubAckPacket>[MessageLength];
 
-            foreach (var data in datas)
+            for (var i = 0; i < MessageLength; i++)
             {
-                var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, data);
+                var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, datas.ElementAt(i));
 
                 var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
                 _waitPubAckTaskSchedule[Packet.ReplyTo] = PubAckReady;
+
+                WaitPubAckTaskSchedules[i] = PubAckReady.Task;
 
                 //发送订阅请求
                 _channel.WriteAsync(Packet).GetAwaiter().GetResult();
@@ -326,11 +546,9 @@ namespace Hunter.STAN.Client
 
             _channel.Flush();
 
-            return null;
+            Task.WaitAll(WaitPubAckTaskSchedules.ToArray());
 
-            //var AckResult = PubAckReady.Task.GetAwaiter().GetResult();
-
-            //return AckResult;
+            return WaitPubAckTaskSchedules.Select(v => v.Result);
         }
 
         /// <summary>
@@ -341,8 +559,6 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public async Task<PubAckPacket> PublishWaitAckAsync(string subject, byte[] data)
         {
-
-            //if (!_channel.Open) return null;
 
             var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _options.ClientId, subject, data);
 
@@ -426,14 +642,100 @@ namespace Hunter.STAN.Client
         {
             if (_localSubscriptionConfig.TryGetValue(msg.Subject, out var subscriptionConfig))
             {
+                if (AutoUnSubscribe(subscriptionConfig))
+                {
+                    var HandlerResult = subscriptionConfig.Handler(new STANMsgContent()
+                    {
+                        Sequence = msg.Message.Sequence,
+                        Subject = msg.Message.Subject,
+                        Reply = msg.Message.Reply,
+                        Data = msg.Message.Data.ToByteArray(),
+                        Timestamp = msg.Message.Timestamp,
+                        Redelivered = msg.Message.Redelivered,
+                        CRC32 = msg.Message.CRC32
+                    });
 
-                subscriptionConfig.Handler(msg.Message.Data.ToByteArray());
-
-                var Packet = new AckPacket(subscriptionConfig.AckInbox, msg.Message.Subject, msg.Message.Sequence);
-
-                //发送消息成功处理
-                _channel.WriteAndFlushAsync(Packet);
+                    if (HandlerResult)
+                    {
+                        //发送消息成功处理
+                        _channel.WriteAndFlushAsync(new AckPacket(subscriptionConfig.AckInbox, msg.Message.Subject, msg.Message.Sequence));
+                    }
+                }
+                else
+                {
+                    //发送消息成功处理
+                    _channel.WriteAndFlushAsync(new AckPacket(subscriptionConfig.AckInbox, msg.Message.Subject, msg.Message.Sequence));
+                }
             }
+            else if (_localSubscriptionAsyncConfig.TryGetValue(msg.Subject, out var subscriptionAsyncConfig))
+            {
+
+                if (AutoUnSubscribeAsync(subscriptionAsyncConfig))
+                {
+
+                    var AsyncHandlerResult = subscriptionAsyncConfig.Handler(new STANMsgContent()
+                    {
+                        Sequence = msg.Message.Sequence,
+                        Subject = msg.Message.Subject,
+                        Reply = msg.Message.Reply,
+                        Data = msg.Message.Data.ToByteArray(),
+                        Timestamp = msg.Message.Timestamp,
+                        Redelivered = msg.Message.Redelivered,
+                        CRC32 = msg.Message.CRC32
+                    }).GetAwaiter().GetResult();
+
+
+                    if (AsyncHandlerResult)
+                    {
+                        //发送消息成功处理
+                        _channel.WriteAndFlushAsync(new AckPacket(subscriptionAsyncConfig.AckInbox, msg.Message.Subject, msg.Message.Sequence));
+                    }
+                }
+                else
+                {
+                    //发送消息成功处理
+                    _channel.WriteAndFlushAsync(new AckPacket(subscriptionAsyncConfig.AckInbox, msg.Message.Subject, msg.Message.Sequence));
+                }
+            }
+        }
+
+        public bool AutoUnSubscribe(STANSubscriptionConfig subscriptionConfig)
+        {
+            if (subscriptionConfig.MaxMsg.HasValue)
+            {
+                subscriptionConfig.MaxMsg--;
+
+                if (subscriptionConfig.MaxMsg < 0)
+                {
+                    UnSubscribe(subscriptionConfig.Inbox, subscriptionConfig.DurableName);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        protected bool AutoUnSubscribeAsync(STANSubscriptionAsyncConfig subscriptionConfig)
+        {
+
+            if (subscriptionConfig.MaxMsg.HasValue)
+            {
+                subscriptionConfig.MaxMsg--;
+
+                if (subscriptionConfig.MaxMsg < 0)
+                {
+                    UnSubscribeAsync(subscriptionConfig.Inbox, subscriptionConfig.DurableName).GetAwaiter().GetResult();
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            return true;
         }
 
         public async Task<CloseResponsePacket> CloseRequestAsync(string inboxId)

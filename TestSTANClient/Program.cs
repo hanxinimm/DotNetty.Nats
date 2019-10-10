@@ -56,7 +56,8 @@ namespace TestSTANClient
             {
                 options.ClusterID = "main-cluster";
                 options.ClientId = "Security-StatefulManagerService";
-                options.Host = "mq.stan.yidujob.com";
+                //options.Host = "mq.stan.yidujob.com";
+                options.Host = "127.0.0.1";
                 options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
@@ -66,12 +67,15 @@ namespace TestSTANClient
 
 
             var opts = _serviceProvider.GetRequiredService<IOptions<STANOptions>>();
-            var client = new STANClientFactory(opts.Value);
-            await client.ConnectionAsync();
+            //var client = new STANClientFactory(opts.Value);
+            //await client.ConnectionAsync();
+
+            var client = new STANClient(opts.Value);
+            await client.ContentcAsync();
 
             Console.WriteLine("连接成功");
 
-            return;
+
 
             //for (int i = 0; i < 100; i++)
             //{
@@ -127,6 +131,20 @@ namespace TestSTANClient
 
 
             #endregion
+
+
+
+            //client.Subscribe("Security-App-1", "Test-Vue", "Vue", new STANSubscribeOptions(), (data) =>
+            //{
+            //    var TestString = Encoding.UTF8.GetString(data);
+            //    Console.WriteLine(TestString);
+            //});
+
+            //Console.WriteLine("订阅成功");
+
+            //Console.ReadLine();
+
+            //return;
 
             #region  发布测试
 
