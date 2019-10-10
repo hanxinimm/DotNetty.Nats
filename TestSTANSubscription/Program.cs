@@ -55,9 +55,9 @@ namespace TestSTANSubscription
         static async Task Main(string[] args)
         {
             var options = new STANOptions();
-            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.1.226"), 4222));
+            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4222));
             options.ClusterID = "main-cluster";
-            options.ClientId = "TestClientIdSender";
+            options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
 
             var client = new STANClient(options);
             await client.ContentcAsync();
@@ -72,12 +72,22 @@ namespace TestSTANSubscription
             //    return new ValueTask<bool>(true);
             //});
 
-            var content = await client.ReadAsync("Labor-Enterprise-Account", 2);
+            var s = await client.SubscribeDurableAsync("Security-App-1",
+                "T",
+                "T",
+                (content) =>
+            {
+                var data = Encoding.UTF8.GetString(content.Data);
+                Console.WriteLine($"sequence={content.Sequence} data={data}");
+                return new ValueTask<bool>(true);
+            });
 
-            var data = Encoding.UTF8.GetString(content.Data);
-            Console.WriteLine($"sequence={content.Sequence} data={data}");
+            //var content = await client.ReadAsync("Labor-Enterprise-Account", 2);
 
-            var contents = await client.ReadAsync("Labor-Enterprise-Account", 2, 3);
+            //var data = Encoding.UTF8.GetString(content.Data);
+            //Console.WriteLine($"sequence={content.Sequence} data={data}");
+
+            //var contents = await client.ReadAsync("Labor-Enterprise-Account", 2, 3);
 
             Console.WriteLine("订阅成功");
 

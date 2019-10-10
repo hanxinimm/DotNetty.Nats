@@ -220,19 +220,31 @@ namespace Hunter.STAN.Client
 
         #region 订阅
 
-        public string Subscribe(string subject, string queueGroup, string durableName, Func<STANMsgContent, bool> handler)
-        {
-            return Subscribe(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
-        }
-
         public string Subscribe(string subject, string queueGroup, Func<STANMsgContent, bool> handler)
         {
-            return Subscribe(subject, queueGroup, string.Empty, handler);
+            CheckSubject(subject);
+            CheckQueueGroup(queueGroup);
+            return Subscribe(subject, queueGroup, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
         }
 
         public string Subscribe(string subject, string queueGroup, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
         {
+            CheckSubject(subject);
+            CheckQueueGroup(queueGroup);
             return Subscribe(subject, queueGroup, string.Empty, subscribeOptions, handler);
+        }
+
+        public string SubscribeDurable(string subject, string durableName, Func<STANMsgContent, bool> handler)
+        {
+            CheckSubject(subject);
+            return Subscribe(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+        }
+
+        public string SubscribeDurable(string subject, string queueGroup, string durableName, Func<STANMsgContent, bool> handler)
+        {
+            CheckSubject(subject);
+            CheckQueueGroup(queueGroup);
+            return Subscribe(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
 
         public string Subscribe(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
@@ -282,21 +294,32 @@ namespace Hunter.STAN.Client
 
         #region; 异步订阅
 
-        public Task<string> SubscribeAsync(string subject, string queueGroup, string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
-        {
-            return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
-        }
-
         public Task<string> SubscribeAsync(string subject, string queueGroup, Func<STANMsgContent, ValueTask<bool>> handler)
         {
-            return SubscribeAsync(subject, queueGroup, string.Empty, handler);
+            CheckSubject(subject);
+            CheckQueueGroup(queueGroup);
+            return SubscribeAsync(subject, queueGroup, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
         }
-
         public Task<string> SubscribeAsync(string subject, string queueGroup, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
+            CheckSubject(subject);
+            CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
-
+        public Task<string> SubscribeDurableAsync(string subject, string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+        }
+        public Task<string> SubscribeDurableAsync(string subject, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            return SubscribeAsync(subject, string.Empty, durableName, subscribeOptions, handler);
+        }
+        public Task<string> SubscribeDurableAsync(string subject, string queueGroup, string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            CheckSubject(subject);
+            CheckQueueGroup(queueGroup);
+            return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+        }
         public async Task<string> SubscribeAsync(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
@@ -339,8 +362,6 @@ namespace Hunter.STAN.Client
 
             return Packet.Message.Inbox;
         }
-
-
 
         #endregion;
 
@@ -609,7 +630,6 @@ namespace Hunter.STAN.Client
 
             Task.WaitAll(PackWait.ToArray());
         }
-
         /// <summary>
         /// 异步发送
         /// </summary>
@@ -623,12 +643,13 @@ namespace Hunter.STAN.Client
             return _channel.WriteAndFlushAsync(Packet);
         }
 
-        public void PubAckCallback(PubAckPacket pubAck)
+        #region 消息发送确认
+
+        protected void PubAckCallback(PubAckPacket pubAck)
         {
             //Console.WriteLine($"GUID = {pubAck.Message.Guid} Error = {pubAck.Message.Error}");
         }
-
-        public Task AckAsync(IChannel bootstrapChannel, string subject, ulong sequence)
+        protected Task AckAsync(IChannel bootstrapChannel, string subject, ulong sequence)
         {
             var AckInbox = string.Empty;
 
@@ -637,8 +658,7 @@ namespace Hunter.STAN.Client
             //发送消息成功处理
             return bootstrapChannel.WriteAndFlushAsync(Packet);
         }
-
-        public void AckAsync(IChannel channel, MsgProtoPacket msg)
+        protected void AckAsync(IChannel channel, MsgProtoPacket msg)
         {
             if (_localSubscriptionConfig.TryGetValue(msg.Subject, out var subscriptionConfig))
             {
@@ -698,8 +718,7 @@ namespace Hunter.STAN.Client
                 }
             }
         }
-
-        public bool AutoUnSubscribe(STANSubscriptionConfig subscriptionConfig)
+        protected bool AutoUnSubscribe(STANSubscriptionConfig subscriptionConfig)
         {
             if (subscriptionConfig.MaxMsg.HasValue)
             {
@@ -717,7 +736,6 @@ namespace Hunter.STAN.Client
             }
             return true;
         }
-
         protected bool AutoUnSubscribeAsync(STANSubscriptionAsyncConfig subscriptionConfig)
         {
 
@@ -738,6 +756,8 @@ namespace Hunter.STAN.Client
             return true;
         }
 
+        #endregion;
+
         public async Task<CloseResponsePacket> CloseRequestAsync(string inboxId)
         {
 
@@ -757,6 +777,16 @@ namespace Hunter.STAN.Client
             _channel.Pipeline.Remove(Handler);
 
             return Result;
+        }
+
+        private void CheckSubject(string subject)
+        {
+            if (string.IsNullOrEmpty(subject)) throw new ArgumentNullException(nameof(subject));
+        }
+
+        private void CheckQueueGroup(string queueGroup)
+        {
+            if (string.IsNullOrEmpty(queueGroup)) throw new ArgumentNullException(nameof(queueGroup));
         }
 
         private static string GenerateInboxId()

@@ -160,7 +160,11 @@ namespace TestSTANClient
 
                 var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 //client.Publish("test3", Testbytes);
-                var rlt = await client.PublishWaitAckAsync("Security-App-1", Testbytes);
+
+                for (int j = 0; j < 5; j++)
+                {
+                    var rlt = await client.PublishWaitAckAsync("Security-App-1", Testbytes);
+                }
                 //if (Rlt == null) Console.WriteLine("发送失败");
                 
 
