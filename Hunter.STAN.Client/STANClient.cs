@@ -478,9 +478,9 @@ namespace Hunter.STAN.Client
 
         #endregion;
 
-        public void UnSubscribe(string subscribeInbox,string durableName)
+        public void UnSubscribe(string subscribeId,string durableName)
         {
-            if (_localSubscriptionConfig.TryRemove(subscribeInbox, out var subscriptionConfig))
+            if (_localSubscriptionConfig.TryRemove(subscribeId, out var subscriptionConfig))
             {
                 //var SubscribePacket = new UnsubscribeRequestPacket( _config.UnsubRequests,_clientId,subject, _replyInboxId,durableName);
 
@@ -503,9 +503,9 @@ namespace Hunter.STAN.Client
             }
         }
 
-        public Task UnSubscribeAsync(string subscribeInbox, string durableName)
+        public Task UnSubscribeAsync(string subscribeId, string durableName)
         {
-            if (_localSubscriptionAsyncConfig.TryRemove(subscribeInbox, out var subscriptionConfig))
+            if (_localSubscriptionAsyncConfig.TryRemove(subscribeId, out var subscriptionConfig))
             {
                 var Packet = new UnsubscribeRequestPacket(_replyInboxId, _config.UnsubRequests, _options.ClientId, subscriptionConfig.Subject, subscriptionConfig.AckInbox, durableName);
 
@@ -758,10 +758,10 @@ namespace Hunter.STAN.Client
 
         #endregion;
 
-        public async Task<CloseResponsePacket> CloseRequestAsync(string inboxId)
+        public async Task<CloseResponsePacket> CloseRequestAsync()
         {
 
-            var Packet = new CloseRequestPacket(inboxId, _config.CloseRequests, _options.ClientId);
+            var Packet = new CloseRequestPacket(_replyInboxId, _config.CloseRequests, _options.ClientId);
 
             var CloseRequestReady = new TaskCompletionSource<CloseResponsePacket>();
 
