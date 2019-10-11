@@ -109,7 +109,8 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
                 channel.Pipeline.AddLast(new MessagePacketHandler(MsgAck));
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
-                channel.Pipeline.AddLast(new PubAckPacketAsynHandler(PubAckCallback));
+                if (_options.PubAckCallback != null)
+                    channel.Pipeline.AddLast(new PubAckPacketAsynHandler(PubAckCallback));
                 channel.Pipeline.AddLast(new SubscriptionResponsePacketSyncHandler(_waitSubResponseTaskSchedule));
                 channel.Pipeline.AddLast(new SubscriptionResponsePacketAsynHandler((subReps) => { }));
                 channel.Pipeline.AddLast(new UnSubscriptionResponsePacketSyncHandler(_waitUnSubResponseTaskSchedule));
@@ -466,7 +467,7 @@ namespace Hunter.STAN.Client
 
         protected void PubAckCallback(PubAckPacket pubAck)
         {
-            //Console.WriteLine($"GUID = {pubAck.Message.Guid} Error = {pubAck.Message.Error}");
+            _options.PubAckCallback(new STANMsgPubAck(pubAck.Message.Guid, pubAck.Message.Error));
         }
 
         protected void MsgAck(IChannel channel, MsgProtoPacket msg)

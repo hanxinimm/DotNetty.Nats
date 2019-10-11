@@ -72,8 +72,10 @@ namespace TestSTANSubscription
             //    return new ValueTask<bool>(true);
             //});
 
-            var s = await client.SubscribeDurableAsync("Security-App-1",
+            var s = await client.SubscribeAsync("Security-App-1",
                 "T",
+                "T",
+                new STANSubscribeOptions() { Position = StartPosition.NewOnly  },
                 (content) =>
             {
                 var data = Encoding.UTF8.GetString(content.Data);

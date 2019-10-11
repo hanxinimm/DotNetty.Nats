@@ -57,5 +57,10 @@ namespace Hunter.STAN.Client
         /// </summary>
         public int MaxPubAckInFlight { get; set; }
 
+        /// <summary>
+        /// 消息发布确认回调
+        /// </summary>
+        public Action<STANMsgPubAck> PubAckCallback { get; set; }
+
     }
 }
