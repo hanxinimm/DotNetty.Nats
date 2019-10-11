@@ -81,6 +81,17 @@ namespace Hunter.STAN.Client
 
         #region 订阅自动确认 异步回调
 
+        public Task<string> SubscribeAsync(string subject, Func<STANMsgContent, Task> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+        }
+        public Task<string> SubscribeAsync(string subject, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, Task> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, subscribeOptions, handler);
+        }
+
         public Task<string> SubscribeAsync(string subject, string queueGroup, Func<STANMsgContent, Task> handler)
         {
             CheckSubject(subject);
@@ -93,6 +104,8 @@ namespace Hunter.STAN.Client
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
+        
+
         public Task<string> SubscribeDurableAsync(string subject, string durableName, Func<STANMsgContent, Task> handler)
         {
             return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
@@ -107,6 +120,7 @@ namespace Hunter.STAN.Client
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
+        
         public async Task<string> SubscribeAsync(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, Task> handler)
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
@@ -154,6 +168,17 @@ namespace Hunter.STAN.Client
 
         #region 订阅手动确认 同步回调
 
+        public Task<string> SubscribeAsync(string subject, Func<STANMsgContent, bool> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+        }
+        public Task<string> SubscribeAsync(string subject, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, subscribeOptions, handler);
+        }
+
         public Task<string> SubscribeAsync(string subject, string queueGroup, Func<STANMsgContent, bool> handler)
         {
             CheckSubject(subject);
@@ -166,6 +191,7 @@ namespace Hunter.STAN.Client
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
+        
         public Task<string> SubscribeDurableAsync(string subject, string durableName, Func<STANMsgContent, bool> handler)
         {
             return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
@@ -229,6 +255,17 @@ namespace Hunter.STAN.Client
 
         #region 订阅自动确认 同步回调
 
+        public Task<string> SubscribeAsync(string subject, Action<STANMsgContent> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+        }
+        public Task<string> SubscribeAsync(string subject, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, subscribeOptions, handler);
+        }
+
         public Task<string> SubscribeAsync(string subject, string queueGroup, Action<STANMsgContent> handler)
         {
             CheckSubject(subject);
@@ -241,6 +278,7 @@ namespace Hunter.STAN.Client
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
+        
         public Task<string> SubscribeDurableAsync(string subject, string durableName, Action<STANMsgContent> handler)
         {
             return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
@@ -302,6 +340,17 @@ namespace Hunter.STAN.Client
 
         #region 订阅手动确认 异步回调
 
+        public Task<string> SubscribeAsync(string subject, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+        }
+        public Task<string> SubscribeAsync(string subject, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        {
+            CheckSubject(subject);
+            return SubscribeAsync(subject, string.Empty, string.Empty, subscribeOptions, handler);
+        }
+
         public Task<string> SubscribeAsync(string subject, string queueGroup, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             CheckSubject(subject);
@@ -314,6 +363,8 @@ namespace Hunter.STAN.Client
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
+
+
         public Task<string> SubscribeDurableAsync(string subject, string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
