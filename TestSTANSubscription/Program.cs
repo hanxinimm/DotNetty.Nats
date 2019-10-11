@@ -74,7 +74,6 @@ namespace TestSTANSubscription
 
             var s = await client.SubscribeDurableAsync("Security-App-1",
                 "T",
-                "T",
                 (content) =>
             {
                 var data = Encoding.UTF8.GetString(content.Data);
