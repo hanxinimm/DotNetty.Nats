@@ -2,6 +2,7 @@
 using Hunter.STAN.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,7 +12,7 @@ namespace Microsoft.Extensions.DependencyInjection
 {
     public static class STANServiceCollectionExtensions
     {
-        private static readonly Regex _clientIdReplacer = new Regex("\\W\\D");
+        private static readonly Regex _clientIdReplacer = new Regex("[^A-Za-z0-9_]");
         public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration)
         {
             services.Configure<STANOptions>(options => configuration.GetSection("STANOptions").Bind(options));
@@ -21,9 +22,10 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure<STANOptions>(options =>
             {
+                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}-{Guid.NewGuid().ToString("N")}";
                 configuration.GetSection("STANOptions").Bind(options);
-                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "-")}_{Guid.NewGuid().ToString("N")}";
             });
+            services.AddSingleton(spr => new STANClient(spr.GetRequiredService<IOptions<STANOptions>>()));
         }
     }
 }

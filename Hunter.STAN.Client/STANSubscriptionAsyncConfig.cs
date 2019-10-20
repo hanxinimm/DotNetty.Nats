@@ -86,6 +86,15 @@ namespace Hunter.STAN.Client
             AutoAckHandler = handler;
         }
 
+        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, int maxMsg)
+        {
+            IsAutoAck = true;
+            Subject = subject;
+            Inbox = inbox;
+            AckInbox = ackInbox;
+            MaxMsg = maxMsg;
+        }
+
         /// <summary>
         /// 主题
         /// </summary>
