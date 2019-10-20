@@ -12,13 +12,13 @@ namespace Hunter.STAN.Client
         public STANSubscriptionManager()
         {
             MessageQueues = new ConcurrentQueue<MsgProtoPacket>();
-            QueueManualResetEvent = new ManualResetEvent(false);
+            QueueEventWaitHandle = new ManualResetEvent(false);
         }
 
         public STANSubscriptionManager(EventResetMode mode)
         {
             MessageQueues = new ConcurrentQueue<MsgProtoPacket>();
-            QueueManualResetEvent = new EventWaitHandle(false, mode);
+            QueueEventWaitHandle = new EventWaitHandle(false, mode);
         }
 
         /// <summary>
@@ -34,6 +34,6 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 消息通知信号
         /// </summary>
-        public EventWaitHandle QueueManualResetEvent { get; } 
+        public EventWaitHandle QueueEventWaitHandle { get; } 
     }
 }

@@ -745,7 +745,7 @@ namespace Hunter.STAN.Client
             {
                 while (true)
                 {
-                    stanSubscriptionManager.QueueManualResetEvent.Reset();
+                    stanSubscriptionManager.QueueEventWaitHandle.Reset();
 
                     if (stanSubscriptionManager.SubscriptionConfig.IsAutoAck)
                     {
@@ -756,7 +756,7 @@ namespace Hunter.STAN.Client
                         await MessageProcessingChannelWithCustomAckAsync(stanSubscriptionManager, stanSubscriptionManager.SubscriptionConfig);
                     }
 
-                    stanSubscriptionManager.QueueManualResetEvent.WaitOne();
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
                 }
             });
         }
@@ -789,7 +789,7 @@ namespace Hunter.STAN.Client
             {
                 for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
                 {
-                    stanSubscriptionManager.QueueManualResetEvent.WaitOne();
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
 
                     if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                     {
@@ -803,7 +803,7 @@ namespace Hunter.STAN.Client
             {
                 for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
                 {
-                    stanSubscriptionManager.QueueManualResetEvent.WaitOne();
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
 
                     if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                     {
@@ -838,7 +838,7 @@ namespace Hunter.STAN.Client
             {
                 for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
                 {
-                    stanSubscriptionManager.QueueManualResetEvent.WaitOne();
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
 
                     if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                     {
@@ -852,7 +852,7 @@ namespace Hunter.STAN.Client
             {
                 for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
                 {
-                    stanSubscriptionManager.QueueManualResetEvent.WaitOne();
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
 
                     if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                     {
@@ -870,7 +870,7 @@ namespace Hunter.STAN.Client
             {
                 for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
                 {
-                    stanSubscriptionManager.QueueManualResetEvent.WaitOne();
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
 
                     if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                     {
@@ -884,7 +884,7 @@ namespace Hunter.STAN.Client
             {
                 for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
                 {
-                    stanSubscriptionManager.QueueManualResetEvent.WaitOne();
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
 
                     if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                     {
@@ -896,12 +896,12 @@ namespace Hunter.STAN.Client
             }
         }
 
+        //TODO:还有另外一种写法
         private async Task MessageProcessingChannelWithAutoUnSubscribeAsync(STANSubscriptionAutomaticManager stanSubscriptionManager)
         {
 
             for (int i = 0; i < stanSubscriptionManager.SubscriptionConfig.MaxMsg.Value; i++)
             {
-                stanSubscriptionManager.QueueManualResetEvent.WaitOne();
 
                 if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                 {
@@ -910,6 +910,11 @@ namespace Hunter.STAN.Client
 
                     //发送消息成功处理
                     await AckAsync(stanSubscriptionManager.SubscriptionConfig, msgPacket);
+                }
+                else
+                {
+                    i--;
+                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
                 }
             }
 

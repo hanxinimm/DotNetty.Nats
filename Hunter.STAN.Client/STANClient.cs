@@ -518,7 +518,7 @@ namespace Hunter.STAN.Client
             if (_subscriptionMessageQueue.TryGetValue(msg.Subject, out var stanSubscriptionManager))
             {
                 stanSubscriptionManager.MessageQueues.Enqueue(msg);
-                stanSubscriptionManager.QueueManualResetEvent.Set();
+                stanSubscriptionManager.QueueEventWaitHandle.Set();
             }
 
             return;

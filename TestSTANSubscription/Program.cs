@@ -99,7 +99,11 @@ namespace TestSTANSubscription
             //    return new ValueTask<bool>(true);
             //});
 
-
+            await client.ReadAsync("Security-App-1", 1, 20);
+            await client.ReadAsync("Security-App-1", 1, 20);
+            await client.ReadAsync("Security-App-1", 1, 20);
+            await client.ReadAsync("Security-App-1", 1, 20);
+            await client.ReadAsync("Security-App-1", 1, 20);
 
             var s = await client.ReadAsync("Security-App-1", 1, 20);
 

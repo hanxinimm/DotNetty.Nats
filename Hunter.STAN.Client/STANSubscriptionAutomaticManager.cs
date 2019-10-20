@@ -7,7 +7,7 @@ namespace Hunter.STAN.Client
 {
     public class STANSubscriptionAutomaticManager : STANSubscriptionManager
     {
-        public STANSubscriptionAutomaticManager(int capacity) : base(EventResetMode.AutoReset)
+        public STANSubscriptionAutomaticManager(int capacity)
         {
             Messages = new Queue<STANMsgContent>(capacity);
         }
