@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using DotNetty.Buffers;
 using System.Threading;
 using System.Linq;
+using Microsoft.Extensions.Options;
 
 namespace Hunter.NATS.Client
 {
@@ -75,6 +76,11 @@ namespace Hunter.NATS.Client
                     channel.Pipeline.AddLast(new OKPacketHandler());
                     channel.Pipeline.AddLast(new InfoPacketHandler(InfoAsync));
                 }));
+
+        }
+
+        public NATSClient(IOptions<NATSOptions> options) : this(options.Value)
+        {
 
         }
 
