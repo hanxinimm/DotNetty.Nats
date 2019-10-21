@@ -163,7 +163,7 @@ namespace Hunter.STAN.Client
                                 _channel = await _bootstrap.ConnectAsync(socketAddress);
                                 break;
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 await Task.Delay(TimeSpan.FromSeconds(3));
                             }
@@ -517,8 +517,15 @@ namespace Hunter.STAN.Client
 
             if (_subscriptionMessageQueue.TryGetValue(msg.Subject, out var stanSubscriptionManager))
             {
-                stanSubscriptionManager.MessageQueues.Enqueue(msg);
-                stanSubscriptionManager.QueueEventWaitHandle.Set();
+                //if (stanSubscriptionManager.IsAutoUnSubscription)
+                //{
+                //    stanSubscriptionManager.MessageQueues.Enqueue(msg);
+                //    stanSubscriptionManager.QueueEventWaitHandle.Set();
+                //}
+                //else
+                //{
+                    MessageProcessingChannelAsync(stanSubscriptionManager, msg).GetAwaiter().GetResult();
+                //}
             }
 
             return;

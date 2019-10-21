@@ -9,6 +9,7 @@ namespace Hunter.STAN.Client
     {
         public STANSubscriptionAutomaticManager(int capacity)
         {
+            IsAutoUnSubscription = true;
             Messages = new Queue<STANMsgContent>(capacity);
         }
         public Queue<STANMsgContent> Messages { get; set; }

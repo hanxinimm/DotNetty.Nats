@@ -90,40 +90,47 @@ namespace TestSTANSubscription
             await client.ContentcAsync();
 
 
-            //var s = await client.ReadAsync("Labor-Enterprise-Account",
-            //    2,
-            //    (content) =>
+            var s = await client.SubscribeAsync("Security-App-1",
+                (content) =>
+            {
+                var data = Encoding.UTF8.GetString(content.Data);
+                Console.WriteLine($"订阅 1 sequence={content.Sequence} data={data}");
+                return new ValueTask<bool>(true);
+            });
+
+            var s2 = await client.SubscribeAsync("Security-App-1",
+            (content) =>
+            {
+                var data = Encoding.UTF8.GetString(content.Data);
+                Console.WriteLine($"订阅 2 sequence={content.Sequence} data={data}");
+                return new ValueTask<bool>(true);
+            });
+
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+
+            //var s = await client.ReadAsync("Security-App-1", 1, 20);
+
+            //foreach (var sss in s)
             //{
-            //    var data = Encoding.UTF8.GetString(content.Data);
-            //    Console.WriteLine($"sequence={content.Sequence} data={data}");
-            //    return new ValueTask<bool>(true);
-            //});
+            //    var data = Encoding.UTF8.GetString(sss.Data);
+            //    Console.WriteLine($"sequence={sss.Sequence} data={data}");
+            //}
 
-            await client.ReadAsync("Security-App-1", 1, 20);
-            await client.ReadAsync("Security-App-1", 1, 20);
-            await client.ReadAsync("Security-App-1", 1, 20);
-            await client.ReadAsync("Security-App-1", 1, 20);
-            await client.ReadAsync("Security-App-1", 1, 20);
+            //Console.WriteLine("订阅2 完成 " + s.Count);
 
-            var s = await client.ReadAsync("Security-App-1", 1, 20);
+            //var s2 = await client.ReadAsync("Security-App-1", 1, 20);
 
-            foreach (var sss in s)
-            {
-                var data = Encoding.UTF8.GetString(sss.Data);
-                Console.WriteLine($"sequence={sss.Sequence} data={data}");
-            }
+            //foreach (var sss in s2)
+            //{
+            //    var data = Encoding.UTF8.GetString(sss.Data);
+            //    Console.WriteLine($"sequence={sss.Sequence} data={data}");
+            //}
 
-            Console.WriteLine("订阅2 完成 " + s.Count);
-
-            var s2 = await client.ReadAsync("Security-App-1", 1, 20);
-
-            foreach (var sss in s2)
-            {
-                var data = Encoding.UTF8.GetString(sss.Data);
-                Console.WriteLine($"sequence={sss.Sequence} data={data}");
-            }
-
-            Console.WriteLine("订阅2 完成 " + s2.Count);
+            //Console.WriteLine("订阅2 完成 " + s2.Count);
 
             //var content = await client.ReadAsync("Labor-Enterprise-Account", 2);
 

@@ -440,7 +440,7 @@ namespace Hunter.STAN.Client
 
             stanSubscriptionManager.SubscriptionConfig = new STANSubscriptionAsyncConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox, handler);
 
-            await MessageProcessingChannelAsync(stanSubscriptionManager);
+            //await MessageProcessingChannelAsync(stanSubscriptionManager);
 
             return Packet.Message.Inbox;
         }
@@ -739,9 +739,56 @@ namespace Hunter.STAN.Client
         }
 
 
+        private async Task MessageProcessingChannelAsync(STANSubscriptionManager stanSubscriptionManager, MsgProtoPacket msgPacket)
+        {
+
+            if (stanSubscriptionManager.SubscriptionConfig.IsAutoAck)
+            {
+                await MessageProcessingChannelWithAutoAckAsync(stanSubscriptionManager, stanSubscriptionManager.SubscriptionConfig, msgPacket);
+            }
+            else
+            {
+                await MessageProcessingChannelWithCustomAckAsync(stanSubscriptionManager, stanSubscriptionManager.SubscriptionConfig, msgPacket);
+            }
+        }
+
+        private async Task MessageProcessingChannelWithAutoAckAsync(STANSubscriptionManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig, MsgProtoPacket msgPacket)
+        {
+            if (subscriptionConfig.IsAsyncCallback)
+            {
+
+                await subscriptionConfig.AutoAckAsyncHandler(PackMsgContent(msgPacket));
+                //发送消息成功处理
+                await AckAsync(subscriptionConfig, msgPacket);
+            }
+            else
+            {
+
+                subscriptionConfig.AutoAckHandler(PackMsgContent(msgPacket));
+                //发送消息成功处理
+                await AckAsync(subscriptionConfig, msgPacket);
+            }
+        }
+        private async Task MessageProcessingChannelWithCustomAckAsync(STANSubscriptionManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig, MsgProtoPacket msgPacket)
+        {
+            if (subscriptionConfig.IsAsyncCallback)
+            {
+                var AsyncHandlerResult = await subscriptionConfig.AsyncHandler(PackMsgContent(msgPacket));
+                //发送消息成功处理
+                await AckAsync(subscriptionConfig, msgPacket, AsyncHandlerResult);
+            }
+            else
+            {
+                var HandlerResult = subscriptionConfig.Handler(PackMsgContent(msgPacket));
+                //发送消息成功处理
+                await AckAsync(subscriptionConfig, msgPacket, HandlerResult);
+            }
+        }
+
+
         private Task MessageProcessingChannelAsync(STANSubscriptionManager stanSubscriptionManager)
         {
-            return Task.Factory.StartNew(async () =>
+            return Task.Run(async () =>
             {
                 while (true)
                 {
@@ -760,7 +807,6 @@ namespace Hunter.STAN.Client
                 }
             });
         }
-
         private async Task MessageProcessingChannelWithAutoAckAsync(STANSubscriptionManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig)
         {
             if (subscriptionConfig.IsAsyncCallback)
@@ -782,35 +828,24 @@ namespace Hunter.STAN.Client
                 }
             }
         }
-
         private async Task MessageProcessingChannelWithCustomAckAsync(STANSubscriptionManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig)
         {
             if (subscriptionConfig.IsAsyncCallback)
             {
-                for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
+                while (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                 {
-                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
-
-                    if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-                    {
-                        var AsyncHandlerResult = await subscriptionConfig.AsyncHandler(PackMsgContent(msgPacket));
-                        //发送消息成功处理
-                        await AckAsync(subscriptionConfig, msgPacket, AsyncHandlerResult);
-                    }
+                    var AsyncHandlerResult = await subscriptionConfig.AsyncHandler(PackMsgContent(msgPacket));
+                    //发送消息成功处理
+                    await AckAsync(subscriptionConfig, msgPacket, AsyncHandlerResult);
                 }
             }
             else
             {
-                for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
+                while (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
                 {
-                    stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
-
-                    if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-                    {
-                        var HandlerResult = subscriptionConfig.Handler(PackMsgContent(msgPacket));
-                        //发送消息成功处理
-                        await AckAsync(subscriptionConfig, msgPacket, HandlerResult);
-                    }
+                    var HandlerResult = subscriptionConfig.Handler(PackMsgContent(msgPacket));
+                    //发送消息成功处理
+                    await AckAsync(subscriptionConfig, msgPacket, HandlerResult);
                 }
             }
         }

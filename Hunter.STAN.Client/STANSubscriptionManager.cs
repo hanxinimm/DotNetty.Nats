@@ -22,6 +22,11 @@ namespace Hunter.STAN.Client
         }
 
         /// <summary>
+        /// 是否为自动取消订阅
+        /// </summary>
+        public bool IsAutoUnSubscription { get; set; }
+
+        /// <summary>
         /// 消息队列
         /// </summary>
         public ConcurrentQueue<MsgProtoPacket> MessageQueues { get; }
