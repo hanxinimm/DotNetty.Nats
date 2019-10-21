@@ -5,9 +5,9 @@ using System.Threading;
 
 namespace Hunter.STAN.Client
 {
-    public class STANSubscriptionAutomaticManager : STANSubscriptionManager
+    public class STANSubscriptionAutomaticSyncManager : STANSubscriptionSyncManager
     {
-        public STANSubscriptionAutomaticManager(int capacity)
+        public STANSubscriptionAutomaticSyncManager(int capacity)
         {
             IsAutoUnSubscription = true;
             Messages = new Queue<STANMsgContent>(capacity);

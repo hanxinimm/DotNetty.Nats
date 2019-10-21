@@ -32,13 +32,13 @@ namespace Hunter.STAN.Client
         public ConcurrentQueue<MsgProtoPacket> MessageQueues { get; }
 
         /// <summary>
-        /// 队列配置
-        /// </summary>
-        public STANSubscriptionAsyncConfig SubscriptionConfig { get; set; }
-
-        /// <summary>
         /// 消息通知信号
         /// </summary>
-        public EventWaitHandle QueueEventWaitHandle { get; } 
+        public EventWaitHandle QueueEventWaitHandle { get; }
+
+        /// <summary>
+        /// 队列配置
+        /// </summary>
+        public STANSubscriptionConfig SubscriptionConfig { get; set; }
     }
 }
