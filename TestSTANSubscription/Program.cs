@@ -90,21 +90,21 @@ namespace TestSTANSubscription
             await client.ContentcAsync();
 
 
-            var s = await client.SubscribeAsync("Security-App-1",
-                (content) =>
+            for (int i = 0; i < 20; i++)
             {
-                var data = Encoding.UTF8.GetString(content.Data);
-                Console.WriteLine($"订阅 1 sequence={content.Sequence} data={data}");
-                return new ValueTask<bool>(true);
-            });
+                var index = i.ToString();
 
-            var s2 = await client.SubscribeAsync("Security-App-1",
-            (content) =>
-            {
-                var data = Encoding.UTF8.GetString(content.Data);
-                Console.WriteLine($"订阅 2 sequence={content.Sequence} data={data}");
-                return new ValueTask<bool>(true);
-            });
+                var s = await client.SubscribeAsync("Security-App-1", "T" + index,
+                    (content) =>
+                {
+
+                    var data = Encoding.UTF8.GetString(content.Data);
+                    Console.WriteLine($"订阅 {index} sequence={content.Sequence} data={data}");
+                    return new ValueTask<bool>(true);
+                });
+
+                Console.WriteLine("完成 第 {0} 次订阅", i);
+            }
 
             //await client.ReadAsync("Security-App-1", 1, 20);
             //await client.ReadAsync("Security-App-1", 1, 20);

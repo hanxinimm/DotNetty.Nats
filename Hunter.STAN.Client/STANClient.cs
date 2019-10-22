@@ -542,7 +542,7 @@ namespace Hunter.STAN.Client
 
         private void MessageProcessingChannelAsyncConfig(object messageInBox)
         {
-            var stanSubscriptionManager = _subscriptionMessageQueue[messageInBox.ToString()] as STANSubscriptionSyncManager;
+            var stanSubscriptionManager = _subscriptionMessageQueue[messageInBox.ToString()] as STANSubscriptionAsyncManager;
             var subscriptionConfig = stanSubscriptionManager.SubscriptionConfig as STANSubscriptionAsyncConfig;
 
             Task.Run(async () =>
@@ -553,11 +553,11 @@ namespace Hunter.STAN.Client
 
                     if (stanSubscriptionManager.SubscriptionConfig.IsAutoAck)
                     {
-                        await MessageProcessingChannelWithAutoAck(stanSubscriptionManager, subscriptionConfig);
+                        await MessageProcessingChannelWithAutoAckAsync(stanSubscriptionManager, subscriptionConfig);
                     }
                     else
                     {
-                        await MessageProcessingChannelWithCustomAck(stanSubscriptionManager, subscriptionConfig);
+                        await MessageProcessingChannelWithCustomAckAsync(stanSubscriptionManager, subscriptionConfig);
                     }
 
                     stanSubscriptionManager.QueueEventWaitHandle.WaitOne();

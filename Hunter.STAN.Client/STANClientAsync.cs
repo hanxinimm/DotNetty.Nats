@@ -448,6 +448,7 @@ namespace Hunter.STAN.Client
 
             stanSubscriptionManager.SubscriptionConfig = new STANSubscriptionAsyncConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox, handler);
 
+            //TODO;订阅太多可能参数性能影响,考虑优化队列消息处理的逻辑
             ThreadPool.QueueUserWorkItem(new WaitCallback(MessageProcessingChannelAsyncConfig), Packet.Message.Inbox);
 
             return Packet.Message.Inbox;
