@@ -16,7 +16,8 @@ namespace DotNetty.Codecs.STAN
 
     public sealed class STANDecoder : ZeroAllocationByteDecoder
     {
-        public static readonly STANDecoder Instance = new STANDecoder();
+        public static STANDecoder Instance => new STANDecoder();
+
 
         protected override ProtocolPacket DecodePacket(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {

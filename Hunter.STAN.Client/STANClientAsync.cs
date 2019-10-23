@@ -31,6 +31,9 @@ namespace Hunter.STAN.Client
 
             var ClusterNode = _options.ClusterNodes.First();
 
+            if (_channel != null)
+                await _channel.CloseAsync();
+
             _channel = await _bootstrap.ConnectAsync(ClusterNode);
 
             await SubscribeHeartBeatInboxAsync();
@@ -524,7 +527,7 @@ namespace Hunter.STAN.Client
             var MessageReady = new TaskCompletionSource<string>();
             var MessageList = new List<STANMsgContent>();
 
-            await SubscribeAsync(subject, count, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start), MaxInFlight = count },
+            await SubscribeAsync(subject, count, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start) },
                 (msg) =>
                 {
                     MessageList.Add(msg);
@@ -616,6 +619,11 @@ namespace Hunter.STAN.Client
                 {
                     UnSubscribeAsync(subscriptionConfig.Inbox, subscriptionConfig.DurableName).GetAwaiter().GetResult();
                     return false;
+                }
+                else if (subscriptionConfig.MaxMsg == 0)
+                {
+                    UnSubscribeAsync(subscriptionConfig.Inbox, subscriptionConfig.DurableName).GetAwaiter().GetResult();
+                    return true;
                 }
                 else
                 {

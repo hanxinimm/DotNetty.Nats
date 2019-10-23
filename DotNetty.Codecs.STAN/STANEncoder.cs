@@ -17,7 +17,7 @@ namespace DotNetty.Codecs.STAN
 
     public sealed class STANEncoder : MessageToMessageEncoder<STANPacket>
     {
-        public static readonly STANEncoder Instance = new STANEncoder();
+        public static STANEncoder Instance => new STANEncoder();
 
         public static readonly byte[] EMPTY_BYTES;
         public static readonly byte[] SPACES_BYTES;
