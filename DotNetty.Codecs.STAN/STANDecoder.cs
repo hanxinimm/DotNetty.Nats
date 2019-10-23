@@ -18,7 +18,6 @@ namespace DotNetty.Codecs.STAN
     {
         public static STANDecoder Instance => new STANDecoder();
 
-
         protected override ProtocolPacket DecodePacket(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             return DecodePacketInternal(buffer, packetSignature, context);

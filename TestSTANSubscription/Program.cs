@@ -2,6 +2,7 @@
 using Hunter.STAN.Client;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -52,8 +53,34 @@ namespace TestSTANSubscription
             Console.WriteLine("TestHandle");
         }
 
+        public class TestName<T,T2>
+        { 
+            public T Name { get; set; }
+
+            public T2 Name2 { get; set; }
+        }
+
+        protected static string GetPackageType(object package)
+        {
+            return package?.GetType().Name.Split('`')[0];
+        }
+
+        static void load(IEnumerable< int> vals)
+        { 
+        
+        }
         static async Task Main(string[] args)
         {
+
+            //var sss = new int[2];
+            //load(sss);
+            //load(new List<int>());
+
+            //var ttt = new TestName<int,string>().GetType();
+            //Console.WriteLine(GetPackageType(new TestName<int, string>()));
+
+            //return;
+
             var options = new STANOptions();
             options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4222));
             options.ClusterID = "main-cluster";
@@ -63,25 +90,47 @@ namespace TestSTANSubscription
             await client.ContentcAsync();
 
 
-            //var s = await client.ReadAsync("Labor-Enterprise-Account",
-            //    2,
-            //    (content) =>
-            //{
-            //    var data = Encoding.UTF8.GetString(content.Data);
-            //    Console.WriteLine($"sequence={content.Sequence} data={data}");
-            //    return new ValueTask<bool>(true);
-            //});
-
-            var s = await client.SubscribeAsync("Security-App-1",
-                "T",
-                "T",
-                new STANSubscribeOptions() { Position = StartPosition.NewOnly  },
-                (content) =>
+            for (int i = 0; i < 20; i++)
             {
-                var data = Encoding.UTF8.GetString(content.Data);
-                Console.WriteLine($"sequence={content.Sequence} data={data}");
-                return new ValueTask<bool>(true);
-            });
+                var index = i.ToString();
+
+                var s = await client.SubscribeAsync("Security-App-1", "T" + index,
+                    (content) =>
+                {
+
+                    var data = Encoding.UTF8.GetString(content.Data);
+                    Console.WriteLine($"订阅 {index} sequence={content.Sequence} data={data}");
+                    return new ValueTask<bool>(true);
+                });
+
+                Console.WriteLine("完成 第 {0} 次订阅", i);
+            }
+
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+            //await client.ReadAsync("Security-App-1", 1, 20);
+
+            //var s = await client.ReadAsync("Security-App-1", 1, 20);
+
+            //foreach (var sss in s)
+            //{
+            //    var data = Encoding.UTF8.GetString(sss.Data);
+            //    Console.WriteLine($"sequence={sss.Sequence} data={data}");
+            //}
+
+            //Console.WriteLine("订阅2 完成 " + s.Count);
+
+            //var s2 = await client.ReadAsync("Security-App-1", 1, 20);
+
+            //foreach (var sss in s2)
+            //{
+            //    var data = Encoding.UTF8.GetString(sss.Data);
+            //    Console.WriteLine($"sequence={sss.Sequence} data={data}");
+            //}
+
+            //Console.WriteLine("订阅2 完成 " + s2.Count);
 
             //var content = await client.ReadAsync("Labor-Enterprise-Account", 2);
 
