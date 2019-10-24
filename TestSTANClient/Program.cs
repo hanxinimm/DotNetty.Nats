@@ -161,9 +161,9 @@ namespace TestSTANClient
                 var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 //client.Publish("test3", Testbytes);
 
-                for (int j = 0; j < 100; j++)
+                for (int j = 0; j < 10; j++)
                 {
-                    var rlt = await client.PublishWaitAckAsync("Security-App-1", Testbytes);
+                    await client.PublishAsync("Security-App-1", Testbytes);
                 }
                 //if (Rlt == null) Console.WriteLine("发送失败");
                 
@@ -171,7 +171,7 @@ namespace TestSTANClient
                 stopwatch.Stop(); //停止监视  
 
                 //TimeSpan timespan = stopwatch.Elapsed; //  获取当前实例测量得出的总时间  
-                Console.WriteLine("完成发送" + stopwatch.ElapsedMilliseconds);
+                Console.WriteLine("完成发送 " + stopwatch.ElapsedMilliseconds);
 
                 Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 

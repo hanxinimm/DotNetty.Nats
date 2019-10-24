@@ -84,6 +84,8 @@ namespace Hunter.NATS.Client
 
         }
 
+        public bool IsOpen => _channel?.Open ?? false;
+
         public async Task ContentcAsync()
         {
             if (!_options.ClusterNodes.Any())
