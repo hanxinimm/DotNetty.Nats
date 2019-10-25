@@ -531,9 +531,10 @@ namespace Hunter.STAN.Client
 
         #region; 读取消息
 
-        public Task<Queue<STANMsgContent>> ReadAsync(string subject, long sequence)
+        public async Task<STANMsgContent> ReadAsync(string subject, long sequence)
         {
-            return ReadAsync(subject, sequence, 1, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(sequence < 1 ? 1 : sequence), MaxInFlight = 1 });
+            var MsgContents =  await ReadAsync(subject, sequence, 1, new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = (ulong)(sequence < 1 ? 1 : sequence), MaxInFlight = 1 });
+            return MsgContents.FirstOrDefault();
         }
 
         public Task<Queue<STANMsgContent>> ReadAsync(string subject, long start, int count)
