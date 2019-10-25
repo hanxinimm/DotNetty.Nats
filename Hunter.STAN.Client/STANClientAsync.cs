@@ -592,6 +592,24 @@ namespace Hunter.STAN.Client
 
         #endregion;
 
+
+        public async ValueTask UnSubscribeAsync(string subscribeId)
+        {
+            if (_subscriptionMessageQueue.TryRemove(subscribeId, out var stanSubscriptionManager))
+            {
+                var Packet = new UnsubscribeRequestPacket(_replyInboxId,
+                    _config.UnsubRequests,
+                    _clientId,
+                    stanSubscriptionManager.SubscriptionConfig.Subject,
+                    stanSubscriptionManager.SubscriptionConfig.AckInbox,
+                    stanSubscriptionManager.SubscriptionConfig.DurableName);
+
+                //发送取消订阅请求
+                await _channel.WriteAndFlushAsync(Packet);
+            }
+        }
+
+
         private async ValueTask UnSubscribeAsync(STANSubscriptionAsyncManager stanSubscriptionManager)
         {
             if (_subscriptionMessageQueue.TryRemove(stanSubscriptionManager.SubscriptionConfig.Inbox, out _))
