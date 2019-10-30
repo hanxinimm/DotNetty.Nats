@@ -48,7 +48,7 @@ namespace TestSTANClient
 
             //return;
 
-            IPHostEntry hostInfo = Dns.GetHostEntry("www.contoso.com");
+            //IPHostEntry hostInfo = Dns.GetHostEntry("www.contoso.com");
 
             var Services = new ServiceCollection();
             
@@ -161,7 +161,7 @@ namespace TestSTANClient
                 var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 //client.Publish("test3", Testbytes);
 
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < 1; j++)
                 {
                     await client.PublishAsync("Security-App-1", Testbytes);
                 }
