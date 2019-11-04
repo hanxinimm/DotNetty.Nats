@@ -116,7 +116,7 @@ namespace Hunter.NATS.Client
 
         }
 
-        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<byte[]> handler, string subscribeId = null)
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<NATSMsgContent> handler, string subscribeId = null)
         {
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -130,7 +130,7 @@ namespace Hunter.NATS.Client
 
         }
 
-        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<byte[]> handler)
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<NATSMsgContent> handler)
         {
             var SubscribeId = $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -211,7 +211,7 @@ namespace Hunter.NATS.Client
                         _localSubscriptionConfig.Remove(message.SubscribeId);
                 }
 
-                subscriptionConfig.Handler(message.Payload);
+                subscriptionConfig.Handler(new NATSMsgContent(message.SubscribeId, message.Subject, message.ReplyTo, message.Payload));
             }
         }
     }

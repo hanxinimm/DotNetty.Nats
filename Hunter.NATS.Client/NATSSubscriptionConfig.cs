@@ -6,7 +6,7 @@ namespace Hunter.NATS.Client
 {
     public class NATSSubscriptionConfig
     {
-        public NATSSubscriptionConfig(string subject, string subscribeId, Action<byte[]> handler)
+        public NATSSubscriptionConfig(string subject, string subscribeId, Action<NATSMsgContent> handler)
         {
             Subject = subject;
             SubscribeId = subscribeId;
@@ -29,7 +29,7 @@ namespace Hunter.NATS.Client
         /// <summary>
         /// 处理程序
         /// </summary>
-        public Action<byte[]> Handler { get; }
+        public Action<NATSMsgContent> Handler { get; }
 
     }
 }
