@@ -26,6 +26,11 @@ namespace Hunter.NATS.Client
         private readonly NATSOptions _options;
 
         /// <summary>
+        /// 客户端编号
+        /// </summary>
+        private readonly string _clientId;
+
+        /// <summary>
         /// 通道引导
         /// </summary>
         private readonly Bootstrap _bootstrap;
@@ -61,6 +66,7 @@ namespace Hunter.NATS.Client
         public NATSClient(NATSOptions options)
         {
             _options = options;
+            _clientId = _options.ClientId;
             _localSubscriptionConfig = new Dictionary<string, NATSSubscriptionConfig>();
             _bootstrap = new Bootstrap()
                 .Group(new MultithreadEventLoopGroup())
@@ -104,7 +110,7 @@ namespace Hunter.NATS.Client
         private async Task<InfoPacket> ConnectAsync()
         {
 
-            var Packet = new ConnectPacket(true, false, false, null, null, _options.ClientId, null);
+            var Packet = new ConnectPacket(true, false, false, null, null, _clientId, null);
 
             _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
 

@@ -27,7 +27,7 @@ namespace Hunter.STAN.Client
         private readonly STANOptions _options;
 
         /// <summary>
-        /// 心跳收件箱
+        /// 客户端编号
         /// </summary>
         private readonly string _clientId;
 

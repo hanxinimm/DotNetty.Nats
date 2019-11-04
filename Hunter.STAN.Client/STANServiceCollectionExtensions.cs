@@ -15,7 +15,11 @@ namespace Microsoft.Extensions.DependencyInjection
         private static readonly Regex _clientIdReplacer = new Regex("[^A-Za-z0-9_]");
         public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration)
         {
-            services.Configure<STANOptions>(options => configuration.GetSection("STANOptions").Bind(options));
+            services.Configure<STANOptions>(options =>
+            {
+                options.ClientId = Guid.NewGuid().ToString("N");
+                configuration.GetSection("STANOptions").Bind(options);
+            });
         }
 
         public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration, string clientId)
