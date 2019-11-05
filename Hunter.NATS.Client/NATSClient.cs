@@ -47,11 +47,6 @@ namespace Hunter.NATS.Client
         /// 等待发送消息确认安排表
         /// </summary>
         private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
-        /// <summary>
-        /// 本地订阅配置
-        /// </summary>
-        private Dictionary<string, NATSSubscriptionConfig> _localSubscriptionConfig = new Dictionary<string, NATSSubscriptionConfig>();
-
 
         private static readonly Regex _publishSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
         private static readonly Regex _subscribeSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
@@ -60,7 +55,7 @@ namespace Hunter.NATS.Client
         {
             _options = options;
             _clientId = _options.ClientId;
-            _localSubscriptionConfig = new Dictionary<string, NATSSubscriptionConfig>();
+            _localSubscriptionAsyncConfig = new Dictionary<string, NATSSubscriptionAsyncConfig>();
             _bootstrap = new Bootstrap()
                 .Group(new MultithreadEventLoopGroup())
                 .Channel<TcpSocketChannel>()
@@ -69,7 +64,7 @@ namespace Hunter.NATS.Client
                 {
                     channel.Pipeline.AddLast(NATSEncoder.Instance, NATSDecoder.Instance);
                     channel.Pipeline.AddLast(new ErrorPacketHandler());
-                    channel.Pipeline.AddLast(new MessagePacketHandler(MessageAsync));
+                    channel.Pipeline.AddLast(new MessagePacketHandler(MessageProcessingAsync));
                     channel.Pipeline.AddLast(new PingPacketHandler());
                     channel.Pipeline.AddLast(new PongPacketHandler());
                     channel.Pipeline.AddLast(new OKPacketHandler());

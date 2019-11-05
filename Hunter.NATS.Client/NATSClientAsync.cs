@@ -1,5 +1,6 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -9,6 +10,11 @@ namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
+        /// <summary>
+        /// 本地订阅配置
+        /// </summary>
+        private Dictionary<string, NATSSubscriptionAsyncConfig> _localSubscriptionAsyncConfig = new Dictionary<string, NATSSubscriptionAsyncConfig>();
+
         public async Task ContentcAsync()
         {
             if (!_options.ClusterNodes.Any())
@@ -37,54 +43,48 @@ namespace Hunter.NATS.Client
             return ConnectInfoResult;
 
         }
-        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<NATSMsgContent> handler, string subscribeId = null)
+        
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, Func<NATSMsgContent, ValueTask> handler, string subscribeId = null)
         {
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
-            _localSubscriptionConfig[SubscribeId] = new NATSSubscriptionConfig(subject, SubscribeId, handler);
+            _localSubscriptionAsyncConfig[SubscribeId] = new NATSSubscriptionAsyncConfig(subject, SubscribeId, handler);
 
             var SubscribePacket = new SubscribePacket(SubscribeId, subject, queueGroup);
 
             await _channel.WriteAndFlushAsync(SubscribePacket);
 
             return SubscribeId;
+        }
 
-        }
-        public Task<string> SubscribeAsync(string subject, Action<NATSMsgContent> handler, string subscribeId = null)
-        {
-            return SubscribeAsync(subject, string.Empty, handler, subscribeId);
-        }
-        public async Task<string> SubscribeAsync(string subject, string queueGroup, Action<NATSMsgContent> handler)
+        public async Task<string> SubscribeAsync(string subject, string queueGroup, int maxMsg, Func<NATSMsgContent, ValueTask> handler)
         {
             var SubscribeId = $"sid{Interlocked.Increment(ref _subscribeId)}";
 
-            _localSubscriptionConfig[SubscribeId] = new NATSSubscriptionConfig(subject, SubscribeId, handler);
+            _localSubscriptionAsyncConfig[SubscribeId] = new NATSSubscriptionAsyncConfig(subject, SubscribeId, maxMsg, handler);
 
             var SubscribePacket = new SubscribePacket(SubscribeId, subject, queueGroup);
 
             await _channel.WriteAndFlushAsync(SubscribePacket);
 
             return SubscribeId;
+        }
 
-        }
-        public Task<string> SubscribeAsync(string subject, Action<NATSMsgContent> handler)
-        {
-            return SubscribeAsync(subject, string.Empty, handler);
-        }
         public async Task UnSubscribeAsync(string subscribeId)
         {
-            if (_localSubscriptionConfig.Remove(subscribeId))
+            if (_localSubscriptionAsyncConfig.Remove(subscribeId))
             {
                 var UnSubscribePacket = new UnSubscribePacket(subscribeId);
 
                 await _channel.WriteAndFlushAsync(UnSubscribePacket);
             }
         }
+
         public async Task AutoUnSubscribeAsync(string subscribeId, int max_msgs)
         {
-            if (_localSubscriptionConfig.TryGetValue(subscribeId, out var subscriptionConfig))
+            if (_localSubscriptionAsyncConfig.TryGetValue(subscribeId, out var subscriptionConfig))
             {
-                subscriptionConfig.MaxProcessed = max_msgs;
+                subscriptionConfig.MaxMsg = max_msgs;
 
                 var UnSubscribePacket = new UnSubscribePacket(subscribeId, max_msgs);
 
@@ -124,19 +124,21 @@ namespace Hunter.NATS.Client
             _infoTaskCompletionSource.TrySetResult(info);
         }
 
-        protected void MessageAsync(MessagePacket message)
+        protected void MessageProcessingAsync(MessagePacket message)
         {
-            if (_localSubscriptionConfig.TryGetValue(message.SubscribeId, out var subscriptionConfig))
+            if (_localSubscriptionAsyncConfig.TryGetValue(message.SubscribeId, out var subscriptionConfig))
             {
-                if (subscriptionConfig.MaxProcessed.HasValue)
+                if (subscriptionConfig.MaxMsg.HasValue)
                 {
-                    subscriptionConfig.MaxProcessed--;
+                    subscriptionConfig.MaxMsg--;
 
-                    if (subscriptionConfig.MaxProcessed <= 0)
-                        _localSubscriptionConfig.Remove(message.SubscribeId);
+                    if (subscriptionConfig.MaxMsg <= 0)
+                        _localSubscriptionAsyncConfig.Remove(message.SubscribeId);
                 }
 
-                subscriptionConfig.Handler(new NATSMsgContent(message.SubscribeId, message.Subject, message.ReplyTo, message.Payload));
+                subscriptionConfig.AsyncHandler(
+                    new NATSMsgContent(message.SubscribeId, message.Subject, message.ReplyTo, message.Payload)
+                    ).GetAwaiter().GetResult();
             }
         }
     }

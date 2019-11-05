@@ -37,6 +37,7 @@ namespace TestNATSClient
                     Console.WriteLine(SValue);
                     SValue = 0;
                 }
+                return new ValueTask();
             });
 
 
