@@ -1,20 +1,12 @@
-﻿using DotNetty.Codecs.STAN;
-using DotNetty.Codecs.STAN.Packets;
+﻿using DotNetty.Codecs.STAN.Packets;
 using DotNetty.Codecs.STAN.Protocol;
 using DotNetty.Handlers.STAN;
-using DotNetty.Transport.Bootstrapping;
-using DotNetty.Transport.Channels;
-using DotNetty.Transport.Channels.Sockets;
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
-using Hunter.STAN.Client.Handlers;
 using System.Linq;
+using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hunter.STAN.Client
 {
