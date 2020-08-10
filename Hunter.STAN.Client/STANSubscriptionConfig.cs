@@ -9,6 +9,13 @@ namespace Hunter.STAN.Client
     {
         public STANSubscriptionConfig() { }
 
+        public STANSubscriptionConfig(string subject, string inbox, string ackInbox)
+        {
+            Subject = subject;
+            Inbox = inbox;
+            AckInbox = ackInbox;
+        }
+
         public STANSubscriptionConfig(string subject, string inbox, string ackInbox, int maxMsg)
         {
             Subject = subject;

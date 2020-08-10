@@ -69,6 +69,52 @@ namespace TestSTANSubscription
         { 
         
         }
+
+        public class SyncingClass : ContextBoundObject
+        {
+            private EventWaitHandle waitHandle;
+
+            public SyncingClass()
+            {
+                waitHandle =
+                   new EventWaitHandle(false, EventResetMode.ManualReset);
+            }
+
+            public void Signal()
+            {
+                Console.WriteLine("Thread[{0:d4}]: Signalling...", Thread.CurrentThread.GetHashCode());
+                waitHandle.Set();
+            }
+
+            public void DoWait(bool leaveContext)
+            {
+                bool signalled;
+
+                waitHandle.Reset();
+                Console.WriteLine("Thread[{0:d4}]: Waiting...", Thread.CurrentThread.GetHashCode());
+                signalled = waitHandle.WaitOne(3000, leaveContext);
+                if (signalled)
+                {
+                    Console.WriteLine("Thread[{0:d4}]: Wait released!!!", Thread.CurrentThread.GetHashCode());
+                }
+                else
+                {
+                    Console.WriteLine("Thread[{0:d4}]: Wait timeout!!!", Thread.CurrentThread.GetHashCode());
+                }
+            }
+        }
+
+        public static void RunWaitKeepContext(object parm)
+        {
+            ((SyncingClass)parm).DoWait(false);
+        }
+
+        public static void RunWaitLeaveContext(object parm)
+        {
+            ((SyncingClass)parm).DoWait(true);
+        }
+
+
         static async Task Main(string[] args)
         {
 
@@ -82,7 +128,7 @@ namespace TestSTANSubscription
             //return;
 
             var options = new STANOptions();
-            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 4222));
+            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.4.138"), 4222));
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
 
@@ -94,19 +140,20 @@ namespace TestSTANSubscription
             //{
             //    var index = i.ToString();
 
-            var s = await client.SubscribeAsync("Security-App-1",
-                "Queue",
-                (content) =>
-            {
+            //var s = await client.SubscribeAsync("Test-Security-App-1",
+            //    "Queue",
+            //    (content) =>
+            //{
 
-                var data = Encoding.UTF8.GetString(content.Data);
-                Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
-                return new ValueTask<bool>(true);
-            });
+            //    var data = Encoding.UTF8.GetString(content.Data);
+            //    Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
+            //    return new ValueTask<bool>(true);
+            //});
 
             //}
 
-            //await client.ReadAsync("Security-App-1", 1, 20);
+            var ss = await client.ReadAsync("Test-Security-App-1", 1);
+
             //await client.ReadAsync("Security-App-1", 1, 20);
             //await client.ReadAsync("Security-App-1", 1, 20);
             //await client.ReadAsync("Security-App-1", 1, 20);

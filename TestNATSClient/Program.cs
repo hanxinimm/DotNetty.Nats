@@ -18,7 +18,7 @@ namespace TestNATSClient
             var options = new NATSOptions();
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientId";
-            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4221));
+            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("mq.stan.yd.com"), 4221));
 
             var client = new NATSClient(options);
             await client.ContentcAsync();
