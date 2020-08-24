@@ -15,7 +15,7 @@ namespace Hunter.STAN.Client
             AckInbox = ackInbox;
             AsyncHandler = handler;
         }
-        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, Func<STANMsgContent, Task> handler)
+        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, Func<STANMsgContent, ValueTask> handler)
         {
             IsAsyncHandler = true;
             IsAutoAck = true;
@@ -35,7 +35,7 @@ namespace Hunter.STAN.Client
             AsyncHandler = handler;
             MaxMsg = maxMsg;
         }
-        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, int maxMsg, Func<STANMsgContent, Task> handler)
+        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, int maxMsg, Func<STANMsgContent, ValueTask> handler)
         {
             IsAsyncHandler = true;
             IsAutoAck = true;
@@ -57,7 +57,7 @@ namespace Hunter.STAN.Client
             MaxMsg = maxMsg;
             DurableName = durableName;
         }
-        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, int maxMsg, string durableName, Func<STANMsgContent, Task> handler)
+        public STANSubscriptionAsyncConfig(string subject, string inbox, string ackInbox, int maxMsg, string durableName, Func<STANMsgContent, ValueTask> handler)
         {
             IsAsyncHandler = true;
             IsAutoAck = true;
@@ -72,7 +72,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 自动确认消息处理程序
         /// </summary>
-        public Func<STANMsgContent,Task> AutoAckAsyncHandler { get; }
+        public Func<STANMsgContent, ValueTask> AutoAckAsyncHandler { get; }
 
         /// <summary>
         /// 处理程序
