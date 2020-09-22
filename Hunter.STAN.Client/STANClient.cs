@@ -5,22 +5,22 @@ using DotNetty.Handlers.STAN;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using Hunter.STAN.Client.Handlers;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hunter.STAN.Client
 {
     public partial class STANClient : IDisposable
     {
+        private readonly ILogger _logger;
         /// <summary>
         /// STAN配置
         /// </summary>
@@ -561,7 +561,7 @@ namespace Hunter.STAN.Client
             var stanSubscriptionManager = _subscriptionMessageQueue[messageInBox.ToString()] as STANSubscriptionAsyncManager;
             var subscriptionConfig = stanSubscriptionManager.SubscriptionConfig as STANSubscriptionAsyncConfig;
 
-            Task.Run(async () =>
+            Task.Factory.StartNew(async () =>
             {
                 while (true)
                 {
@@ -578,7 +578,7 @@ namespace Hunter.STAN.Client
 
                     stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
                 }
-            });
+            }).ConfigureAwait(false);
         }
 
         private void MessageProcessingChannelSyncConfig(object messageInBox)
@@ -586,7 +586,7 @@ namespace Hunter.STAN.Client
             var stanSubscriptionManager = _subscriptionMessageQueue[messageInBox.ToString()] as STANSubscriptionSyncManager;
             var subscriptionConfig = stanSubscriptionManager.SubscriptionConfig as STANSubscriptionSyncConfig;
 
-            Task.Run(() =>
+            Task.Factory.StartNew(() =>
             {
                 while (true)
                 {
@@ -603,27 +603,9 @@ namespace Hunter.STAN.Client
 
                     stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
                 }
-            });
+            }).ConfigureAwait(false);
         }
 
-        private async ValueTask MessageProcessingChannelWithAutoAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig)
-        {
-            while (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-            {
-                await subscriptionConfig.AutoAckAsyncHandler(PackMsgContent(msgPacket));
-                //发送消息成功处理
-                Ack(subscriptionConfig, msgPacket);
-            }
-        }
-        private async ValueTask MessageProcessingChannelWithCustomAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig)
-        {
-            while (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-            {
-                var AsyncHandlerResult = await subscriptionConfig.AsyncHandler(PackMsgContent(msgPacket));
-                //发送消息成功处理
-                Ack(subscriptionConfig, msgPacket, AsyncHandlerResult);
-            }
-        }
 
         private void MessageProcessingChannelWithAutoAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionSyncConfig subscriptionConfig)
         {
@@ -642,95 +624,6 @@ namespace Hunter.STAN.Client
                 var HandlerResult = subscriptionConfig.Handler(PackMsgContent(msgPacket));
                 //发送消息成功处理
                 Ack(subscriptionConfig, msgPacket, HandlerResult);
-            }
-        }
-
-        private Task MessageProcessingChannelWithAutoUnSubscribe(STANSubscriptionSyncManager stanSubscriptionManager)
-        {
-            return Task.Factory.StartNew(async () =>
-            {
-                if (stanSubscriptionManager.SubscriptionConfig.IsAutoAck)
-                {
-                    await MessageProcessingChannelWithAutoUnSubscribeAndAutoAck(stanSubscriptionManager, stanSubscriptionManager.SubscriptionConfig);
-                }
-                else
-                {
-                    await MessageProcessingChannelWithAutoUnSubscribeAndCustomAck(stanSubscriptionManager, stanSubscriptionManager.SubscriptionConfig);
-                }
-
-                UnSubscribe(stanSubscriptionManager);
-            });
-        }
-
-        private async ValueTask MessageProcessingChannelWithAutoUnSubscribeAndAutoAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionConfig subscriptionConfig)
-        {
-            //发送消息成功处理
-            //await AckAsync(subscriptionConfig, msgPacket);
-        }
-
-        private async ValueTask MessageProcessingChannelWithAutoUnSubscribeAndAutoAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig)
-        {
-            for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
-            {
-                stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
-
-                if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-                {
-                    await subscriptionConfig.AutoAckAsyncHandler(PackMsgContent(msgPacket));
-                    //发送消息成功处理
-                    Ack(subscriptionConfig, msgPacket);
-                }
-            }
-        }
-
-        private void MessageProcessingChannelWithAutoUnSubscribeAndAutoAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionSyncConfig subscriptionConfig)
-        {
-            for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
-            {
-                stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
-
-                if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-                {
-                    subscriptionConfig.AutoAckHandler(PackMsgContent(msgPacket));
-                    //发送消息成功处理
-                    Ack(subscriptionConfig, msgPacket);
-                }
-            }
-        }
-
-
-        private async ValueTask MessageProcessingChannelWithAutoUnSubscribeAndCustomAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionConfig subscriptionConfig)
-        {
-
-        }
-
-        private async ValueTask MessageProcessingChannelWithAutoUnSubscribeAndCustomAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionAsyncConfig subscriptionConfig)
-        {
-            for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
-            {
-                stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
-
-                if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-                {
-                    var AsyncHandlerResult = await subscriptionConfig.AsyncHandler(PackMsgContent(msgPacket));
-                    //发送消息成功处理
-                    Ack(subscriptionConfig, msgPacket, AsyncHandlerResult);
-                }
-            }
-        }
-
-        private void MessageProcessingChannelWithAutoUnSubscribeAndCustomAck(STANSubscriptionSyncManager stanSubscriptionManager, STANSubscriptionSyncConfig subscriptionConfig)
-        {
-            for (int i = 0; i < subscriptionConfig.MaxMsg.Value; i++)
-            {
-                stanSubscriptionManager.QueueEventWaitHandle.WaitOne();
-
-                if (stanSubscriptionManager.MessageQueues.TryDequeue(out var msgPacket))
-                {
-                    var HandlerResult = subscriptionConfig.Handler(PackMsgContent(msgPacket));
-                    //发送消息成功处理
-                    Ack(subscriptionConfig, msgPacket, HandlerResult);
-                }
             }
         }
 
@@ -770,11 +663,6 @@ namespace Hunter.STAN.Client
         }
 
         private static string GenerateInboxId()
-        {
-            return Guid.NewGuid().ToString("N");
-        }
-
-        private static string GenerateQueueGroup()
         {
             return Guid.NewGuid().ToString("N");
         }

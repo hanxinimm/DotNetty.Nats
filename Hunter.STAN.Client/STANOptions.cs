@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -61,6 +62,11 @@ namespace Hunter.STAN.Client
         /// 消息发布确认回调
         /// </summary>
         public Action<STANMsgPubAck> PubAckCallback { get; set; }
+
+        /// <summary>
+        /// 日记记录
+        /// </summary>
+        public ILogger Logger { get; set; }
 
     }
 }

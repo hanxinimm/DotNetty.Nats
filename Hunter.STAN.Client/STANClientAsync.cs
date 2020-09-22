@@ -708,7 +708,7 @@ namespace Hunter.STAN.Client
             var stanSubscriptionManager = _subscriptionMessageQueue[messageInBox.ToString()] as STANSubscriptionAsyncManager;
             var subscriptionConfig = stanSubscriptionManager.SubscriptionConfig as STANSubscriptionAsyncConfig;
 
-            Task.Run(async () =>
+            Task.Factory.StartNew(async () =>
             {
                 while (true)
                 {
@@ -733,7 +733,7 @@ namespace Hunter.STAN.Client
             var stanSubscriptionManager = _subscriptionMessageQueue[messageInBox.ToString()] as STANSubscriptionAsyncManager;
             var subscriptionConfig = stanSubscriptionManager.SubscriptionConfig as STANSubscriptionSyncConfig;
 
-            Task.Run(async () =>
+            Task.Factory.StartNew(async () =>
             {
                 while (true)
                 {
