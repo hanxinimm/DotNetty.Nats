@@ -82,14 +82,14 @@ namespace Hunter.STAN.Client
         /// </summary>
         /// <param name="subject">主题</param>
         /// <param name="queueGroup">分组名称</param>
-        /// <param name="durableName">持久化名称</param>
+        /// <param name="PersistenceName">持久化名称</param>
         /// <param name="subscribeOptions">订阅配置</param>
         /// <param name="messageHandler">消息处理</param>
         /// <returns></returns>
         private async Task<STANSubscriptionConfig> SubscribeAsync(
              string subject,
              string queueGroup,
-             string durableName,
+             string PersistenceName,
              STANSubscribeOptions subscribeOptions,
              Func<STANSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup)
         {
@@ -107,7 +107,7 @@ namespace Hunter.STAN.Client
                     SubscribePacket.Subject,
                     subscribeOptions.MaxInFlight ?? 1024,
                     subscribeOptions.AckWaitInSecs ?? 30,
-                    durableName,
+                    PersistenceName,
                     subscribeOptions.Position);
 
             if (subscribeOptions.StartSequence.HasValue)
@@ -148,7 +148,7 @@ namespace Hunter.STAN.Client
             _channel.Pipeline.Remove(SubscriptionResponseHandler);
 
             //如果订阅错误,同时移除订阅消息处理管道
-            if (string.IsNullOrEmpty(SubscriptionResponseResult.Message.Error))
+            if (!string.IsNullOrEmpty(SubscriptionResponseResult.Message.Error))
             {
                 _channel.Pipeline.Remove(messageHandler);
 
@@ -186,24 +186,24 @@ namespace Hunter.STAN.Client
         }
         
 
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, Func<STANMsgContent, ValueTask> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, Func<STANMsgContent, ValueTask> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, subscribeOptions, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, subscribeOptions, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string queueGroup, string durableName, Func<STANMsgContent, ValueTask> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string queueGroup, string PersistenceName, Func<STANMsgContent, ValueTask> handler)
         {
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
-            return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
+        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
         {
-            return SubscribeAsync(subject, queueGroup, durableName, subscribeOptions,
+            return SubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAsynHandler(subscriptionConfig, handler, AckAsync));
         }
 
@@ -235,23 +235,23 @@ namespace Hunter.STAN.Client
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
         
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, Action<STANMsgContent> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, Action<STANMsgContent> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, subscribeOptions, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, subscribeOptions, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string queueGroup, string durableName, Action<STANMsgContent> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string queueGroup, string PersistenceName, Action<STANMsgContent> handler)
         {
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
-            return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         } 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
+        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
         {
-            return SubscribeAsync(subject, queueGroup, durableName, subscribeOptions,
+            return SubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageSyncHandler(subscriptionConfig, handler, AckAsync));
         }
 
@@ -283,24 +283,24 @@ namespace Hunter.STAN.Client
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
 
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, Func<STANMsgContent, bool> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, Func<STANMsgContent, bool> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, subscribeOptions, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, subscribeOptions, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string queueGroup, string durableName, Func<STANMsgContent, bool> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string queueGroup, string PersistenceName, Func<STANMsgContent, bool> handler)
         {
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
-            return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
+        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
         {
-            return SubscribeAsync(subject, queueGroup, durableName, subscribeOptions,
+            return SubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAckSyncHandler(subscriptionConfig, handler, AckAsync));
         }
 
@@ -333,24 +333,24 @@ namespace Hunter.STAN.Client
         }
 
 
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, Func<STANMsgContent, ValueTask<bool>> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
-            return SubscribeAsync(subject, string.Empty, durableName, subscribeOptions, handler);
+            return SubscribeAsync(subject, string.Empty, PersistenceName, subscribeOptions, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeDurableAsync(string subject, string queueGroup, string durableName, Func<STANMsgContent, ValueTask<bool>> handler)
+        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string queueGroup, string PersistenceName, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
-            return SubscribeAsync(subject, queueGroup, durableName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
+            return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string durableName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
-            return SubscribeAsync(subject, queueGroup, durableName, subscribeOptions,
+            return SubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(subscriptionConfig, handler, AckAsync));
         }
 
@@ -379,9 +379,9 @@ namespace Hunter.STAN.Client
             return SubscribeAsync(subject, queueGroup, string.Empty, maxMsg, subscribeOptions, handler);
         }
 
-        public Task SubscribeAsync(string subject, string queueGroup, string durableName, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        public Task SubscribeAsync(string subject, string queueGroup, string PersistenceName, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
-            return SubscribeAsync(subject, queueGroup, durableName, subscribeOptions,
+            return SubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(subscriptionConfig, handler, AckAsync, UnSubscribeAsync));
         }
 

@@ -152,7 +152,12 @@ namespace TestSTANSubscription
 
             //}
 
-            var ss = await client.ReadAsync("Test-Security-App-1", 1);
+            var ss = await client.SubscribeAsync("Test-Security-App-1", (content) =>
+            {
+                var data = Encoding.UTF8.GetString(content.Data);
+                Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
+                return new ValueTask<bool>(true);
+            });
 
             //await client.ReadAsync("Security-App-1", 1, 20);
             //await client.ReadAsync("Security-App-1", 1, 20);

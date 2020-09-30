@@ -41,7 +41,7 @@ namespace Hunter.STAN.Client
 
         private void EndlessMessageHandler(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
-            if (msg.Subject == _subscriptionConfig.Subject)
+            if (msg.Message.Subject == _subscriptionConfig.Subject)
             {
                 try
                 {
