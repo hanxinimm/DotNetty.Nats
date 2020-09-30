@@ -9,18 +9,18 @@ namespace Hunter.STAN.Client
     {
         public STANSubscriptionConfig() { }
 
-        public STANSubscriptionConfig(string subject, string inbox, string ackInbox)
+        public STANSubscriptionConfig(string subject, string replyTo, string inbox)
         {
             Subject = subject;
+            ReplyTo = replyTo;
             Inbox = inbox;
-            AckInbox = ackInbox;
         }
 
-        public STANSubscriptionConfig(string subject, string inbox, string ackInbox, int maxMsg)
+        public STANSubscriptionConfig(string subject, string replyTo, string inbox, int maxMsg)
         {
             Subject = subject;
+            ReplyTo = replyTo;
             Inbox = inbox;
-            AckInbox = ackInbox;
             MaxMsg = maxMsg;
         }
 
@@ -28,19 +28,6 @@ namespace Hunter.STAN.Client
         /// 主题
         /// </summary>
         public string Subject { get; protected set; }
-        /// <summary>
-        /// 订阅消息收件箱
-        /// </summary>
-        public string Inbox { get; protected set; }
-        /// <summary>
-        /// 消息确认处理收件箱
-        /// </summary>
-        public string AckInbox { get; protected set; }
-
-        /// <summary>
-        /// 等待处理的最大消息数
-        /// </summary>
-        public int? MaxMsg { get; protected set; }
 
         /// <summary>
         /// 持久化名称
@@ -48,14 +35,23 @@ namespace Hunter.STAN.Client
         public string DurableName { get; protected set; }
 
         /// <summary>
-        /// 是否为自动确认
+        /// 订阅消息收件箱
         /// </summary>
-        public bool IsAutoAck { get; protected set; }
+        public string Inbox { get; protected set; }
 
-        ///// <summary>
-        ///// 是否为异步回调
-        ///// </summary>
-        public bool IsAsyncHandler { get; protected set; }
+        /// <summary>
+        /// 等待处理的最大消息数
+        /// </summary>
+        public int? MaxMsg { get; protected set; }
 
+        /// <summary>
+        /// 订阅响应答复主题
+        /// </summary>
+        public string ReplyTo { get; protected set; }
+
+        /// <summary>
+        /// 消息确认收件箱
+        /// </summary>
+        public string AckInbox { get; set; }
     }
 }

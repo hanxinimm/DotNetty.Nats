@@ -22,7 +22,7 @@ namespace DotNetty.Codecs.STAN.Packets
         public ConnectRequestPacket(string inboxId, string clusterID, string clientID, string heartbeatInbox, string discoverPrefix = ProtocolConstants.DiscoverPrefix)
         {
             Subject = $"{discoverPrefix}.{clusterID}";
-            ReplyTo = $"{STANInboxs.ConnectResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
+            ReplyTo = $"{STANInboxs.ConnectResponse}{inboxId}.{Guid.NewGuid():N}";
             Message = new ConnectRequest() { ClientID = clientID, HeartbeatInbox = $"{STANInboxs.Heartbeat}{heartbeatInbox}" };
         }
 

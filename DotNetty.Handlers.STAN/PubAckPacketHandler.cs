@@ -12,17 +12,8 @@ namespace DotNetty.Handlers.STAN
     using DotNetty.Transport.Channels;
     using Google.Protobuf;
 
-    public class PubAckPacketAsynHandler : SimpleChannelInboundHandler<PubAckPacket>
+    public abstract class PubAckPacketHandler : SimpleChannelInboundHandler<PubAckPacket>
     {
-        private readonly Action<PubAckPacket> _pubAckCallback;
-        public PubAckPacketAsynHandler(Action<PubAckPacket> pubAckCallback)
-        {
-            _pubAckCallback = pubAckCallback;
-        }
-
-        protected override void ChannelRead0(IChannelHandlerContext contex, PubAckPacket msg)
-        {
-            _pubAckCallback(msg);
-        }
+        
     }
 }
