@@ -20,16 +20,17 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ClientId = Guid.NewGuid().ToString("N");
                 configuration.GetSection("STANOptions").Bind(options);
             });
+            services.AddTransient<STANClient>();
         }
 
         public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration, string clientId)
         {
             services.Configure<STANOptions>(options =>
             {
-                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}-{Guid.NewGuid().ToString("N")}";
+                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}-{Guid.NewGuid():N}";
                 configuration.GetSection("STANOptions").Bind(options);
             });
-            services.AddSingleton(spr => new STANClient(spr.GetRequiredService<IOptions<STANOptions>>()));
+            services.AddTransient<STANClient>();
         }
     }
 }

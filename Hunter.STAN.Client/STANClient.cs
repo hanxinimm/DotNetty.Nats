@@ -66,31 +66,21 @@ namespace Hunter.STAN.Client
         /// </summary>
         private ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule;
 
-        ///// <summary>
-        ///// 等待订阅消息响应安排表
-        ///// </summary>
-        //private ConcurrentDictionary<string, TaskCompletionSource<SubscriptionResponsePacket>> _waitSubResponseTaskSchedule;
-
-        /// <summary>
-        /// 等待取消订阅消息响应安排表
-        /// </summary>
-        private ConcurrentDictionary<string, TaskCompletionSource<UnSubscriptionResponsePacket>> _waitUnSubResponseTaskSchedule;
-
-        public STANClient(STANOptions options)
+        public STANClient(
+            ILogger<STANClient> logger,
+            STANOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(STANOptions));
             _clientId = _options.ClientId;
             _heartbeatInboxId = GenerateInboxId();
             _replyInboxId = GenerateInboxId();
-            _waitPubAckTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>>();
-            //TODO:改变当前写法，注入管道处理
-            //_waitSubResponseTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<SubscriptionResponsePacket>>();
-            _waitUnSubResponseTaskSchedule = new ConcurrentDictionary<string, TaskCompletionSource<UnSubscriptionResponsePacket>>();
             _bootstrap = InitBootstrap();
-
+            _logger = logger;
         }
 
-        public STANClient(IOptions<STANOptions> options) : this(options.Value)
+        public STANClient(
+            ILogger<STANClient> logger,
+            IOptions<STANOptions> options) : this(logger, options.Value)
         {
 
         }
@@ -109,14 +99,6 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(STANEncoder.Instance, STANDecoder.Instance);
                 channel.Pipeline.AddLast(new ErrorPacketHandler());
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
-                //channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
-                //if (_options.PubAckCallback != null)
-                //    channel.Pipeline.AddLast(new PubAckPacketAsynHandler(PubAckCallback));
-                //channel.Pipeline.AddLast(new SubscriptionResponsePacketSyncHandler(_waitSubResponseTaskSchedule));
-                //TODO:异步订阅写法有问题
-                //channel.Pipeline.AddLast(new SubscriptionResponsePacketAsynHandler((subReps) => { }));
-                //channel.Pipeline.AddLast(new UnSubscriptionResponsePacketSyncHandler(_waitUnSubResponseTaskSchedule));
-                //channel.Pipeline.AddLast(new UnSubscriptionResponsePacketHandler((unSubReps) => { }));
                 channel.Pipeline.AddLast(new PingPacketHandler());
                 channel.Pipeline.AddLast(new PongPacketHandler());
             }));

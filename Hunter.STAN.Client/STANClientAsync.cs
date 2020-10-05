@@ -8,6 +8,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using Microsoft.Extensions.Logging;
 
 namespace Hunter.STAN.Client
 {
@@ -67,14 +68,22 @@ namespace Hunter.STAN.Client
 
         private async Task SubscribeHeartBeatInboxAsync()
         {
+            _logger.LogDebug($"开始订阅消息服务器心跳消息 HeartbeatInbox = {_heartbeatInboxId}");
+
             var Packet = new HeartbeatInboxPacket(_heartbeatInboxId);
 
             await _channel.WriteAndFlushAsync(Packet);
+
+            _logger.LogDebug("结束订阅消息服务器心跳消息");
         }
 
         private async Task SubscribeReplyInboxAsync()
         {
+            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+
             await _channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
+
+            _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
         }
 
         /// <summary>
@@ -95,8 +104,12 @@ namespace Hunter.STAN.Client
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
+            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+
             //订阅侦听消息
             await _channel.WriteAndFlushAsync(SubscribePacket);
+
+            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
             var Packet = new SubscriptionRequestPacket(
                     _replyInboxId,

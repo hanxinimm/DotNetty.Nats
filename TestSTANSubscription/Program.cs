@@ -1,5 +1,7 @@
 ﻿using DotNetty.Codecs.STAN.Protocol;
 using Hunter.STAN.Client;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -127,12 +129,18 @@ namespace TestSTANSubscription
 
             //return;
 
+            var services = new ServiceCollection();
+            services.AddLogging(options => options.AddConsole());
+
+            var spr = services.BuildServiceProvider();
+
             var options = new STANOptions();
             options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.4.138"), 4222));
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
 
-            var client = new STANClient(options);
+            var client = new STANClient(spr.GetRequiredService<ILogger<STANClient>>(), options);
+
             await client.ContentcAsync();
 
 

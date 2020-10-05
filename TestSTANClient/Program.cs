@@ -1,5 +1,6 @@
 ﻿using Hunter.STAN.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -50,9 +51,11 @@ namespace TestSTANClient
 
             //IPHostEntry hostInfo = Dns.GetHostEntry("www.contoso.com");
 
-            var Services = new ServiceCollection();
-            
-            Services.Configure<STANOptions>(options =>
+            var services = new ServiceCollection();
+
+            services.AddLogging(options => options.AddConsole());
+
+            services.Configure<STANOptions>(options =>
             {
                 options.ClusterID = "main-cluster";
                 options.ClientId = "Security-StatefulManagerService";
@@ -63,14 +66,11 @@ namespace TestSTANClient
             });
 
 
-            var _serviceProvider = Services.BuildServiceProvider();
+            var _serviceProvider = services.BuildServiceProvider();
 
 
-            var opts = _serviceProvider.GetRequiredService<IOptions<STANOptions>>();
-            //var client = new STANClientFactory(opts.Value);
-            //await client.ConnectionAsync();
+            var client = _serviceProvider.GetRequiredService<STANClient>();
 
-            var client = new STANClient(opts.Value);
             await client.ContentcAsync();
 
             Console.WriteLine("连接成功");
