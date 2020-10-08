@@ -24,6 +24,12 @@ namespace Hunter.STAN.Client
 
             var ClusterNode = _options.ClusterNodes.First();
 
+            if (_channel != null)
+            {
+                await _channel.DisconnectAsync();
+                await _channel.CloseAsync();
+            }
+
             if (_config == null)
             {
                 _channel = await _bootstrap.ConnectAsync(ClusterNode);
