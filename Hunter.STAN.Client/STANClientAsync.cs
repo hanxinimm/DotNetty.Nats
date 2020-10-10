@@ -110,12 +110,12 @@ namespace Hunter.STAN.Client
         {
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
-            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+            _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
             //订阅侦听消息
             await _channel.WriteAndFlushAsync(SubscribePacket);
 
-            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+            _logger.LogDebug($"结束设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
             var Packet = new SubscriptionRequestPacket(
                     _replyInboxId,
@@ -157,8 +157,12 @@ namespace Hunter.STAN.Client
             //订阅消息处理器添加到管道
             _channel.Pipeline.AddLast(messageHandler);
 
+            _logger.LogDebug($"开始发送订阅请求 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
+
             //发送订阅请求
             await _channel.WriteAndFlushAsync(Packet);
+
+            _logger.LogDebug($"结束发送订阅请求 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
 
             //等待订阅结果响应
             var SubscriptionResponseResult = await SubscriptionResponseReady.Task;
@@ -171,9 +175,13 @@ namespace Hunter.STAN.Client
             {
                 _channel.Pipeline.Remove(messageHandler);
 
+                _logger.LogError($"订阅消息发生异常 错误信息 {SubscriptionResponseResult.Message.Error}");
+
                 //TODO:待完善异常
                 throw new Exception("");
             }
+
+            _logger.LogDebug($"成功订阅消息 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
 
             return SubscriptionConfig;
         }

@@ -11,7 +11,7 @@ namespace DotNetty.Codecs.STAN.Packets
             int ackWaitInSeconds, string durableName, StartPosition startPosition)
         {
             Subject = subRequests;
-            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
+            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid():N}";
             Message = new SubscriptionRequest
             {
                 ClientID = clientID,
@@ -29,7 +29,7 @@ namespace DotNetty.Codecs.STAN.Packets
             int ackWaitInSeconds, string durableName, ulong startSequence)
         {
             Subject = subRequests;
-            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
+            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid():N}";
             Message = new SubscriptionRequest
             {
                 ClientID = clientID,
@@ -50,7 +50,7 @@ namespace DotNetty.Codecs.STAN.Packets
             int ackWaitInSeconds, string durableName, long startTimeDelta)
         {
             Subject = subRequests;
-            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
+            ReplyTo = $"{STANInboxs.SubscriptionResponse}{inboxId}.{Guid.NewGuid():N}";
             Message = new SubscriptionRequest
             {
                 ClientID = clientID,

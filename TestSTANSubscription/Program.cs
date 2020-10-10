@@ -116,6 +116,12 @@ namespace TestSTANSubscription
             ((SyncingClass)parm).DoWait(true);
         }
 
+        public static ValueTask HandleEventQueueMessageAsync(STANMsgContent msgContent)
+        {
+            var data = Encoding.UTF8.GetString(msgContent.Data);
+            Console.WriteLine($"订阅 sequence={msgContent.Sequence} data={data}");
+            return new ValueTask();
+        }
 
         static async Task Main(string[] args)
         {
@@ -130,7 +136,12 @@ namespace TestSTANSubscription
             //return;
 
             var services = new ServiceCollection();
-            services.AddLogging(options => options.AddConsole());
+            services.AddLogging(options =>
+            {
+                options.AddConsole();
+                options.AddDebug();
+                options.SetMinimumLevel(LogLevel.Trace);
+            });
 
 
 
@@ -152,8 +163,31 @@ namespace TestSTANSubscription
 
             var client = spr.GetRequiredService<STANClient>();
 
+            var logger = spr.GetRequiredService<ILogger<STANClient>>();
+
+
+            logger.LogDebug("测试调试信息输出");
+
+            Console.WriteLine("完成");
+
+            Console.ReadLine();
+
             await client.ContentcAsync();
 
+
+
+            await client.SubscribeAsync("Labor-Work-InvitedEvent", "Labor.Work.StatelessManagerService.StatelessManagerService",
+               new STANSubscribeOptions()
+               {
+                   Position = StartPosition.LastReceived,
+               }, HandleEventQueueMessageAsync);
+
+
+            await client.SubscribeAsync("Labor-Work", "Labor.Work.StatelessManagerService.StatelessManagerService",
+               new STANSubscribeOptions()
+               {
+                   Position = StartPosition.LastReceived,
+               }, HandleEventQueueMessageAsync);
 
             //for (int i = 0; i < 20; i++)
             //{
@@ -171,12 +205,12 @@ namespace TestSTANSubscription
 
             //}
 
-            var ss = await client.SubscribeAsync("Test-Security-App-1", (content) =>
-            {
-                var data = Encoding.UTF8.GetString(content.Data);
-                Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
-                return new ValueTask<bool>(true);
-            });
+            //var ss = await client.SubscribeAsync("Test-Security-App-1", (content) =>
+            //{
+            //    var data = Encoding.UTF8.GetString(content.Data);
+            //    Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
+            //    return new ValueTask<bool>(true);
+            //});
 
             //await client.ReadAsync("Security-App-1", 1, 20);
             //await client.ReadAsync("Security-App-1", 1, 20);
