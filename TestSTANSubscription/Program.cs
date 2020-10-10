@@ -132,14 +132,25 @@ namespace TestSTANSubscription
             var services = new ServiceCollection();
             services.AddLogging(options => options.AddConsole());
 
-            var spr = services.BuildServiceProvider();
+
+
 
             var options = new STANOptions();
             options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.4.138"), 4222));
             options.ClusterID = "main-cluster";
             options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
 
-            var client = new STANClient(spr.GetRequiredService<ILogger<STANClient>>(), options);
+            services.Configure<STANOptions>(options =>
+            {
+                options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.4.138"), 4222));
+                options.ClusterID = "main-cluster";
+                options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
+            });
+            services.AddTransient<STANClient>();
+
+            var spr = services.BuildServiceProvider();
+
+            var client = spr.GetRequiredService<STANClient>();
 
             await client.ContentcAsync();
 

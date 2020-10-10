@@ -16,6 +16,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ClientId = Guid.NewGuid().ToString("N");
                 configuration.GetSection("NATSOptions").Bind(options);
             });
+            services.AddSingleton<NATSClient>();
         }
 
         public static void AddNATSServer(this IServiceCollection services, IConfigurationRoot configuration, string clientId)
@@ -26,7 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 configuration.GetSection("NATSOptions").Bind(options);
             });
 
-            services.AddSingleton(spr => new NATSClient(spr.GetRequiredService<IOptions<NATSOptions>>()));
+            services.AddSingleton<NATSClient>();
         }
     }
 }
