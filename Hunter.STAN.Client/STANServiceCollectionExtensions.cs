@@ -13,6 +13,13 @@ namespace Microsoft.Extensions.DependencyInjection
     public static class STANServiceCollectionExtensions
     {
         private static readonly Regex _clientIdReplacer = new Regex("[^A-Za-z0-9_]");
+
+        public static void AddSTANServer(this IServiceCollection services, Action<STANOptions> steup)
+        {
+            services.Configure(steup);
+            services.AddTransient<STANClient>();
+        }
+
         public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration)
         {
             services.Configure<STANOptions>(options =>

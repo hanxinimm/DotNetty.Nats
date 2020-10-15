@@ -55,7 +55,7 @@ namespace TestSTANClient
 
             services.AddLogging(options => options.AddConsole());
 
-            services.Configure<STANOptions>(options =>
+            services.AddSTANServer(options =>
             {
                 options.ClusterID = "main-cluster";
                 options.ClientId = "Security-StatefulManagerService";

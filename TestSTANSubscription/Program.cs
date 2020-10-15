@@ -168,25 +168,13 @@ namespace TestSTANSubscription
 
             logger.LogDebug("测试调试信息输出");
 
-            Console.WriteLine("完成");
-
-            Console.ReadLine();
 
             await client.ContentcAsync();
 
-
-
-            await client.SubscribeAsync("Labor-Work-InvitedEvent", "Labor.Work.StatelessManagerService.StatelessManagerService",
+            await client.SubscribeAsync("Agent-Recruit-Commission",
                new STANSubscribeOptions()
                {
-                   Position = StartPosition.LastReceived,
-               }, HandleEventQueueMessageAsync);
-
-
-            await client.SubscribeAsync("Labor-Work", "Labor.Work.StatelessManagerService.StatelessManagerService",
-               new STANSubscribeOptions()
-               {
-                   Position = StartPosition.LastReceived,
+                   Position = StartPosition.SequenceStart,
                }, HandleEventQueueMessageAsync);
 
             //for (int i = 0; i < 20; i++)

@@ -64,7 +64,8 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 等待发送消息确认安排表
         /// </summary>
-        private ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule;
+        private ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule 
+            = new ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>>();
 
         public STANClient(
             ILogger<STANClient> logger,
@@ -99,6 +100,8 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(STANEncoder.Instance, STANDecoder.Instance);
                 channel.Pipeline.AddLast(new ErrorPacketHandler());
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
+                channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
+                channel.Pipeline.AddLast(new PubAckPacketAsynSyncHandler(_logger));
                 channel.Pipeline.AddLast(new PingPacketHandler());
                 channel.Pipeline.AddLast(new PongPacketHandler());
             }));
