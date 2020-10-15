@@ -98,7 +98,7 @@ namespace Hunter.STAN.Client
             {
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(ReconnectIfNeedAsync));
                 channel.Pipeline.AddLast(STANEncoder.Instance, STANDecoder.Instance);
-                channel.Pipeline.AddLast(new ErrorPacketHandler());
+                channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
                 channel.Pipeline.AddLast(new PubAckPacketAsynSyncHandler(_logger));
