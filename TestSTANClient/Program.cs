@@ -53,7 +53,10 @@ namespace TestSTANClient
 
             var services = new ServiceCollection();
 
-            services.AddLogging(options => options.AddConsole());
+            services.AddLogging(options => {
+                options.SetMinimumLevel(LogLevel.Debug);
+                options.AddConsole();
+            });
 
             services.AddSTANServer(options =>
             {
