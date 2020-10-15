@@ -34,7 +34,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure<STANOptions>(options =>
             {
-                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}_{Guid.NewGuid():N}";
+                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}-{Guid.NewGuid():N}";
                 configuration.GetSection("STANOptions").Bind(options);
             });
             services.AddTransient<STANClient>();

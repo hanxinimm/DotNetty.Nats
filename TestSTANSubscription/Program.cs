@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -123,8 +124,12 @@ namespace TestSTANSubscription
             return new ValueTask();
         }
 
+        private static readonly Regex _clientIdReplacer = new Regex("[^A-Za-z0-9_]");
+
         static async Task Main(string[] args)
         {
+
+           var ss =  _clientIdReplacer.Replace(nameof(Program), "_");
 
             //var sss = new int[2];
             //load(sss);
