@@ -6,12 +6,19 @@ namespace DotNetty.Handlers.STAN
     using System;
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Transport.Channels;
+    using Microsoft.Extensions.Logging;
 
     public class PingPacketHandler : SimpleChannelInboundHandler<PingPacket>
     {
+        private readonly ILogger _logger;
+        public PingPacketHandler(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         protected override void ChannelRead0(IChannelHandlerContext contex, PingPacket msg)
         {
-            Console.WriteLine("PingPacket => PongPacket");
+            _logger.LogDebug("STAN 服务器心跳 PingPacket => PongPacket");
             contex.WriteAndFlushAsync(new PongPacket());
         }
     }

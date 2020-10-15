@@ -96,14 +96,14 @@ namespace Hunter.STAN.Client
             .Option(ChannelOption.TcpNodelay, false)
             .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
             {
-                channel.Pipeline.AddLast(new ReconnectChannelHandler(ReconnectIfNeedAsync));
                 channel.Pipeline.AddLast(STANEncoder.Instance, STANDecoder.Instance);
+                channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
                 channel.Pipeline.AddLast(new PubAckPacketAsynSyncHandler(_logger));
-                channel.Pipeline.AddLast(new PingPacketHandler());
-                channel.Pipeline.AddLast(new PongPacketHandler());
+                channel.Pipeline.AddLast(new PingPacketHandler(_logger));
+                channel.Pipeline.AddLast(new PongPacketHandler(_logger));
             }));
         }
 
