@@ -26,11 +26,11 @@ namespace DotNetty.Handlers.STAN
         {
             if (!string.IsNullOrEmpty(msg.Message.Error))
             {
-                _logger.LogError($"消息标识 {msg.Message.Guid} 错误信息 {msg.Message.Error}");
+                _logger.LogError($"[PubAckPacketAsynSyncHandler]消息标识 {msg.Message.Guid} 错误信息 {msg.Message.Error}");
             }
             else
             {
-                _logger.LogDebug($"消息标识 {msg.Message.Guid}  发布成功");
+                _logger.LogDebug($"[PubAckPacketAsynSyncHandler]消息标识 {msg.Message.Guid}  发布成功");
             }
         }
     }

@@ -21,6 +21,8 @@ namespace TestSTANClient
         static async Task Main(string[] args)
         {
 
+            var ss =  Guid.NewGuid().ToString("n");
+
             ////http://192.168.0.226:8221/subz
 
             //HttpClient hpclient = new HttpClient();
@@ -72,9 +74,11 @@ namespace TestSTANClient
             var _serviceProvider = services.BuildServiceProvider();
 
 
-            var client = _serviceProvider.GetRequiredService<STANClient>();
+            await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
             await client.ContentcAsync();
+
+            client.CloseAsync();
 
             Console.WriteLine("连接成功");
 

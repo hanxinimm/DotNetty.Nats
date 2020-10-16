@@ -221,7 +221,7 @@ namespace Hunter.STAN.Client
             return HandleSubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAsynHandler(subscriptionConfig, handler, AckAsync));
         }
-        
+
 
         public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, Func<STANMsgContent, ValueTask> handler)
         {
@@ -271,7 +271,7 @@ namespace Hunter.STAN.Client
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions, handler);
         }
-        
+
         public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string PersistenceName, Action<STANMsgContent> handler)
         {
             return SubscribeAsync(subject, string.Empty, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
@@ -285,7 +285,7 @@ namespace Hunter.STAN.Client
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
-        } 
+        }
         public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
         {
             return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
@@ -428,15 +428,15 @@ namespace Hunter.STAN.Client
 
         public async Task<STANMsgContent> ReadFirstOrDefaultAsync(string subject, long start)
         {
-            var MsgContents = await ReadAsync(subject, 1, new STANSubscribeOptions() 
-                { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start), MaxInFlight = 1 });
+            var MsgContents = await ReadAsync(subject, 1, new STANSubscribeOptions()
+            { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start), MaxInFlight = 1 });
             return MsgContents.FirstOrDefault();
         }
 
         public Task<Queue<STANMsgContent>> ReadAsync(string subject, long start)
         {
-            return ReadAsync(subject, null, new STANSubscribeOptions() 
-                { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start) });
+            return ReadAsync(subject, null, new STANSubscribeOptions()
+            { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start) });
         }
 
         public Task<Queue<STANMsgContent>> ReadAsync(string subject, long start, int count)
@@ -502,17 +502,17 @@ namespace Hunter.STAN.Client
 
         public async Task UnSubscribeAsync(STANSubscriptionConfig subscriptionConfig)
         {
-            
-                var Packet = new UnsubscribeRequestPacket(_replyInboxId,
-                    _config.UnsubRequests,
-                    _clientId,
-                    subscriptionConfig.Subject,
-                    subscriptionConfig.AckInbox,
-                    subscriptionConfig.DurableName);
 
-                //发送取消订阅请求
-                await _channel.WriteAndFlushAsync(Packet);
-            
+            var Packet = new UnsubscribeRequestPacket(_replyInboxId,
+                _config.UnsubRequests,
+                _clientId,
+                subscriptionConfig.Subject,
+                subscriptionConfig.AckInbox,
+                subscriptionConfig.DurableName);
+
+            //发送取消订阅请求
+            await _channel.WriteAndFlushAsync(Packet);
+
         }
 
         /// <summary>
@@ -536,7 +536,7 @@ namespace Hunter.STAN.Client
 
             return await PubAckReady.Task;
         }
-        
+
         /// <summary>
         /// 异步发送
         /// </summary>
@@ -588,6 +588,13 @@ namespace Hunter.STAN.Client
             _channel.Pipeline.Remove(Handler);
 
             return Result;
+        }
+
+
+        public async Task CloseAsync()
+        {
+            await CloseRequestAsync();
+            await _channel.CloseAsync();
         }
     }
 }

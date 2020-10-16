@@ -18,13 +18,18 @@ using System.Threading.Tasks;
 
 namespace Hunter.STAN.Client
 {
-    public partial class STANClient : IDisposable
+    public partial class STANClient : IAsyncDisposable
     {
         private readonly ILogger _logger;
         /// <summary>
         /// STAN配置
         /// </summary>
         private readonly STANOptions _options;
+
+        /// <summary>
+        /// 客户端标识
+        /// </summary>
+        public readonly string _identity;
 
         /// <summary>
         /// 客户端编号
@@ -72,9 +77,10 @@ namespace Hunter.STAN.Client
             STANOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(STANOptions));
+            _identity = Guid.NewGuid().ToString("n");
             _clientId = _options.ClientId;
-            _heartbeatInboxId = GenerateInboxId();
-            _replyInboxId = GenerateInboxId();
+            _heartbeatInboxId = _identity;
+            _replyInboxId = _identity;
             _bootstrap = InitBootstrap();
             _logger = logger;
         }
@@ -100,7 +106,7 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
-                channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_waitPubAckTaskSchedule));
+                channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_logger, _waitPubAckTaskSchedule));
                 channel.Pipeline.AddLast(new PubAckPacketAsynSyncHandler(_logger));
                 channel.Pipeline.AddLast(new PingPacketHandler(_logger));
                 channel.Pipeline.AddLast(new PongPacketHandler(_logger));
@@ -174,11 +180,6 @@ namespace Hunter.STAN.Client
             if (string.IsNullOrEmpty(queueGroup)) throw new ArgumentNullException(nameof(queueGroup));
         }
 
-        private static string GenerateInboxId()
-        {
-            return Guid.NewGuid().ToString("N");
-        }
-
         //TODO:2.1框架好像支持释放资源
         public void Dispose()
         {
@@ -188,6 +189,12 @@ namespace Hunter.STAN.Client
                 this._channel.CloseAsync().GetAwaiter().GetResult();
             }
             catch { }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await CloseRequestAsync();
+            await _channel.CloseAsync();
         }
     }
 }

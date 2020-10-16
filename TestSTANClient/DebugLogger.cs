@@ -12,7 +12,7 @@ namespace DotNetty.Codecs.STAN
         static DebugLogger()
         {
             if (IsDebug)
-                LogFileName = $@"D:\decod-{Guid.NewGuid().ToString("N")}.log";
+                LogFileName = $@"D:\decod-{Guid.NewGuid():N}.log";
         }
 
         public static void LogSignature(string content)

@@ -229,5 +229,10 @@ namespace Hunter.NATS.Client
                 }
             }
         }
+
+        private Task CloseAsync()
+        {
+            return _channel.CloseAsync();
+        }
     }
 }
