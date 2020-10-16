@@ -78,7 +78,7 @@ namespace Hunter.STAN.Client
         {
             _options = options ?? throw new ArgumentNullException(nameof(STANOptions));
             _identity = Guid.NewGuid().ToString("n");
-            _clientId = _options.ClientId;
+            _clientId = $"{_options.ClientId}-{_identity}";
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
             _bootstrap = InitBootstrap();

@@ -63,7 +63,7 @@ namespace TestSTANClient
             services.AddSTANServer(options =>
             {
                 options.ClusterID = "main-cluster";
-                options.ClientId = $"Security-StatefulManagerService-{Guid.NewGuid():N}";
+                options.ClientId = $"Security-StatefulManagerService";
                 //options.Host = "mq.stan.yidujob.com";
                 options.Host = "192.168.4.138";
                 options.Port = 4222;
@@ -77,8 +77,6 @@ namespace TestSTANClient
             await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
             await client.ContentcAsync();
-
-            client.CloseAsync();
 
             Console.WriteLine("连接成功");
 
