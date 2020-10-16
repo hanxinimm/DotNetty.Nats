@@ -230,7 +230,7 @@ namespace Hunter.NATS.Client
             }
         }
 
-        private Task CloseAsync()
+        public Task CloseAsync()
         {
             return _channel.CloseAsync();
         }
