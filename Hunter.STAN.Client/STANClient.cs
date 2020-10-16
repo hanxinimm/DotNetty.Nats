@@ -119,6 +119,8 @@ namespace Hunter.STAN.Client
         {
             if (this.IsChannelInactive)
             {
+                _logger.LogDebug("STAN 开始重新连接");
+
                 //await this.semaphoreSlim.WaitAsync();
                 try
                 {
@@ -128,11 +130,17 @@ namespace Hunter.STAN.Client
                         {
                             try
                             {
-                                _channel = await _bootstrap.ConnectAsync(socketAddress);
+                                _logger.LogDebug("STAN 开始尝试重新连接");
+
+                                await ContentcAsync();
+
+                                _logger.LogDebug("STAN 结束尝试重新连接");
+
                                 break;
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
+                                _logger.LogError(ex, "STAN 尝试重新连接异常");
                                 await Task.Delay(TimeSpan.FromSeconds(3));
                             }
                         }
@@ -141,6 +149,7 @@ namespace Hunter.STAN.Client
                 }
                 finally
                 {
+                    _logger.LogDebug("STAN 完成重新连接");
                     //this.semaphoreSlim.Release();
                 }
             }

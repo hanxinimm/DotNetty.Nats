@@ -26,8 +26,12 @@ namespace Hunter.STAN.Client
 
             if (_channel != null)
             {
+                _logger.LogDebug("STAN 开始释放断开的通讯连接频道");
+
                 await _channel.DisconnectAsync();
                 await _channel.CloseAsync();
+
+                _logger.LogDebug("STAN 完成释放断开的通讯连接频道");
             }
 
             if (_config == null)
@@ -43,6 +47,10 @@ namespace Hunter.STAN.Client
             else
             {
                 _channel = await _bootstrap.ConnectAsync(ClusterNode);
+
+                await SubscribeHeartBeatInboxAsync();
+
+                await SubscribeReplyInboxAsync();
             }
         }
 
