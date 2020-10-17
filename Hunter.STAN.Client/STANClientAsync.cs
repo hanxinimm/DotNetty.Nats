@@ -186,7 +186,7 @@ namespace Hunter.STAN.Client
                 _logger.LogError($"订阅消息发生异常 错误信息 {SubscriptionResponseResult.Message.Error}");
 
                 //TODO:待完善异常
-                throw new Exception("");
+                throw new Exception(SubscriptionResponseResult.Message.Error);
             }
 
             _logger.LogDebug($"成功订阅消息 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
@@ -428,8 +428,7 @@ namespace Hunter.STAN.Client
 
         public async Task<STANMsgContent> ReadFirstOrDefaultAsync(string subject, long start)
         {
-            var MsgContents = await ReadAsync(subject, 1, new STANSubscribeOptions()
-            { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start), MaxInFlight = 1 });
+            var MsgContents = await ReadAsync(subject, start, 1);
             return MsgContents.FirstOrDefault();
         }
 
@@ -447,54 +446,94 @@ namespace Hunter.STAN.Client
         //TODO:待完善读取逻辑
         private async Task<Queue<STANMsgContent>> ReadAsync(string subject, int? count, STANSubscribeOptions subscribeOptions)
         {
-            return new Queue<STANMsgContent>();
+            //return new Queue<STANMsgContent>();
 
-            //var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
+            var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
-            ////订阅侦听消息
-            //await _channel.WriteAndFlushAsync(SubscribePacket);
+            _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
-            //var Packet = new SubscriptionRequestPacket(
-            //        _replyInboxId,
-            //        _config.SubRequests,
-            //        _clientId,
-            //        subject,
-            //        string.Empty,
-            //        SubscribePacket.Subject,
-            //        subscribeOptions.MaxInFlight ?? 1024,
-            //        subscribeOptions.AckWaitInSecs ?? 30,
-            //        string.Empty,
-            //        subscribeOptions.Position);
+            //订阅侦听消息
+            await _channel.WriteAndFlushAsync(SubscribePacket);
 
-            //if (subscribeOptions.StartSequence.HasValue)
-            //{
-            //    Packet.Message.StartSequence = subscribeOptions.StartSequence.Value;
-            //}
+            _logger.LogDebug($"结束设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
-            //if (subscribeOptions.StartTimeDelta.HasValue)
-            //{
-            //    Packet.Message.StartTimeDelta = subscribeOptions.StartTimeDelta.Value;
-            //}
+            var Packet = new SubscriptionRequestPacket(
+                    _replyInboxId,
+                    _config.SubRequests,
+                    _clientId,
+                    subject,
+                    null,
+                    SubscribePacket.Subject,
+                    subscribeOptions.MaxInFlight ?? 1024,
+                    subscribeOptions.AckWaitInSecs ?? 30,
+                    null,
+                    subscribeOptions.Position);
 
-            //var stanSubscriptionManager = count.HasValue ?
-            //    new STANSubscriptionAutomaticAsyncManager(count.Value) : new STANSubscriptionAutomaticAsyncManager();
+            if (subscribeOptions.StartSequence.HasValue)
+            {
+                Packet.Message.StartSequence = subscribeOptions.StartSequence.Value;
+            }
 
-            //_subscriptionMessageQueue[Packet.Message.Inbox] = stanSubscriptionManager;
+            if (subscribeOptions.StartTimeDelta.HasValue)
+            {
+                Packet.Message.StartTimeDelta = subscribeOptions.StartTimeDelta.Value;
+            }
 
-            //var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>();
+            //订阅配置信息
+            var SubscriptionConfig = new STANSubscriptionConfig(subject, Packet.ReplyTo, Packet.Message.Inbox);
 
-            //_waitSubResponseTaskSchedule[Packet.ReplyTo] = SubscriptionResponseReady;
+            //订阅响应任务源
+            var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>(SubscriptionConfig);
 
-            ////发送订阅请求
-            //await _channel.WriteAndFlushAsync(Packet);
+            //处理订阅响应的管道
+            var SubscriptionResponseHandler = new SubscriptionResponseHandler(SubscriptionConfig, SubscriptionResponseReady);
 
-            //var SubscriptionResponseResult = await SubscriptionResponseReady.Task;
+            //添加订阅响应管道
+            _channel.Pipeline.AddLast(SubscriptionResponseHandler);
 
-            //stanSubscriptionManager.SubscriptionConfig = count.HasValue ? new STANSubscriptionConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox, count.Value) : new STANSubscriptionConfig(subject, Packet.Message.Inbox, SubscriptionResponseResult.Message.AckInbox);
+            var SubscriptionMsgContentReady = new TaskCompletionSource<Queue<STANMsgContent>>(SubscriptionConfig);
 
-            //await MessageProcessingChannelWithReadAsync(stanSubscriptionManager);
+            //订阅消息处理器
+            var messageHandler = new ReadMessageHandler(SubscriptionConfig, SubscriptionMsgContentReady, UnSubscribeAsync);
 
-            //return stanSubscriptionManager.Messages;
+            //订阅消息处理器添加到管道
+            _channel.Pipeline.AddLast(messageHandler);
+
+            _logger.LogDebug($"开始发送订阅请求 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
+
+            //发送订阅请求
+            await _channel.WriteAndFlushAsync(Packet);
+
+            _logger.LogDebug($"结束发送订阅请求 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
+
+            //等待订阅结果响应
+            var SubscriptionResponseResult = await SubscriptionResponseReady.Task;
+
+            //移除处理订阅响应的管道
+            _channel.Pipeline.Remove(SubscriptionResponseHandler);
+
+            //如果订阅错误,同时移除订阅消息处理管道
+            if (!string.IsNullOrEmpty(SubscriptionResponseResult.Message.Error))
+            {
+                _channel.Pipeline.Remove(messageHandler);
+
+                _logger.LogError($"订阅消息发生异常 错误信息 {SubscriptionResponseResult.Message.Error}");
+
+                //TODO:待完善异常
+                throw new Exception(SubscriptionResponseResult.Message.Error);
+            }
+
+            _logger.LogDebug($"成功订阅消息 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
+
+
+            var subscriptionCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+            //设置任务超时时间 -- 5秒钟超时
+            subscriptionCancellationToken.Token.Register(() => SubscriptionMsgContentReady.TrySetCanceled());
+
+            var msgContents = await SubscriptionMsgContentReady.Task;
+
+            return msgContents;
         }
 
         #endregion;

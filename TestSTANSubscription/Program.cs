@@ -176,11 +176,7 @@ namespace TestSTANSubscription
 
             await client.ContentcAsync();
 
-            await client.SubscribeAsync("Agent-Recruit-Commission",
-               new STANSubscribeOptions()
-               {
-                   Position = StartPosition.SequenceStart,
-               }, HandleEventQueueMessageAsync);
+            var sss = await client.ReadFirstOrDefaultAsync("Agent-Recruit-Commission-32470", 5);
 
             //for (int i = 0; i < 20; i++)
             //{
