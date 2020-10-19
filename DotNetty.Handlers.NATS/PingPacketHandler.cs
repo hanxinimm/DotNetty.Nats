@@ -6,20 +6,20 @@ namespace DotNetty.Handlers.NATS
     using System;
     using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Transport.Channels;
+    using Microsoft.Extensions.Logging;
 
     public class PingPacketHandler : SimpleChannelInboundHandler<PingPacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext contex, PingPacket msg)
+        private readonly ILogger _logger;
+        public PingPacketHandler(ILogger logger)
         {
-            //Console.WriteLine("PingPacket-PONG");
-            contex.WriteAndFlushAsync(new PongPacket());
+            _logger = logger;
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
+        protected override void ChannelRead0(IChannelHandlerContext contex, PingPacket msg)
         {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
-            contex.CloseAsync();
+            _logger.LogDebug("NATS 服务器心跳 PingPacket => PongPacket");
+            contex.WriteAndFlushAsync(new PongPacket());
         }
     }
 }

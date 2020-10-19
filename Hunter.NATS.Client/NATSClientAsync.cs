@@ -1,4 +1,5 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace Hunter.NATS.Client
         /// </summary>
         private Dictionary<string, NATSSubscriptionAsyncConfig> _localSubscriptionAsyncConfig = new Dictionary<string, NATSSubscriptionAsyncConfig>();
 
-        public async Task ContentcAsync()
+        public async Task ConnectAsync()
         {
             if (!_options.ClusterNodes.Any())
             {
@@ -25,11 +26,21 @@ namespace Hunter.NATS.Client
 
             var ClusterNode = _options.ClusterNodes.First();
 
+            if (_channel != null)
+            {
+                _logger.LogDebug("STAN 开始释放断开的通讯连接频道");
+
+                await _channel.DisconnectAsync();
+                await _channel.CloseAsync();
+
+                _logger.LogDebug("STAN 完成释放断开的通讯连接频道");
+            }
+
             _channel = await _bootstrap.ConnectAsync(ClusterNode);
 
-            _info = await ConnectAsync();
+            _info = await ConnectRequestAsync();
         }
-        private async Task<InfoPacket> ConnectAsync()
+        private async Task<InfoPacket> ConnectRequestAsync()
         {
 
             var Packet = new ConnectPacket(true, false, false, null, null, _clientId, null);

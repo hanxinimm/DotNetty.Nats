@@ -6,18 +6,25 @@ namespace DotNetty.Handlers.NATS
     using System;
     using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Transport.Channels;
+    using Microsoft.Extensions.Logging;
 
     public class ErrorPacketHandler : SimpleChannelInboundHandler<UnknownErrorPacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext contex, UnknownErrorPacket msg)
+        private readonly ILogger _logger;
+
+        public ErrorPacketHandler(ILogger logger)
         {
-            Console.WriteLine(msg.Message);
+            _logger = logger;
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
+        protected override void ChannelRead0(IChannelHandlerContext contex, UnknownErrorPacket msg)
         {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
+            _logger.LogError("[ErrorPacketHandler]NATS消息服务发生错误 错误信息:{0}", msg.Message);
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext contex, Exception ex)
+        {
+            _logger.LogError(ex, "[ErrorPacketHandler]NATS消息服务发生异常");
             contex.CloseAsync();
         }
     }

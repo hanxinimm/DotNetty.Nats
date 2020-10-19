@@ -1,5 +1,6 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,20 +9,16 @@ namespace DotNetty.Handlers.NATS
 {
     public class OKPacketHandler : SimpleChannelInboundHandler<OKPacket>
     {
-        protected override void ChannelRead0(IChannelHandlerContext contex, OKPacket msg)
+        private readonly ILogger _logger;
+        public OKPacketHandler(ILogger logger)
         {
-#if DEBUG
-            //Console.WriteLine("OK");
-#else
-            contex.FireChannelReadComplete();
-#endif
+            _logger = logger;
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
+        protected override void ChannelRead0(IChannelHandlerContext contex, OKPacket msg)
         {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
-            contex.CloseAsync();
+            _logger.LogDebug("NATS 服务器消息发布 OK");
+            contex.FireChannelReadComplete();
         }
     }
 }

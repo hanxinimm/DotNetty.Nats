@@ -76,7 +76,7 @@ namespace TestSTANClient
 
             await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
-            await client.ContentcAsync();
+            await client.ConnectAsync();
 
             Console.WriteLine("连接成功");
 
@@ -85,7 +85,7 @@ namespace TestSTANClient
             //for (int i = 0; i < 100; i++)
             //{
             //    var client = new STANClient(options);
-            //    await client.ContentcAsync("main-cluster", "TestClientId" + i);
+            //    await client.ConnectAsync("main-cluster", "TestClientId" + i);
             //}
 
             //Console.WriteLine("完成创建");

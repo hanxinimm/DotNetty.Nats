@@ -138,7 +138,7 @@ namespace Hunter.STAN.Client
                             {
                                 _logger.LogDebug("STAN 开始尝试重新连接");
 
-                                await ContentcAsync();
+                                await ConnectAsync();
 
                                 _logger.LogDebug("STAN 结束尝试重新连接");
 
@@ -178,17 +178,6 @@ namespace Hunter.STAN.Client
         private void CheckQueueGroup(string queueGroup)
         {
             if (string.IsNullOrEmpty(queueGroup)) throw new ArgumentNullException(nameof(queueGroup));
-        }
-
-        //TODO:2.1框架好像支持释放资源
-        public void Dispose()
-        {
-            try
-            {
-                this.CloseRequestAsync().GetAwaiter().GetResult();
-                this._channel.CloseAsync().GetAwaiter().GetResult();
-            }
-            catch { }
         }
 
         public async ValueTask DisposeAsync()

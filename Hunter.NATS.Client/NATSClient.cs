@@ -4,15 +4,21 @@ using DotNetty.Handlers.NATS;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using Hunter.NATS.Client.Handlers;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Hunter.NATS.Client
 {
-    public partial class NATSClient
+    public partial class NATSClient : IAsyncDisposable
     {
+        private readonly ILogger _logger;
+
         /// <summary>
         /// NATS配置
         /// </summary>
@@ -51,33 +57,97 @@ namespace Hunter.NATS.Client
         private static readonly Regex _publishSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
         private static readonly Regex _subscribeSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
 
-        public NATSClient(NATSOptions options)
+        public NATSClient(
+            ILogger<NATSClient> logger,
+            NATSOptions options)
         {
             _options = options;
             _clientId = _options.ClientId;
+            _bootstrap = InitBootstrap();
+            _logger = logger;
             _localSubscriptionAsyncConfig = new Dictionary<string, NATSSubscriptionAsyncConfig>();
-            _bootstrap = new Bootstrap()
+        }
+
+        public NATSClient(
+            ILogger<NATSClient> logger,
+            IOptions<NATSOptions> options) : this(logger, options.Value)
+        {
+
+        }
+
+        public bool IsOpen => _channel?.Open ?? false;
+
+        private Bootstrap InitBootstrap()
+        {
+
+            return new Bootstrap()
                 .Group(new MultithreadEventLoopGroup())
                 .Channel<TcpSocketChannel>()
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
                     channel.Pipeline.AddLast(NATSEncoder.Instance, NATSDecoder.Instance);
-                    channel.Pipeline.AddLast(new ErrorPacketHandler());
+                    channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
+                    channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                     channel.Pipeline.AddLast(new MessagePacketHandler(MessageProcessingAsync));
-                    channel.Pipeline.AddLast(new PingPacketHandler());
-                    channel.Pipeline.AddLast(new PongPacketHandler());
-                    channel.Pipeline.AddLast(new OKPacketHandler());
+                    channel.Pipeline.AddLast(new PingPacketHandler(_logger));
+                    channel.Pipeline.AddLast(new PongPacketHandler(_logger));
+                    channel.Pipeline.AddLast(new OKPacketHandler(_logger));
                     channel.Pipeline.AddLast(new InfoPacketHandler(InfoAsync));
                 }));
-
         }
 
-        public NATSClient(IOptions<NATSOptions> options) : this(options.Value)
+        private bool IsChannelInactive
         {
-
+            get
+            {
+                return !_channel.Active;
+            }
         }
 
-        public bool IsOpen => _channel?.Open ?? false;
+        private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
+        {
+            if (this.IsChannelInactive)
+            {
+                _logger.LogDebug("STAN 开始重新连接");
+
+                //await this.semaphoreSlim.WaitAsync();
+                try
+                {
+                    if (this.IsChannelInactive)
+                    {
+                        while (true)
+                        {
+                            try
+                            {
+                                _logger.LogDebug("STAN 开始尝试重新连接");
+
+                                await ConnectAsync();
+
+                                _logger.LogDebug("STAN 结束尝试重新连接");
+
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "STAN 尝试重新连接异常");
+                                await Task.Delay(TimeSpan.FromSeconds(3));
+                            }
+                        }
+                        // this.clientRpcHandler = channel.Pipeline.Get<RpcClientHandler>();
+                    }
+                }
+                finally
+                {
+                    _logger.LogDebug("STAN 完成重新连接");
+                    //this.semaphoreSlim.Release();
+                }
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _channel.CloseAsync();
+        }
     }
 }

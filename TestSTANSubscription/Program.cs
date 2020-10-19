@@ -174,7 +174,7 @@ namespace TestSTANSubscription
             logger.LogDebug("测试调试信息输出");
 
 
-            await client.ContentcAsync();
+            await client.ConnectAsync();
 
             //var s = await client.SubscribeAsync("Agent-Recruit-Commission",
             //    new STANSubscribeOptions() { Position = StartPosition.First },

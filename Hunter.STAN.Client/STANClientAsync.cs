@@ -14,7 +14,7 @@ namespace Hunter.STAN.Client
 {
     public sealed partial class STANClient
     {
-        public async Task ContentcAsync()
+        public async Task ConnectAsync()
         {
             if (!_options.ClusterNodes.Any())
             {
