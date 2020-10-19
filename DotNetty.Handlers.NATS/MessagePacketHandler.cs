@@ -8,17 +8,8 @@ using System.Threading;
 
 namespace DotNetty.Handlers.NATS
 {
-    public class MessagePacketHandler : SimpleChannelInboundHandler<MessagePacket>
+    public abstract class MessagePacketHandler : SimpleChannelInboundHandler<MessagePacket>
     {
-        private readonly Action<MessagePacket> _messageCallback;
-        public MessagePacketHandler(Action<MessagePacket> messageCallback)
-        {
-            _messageCallback = messageCallback;
-        }
 
-        protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
-        {
-            _messageCallback(msg);
-        }
     }
 }

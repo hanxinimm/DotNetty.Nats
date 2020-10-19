@@ -7,19 +7,8 @@ using System.Threading.Tasks;
 
 namespace DotNetty.Handlers.STAN
 {
-    public class MessagePacketHandler : SimpleChannelInboundHandler<MsgProtoPacket>
+    public abstract class MessagePacketHandler : SimpleChannelInboundHandler<MsgProtoPacket>
     {
-        private readonly Action<IChannelHandlerContext, MsgProtoPacket> _messageAckCallback;
 
-        public MessagePacketHandler(Action<IChannelHandlerContext, MsgProtoPacket> messageAckCallback)
-        {
-            _messageAckCallback = messageAckCallback;
-        }
-
-
-        protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
-        {
-            _messageAckCallback(contex, msg);
-        }
     }
 }

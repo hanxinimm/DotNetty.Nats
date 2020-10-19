@@ -46,8 +46,6 @@ namespace DotNetty.Codecs.STAN
 
         protected override void Encode(IChannelHandlerContext context, STANPacket message, List<object> output) => DoEncode(context.Allocator, message, output);
 
-        public override bool IsSharable => true;
-
         internal static void DoEncode(IByteBufferAllocator bufferAllocator, STANPacket packet, List<object> output)
         {
             switch (packet.PacketType)

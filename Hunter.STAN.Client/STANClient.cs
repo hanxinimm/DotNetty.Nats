@@ -69,10 +69,13 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 等待发送消息确认安排表
         /// </summary>
-        private ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule 
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule 
             = new ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>>();
 
-        private List<SubscriptionMessageHandler> _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
+        /// <summary>
+        /// 订阅消息处理器集合
+        /// </summary>
+        private readonly List<SubscriptionMessageHandler> _subscriptionMessageHandler;
 
         public STANClient(
             ILogger<STANClient> logger,
@@ -83,6 +86,7 @@ namespace Hunter.STAN.Client
             _clientId = $"{_options.ClientId}-{_identity}";
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
+            _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _bootstrap = InitBootstrap();
             _logger = logger;
         }
@@ -182,8 +186,11 @@ namespace Hunter.STAN.Client
 
         public async ValueTask DisposeAsync()
         {
-            await CloseRequestAsync();
-            await _channel.CloseAsync();
+            if (_channel != null)
+            {
+                await CloseRequestAsync();
+                await _channel.CloseAsync();
+            }
         }
     }
 }

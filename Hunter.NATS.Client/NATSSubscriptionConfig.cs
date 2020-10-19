@@ -14,14 +14,42 @@ namespace Hunter.NATS.Client
             SubscribeId = subscribeId;
         }
 
+        public NATSSubscriptionConfig(string subject, string subscribeId, int? maxMsg)
+        {
+            Subject = subject;
+            SubscribeId = subscribeId;
+            MaxMsg = maxMsg;
+        }
+
+        public NATSSubscriptionConfig(string subject, string subscribeId, string subscribeGroup)
+        {
+            Subject = subject;
+            SubscribeId = subscribeId;
+            SubscribeGroup = subscribeGroup;
+        }
+
+        public NATSSubscriptionConfig(string subject, string subscribeId, string subscribeGroup, int? maxMsg)
+        {
+            Subject = subject;
+            SubscribeId = subscribeId;
+            SubscribeGroup = subscribeGroup;
+            MaxMsg = maxMsg;
+        }
+
         /// <summary>
         /// 主题
         /// </summary>
         public string Subject { get; protected set; }
+
         /// <summary>
         /// 订阅编号
         /// </summary>
         public string SubscribeId { get; protected set; }
+
+        /// <summary>
+        /// 订阅组
+        /// </summary>
+        public string SubscribeGroup { get; protected set; }
 
         /// <summary>
         /// 等待处理的最大消息数

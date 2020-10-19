@@ -1,4 +1,5 @@
 ﻿using DotNetty.Codecs.STAN.Packets;
+using DotNetty.Handlers.STAN;
 using DotNetty.Transport.Channels;
 using System;
 using System.Collections.Concurrent;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Hunter.STAN.Client
 {
-    public abstract class SubscriptionMessageHandler : SimpleChannelInboundHandler<MsgProtoPacket>
+    public abstract class SubscriptionMessageHandler : MessagePacketHandler
     {
         private int _messageHandlerCounter = 0;
         protected readonly STANSubscriptionConfig _subscriptionConfig;

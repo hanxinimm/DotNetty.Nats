@@ -3,19 +3,15 @@
 
 namespace DotNetty.Codecs.NATS
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Runtime.CompilerServices;
-    using System.Text;
     using DotNetty.Buffers;
     using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Codecs.Protocol;
     using DotNetty.Transport.Channels;
+    using System;
 
     public sealed class NATSDecoder : ZeroAllocationByteDecoder
     {
-        public static readonly NATSDecoder Instance = new NATSDecoder();
-
+        public static NATSDecoder Instance => new NATSDecoder();
         protected override ProtocolPacket DecodePacket(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             return DecodePacketInternal(buffer, packetSignature, context);

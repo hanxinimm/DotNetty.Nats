@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATS
 
     public sealed class NATSEncoder : MessageToMessageEncoder<NATSPacket>
     {
-        public static readonly NATSEncoder Instance = new NATSEncoder();
+        public static NATSEncoder Instance => new NATSEncoder();
 
         public static readonly byte[] EMPTY_BYTES;
         public static readonly byte[] SPACES_BYTES;
@@ -41,9 +41,11 @@ namespace DotNetty.Codecs.NATS
             PONG_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.PONG);
         }
 
+        public override bool IsSharable => true;
+
+
         protected override void Encode(IChannelHandlerContext context, NATSPacket message, List<object> output) => DoEncode(context.Allocator, message, output);
 
-        public override bool IsSharable => true;
 
         internal static void DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
         {

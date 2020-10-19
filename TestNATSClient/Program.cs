@@ -35,7 +35,7 @@ namespace TestNATSClient
                 options.ClusterID = "main-cluster";
                 options.ClientId = "TestClientId";
                 ///options.Host = "mq.stan.yd.com";
-                options.Host = "192.168.4.138";
+                options.Host = "127.0.0.1";
                 options.Port = 4221;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
@@ -51,11 +51,10 @@ namespace TestNATSClient
 
 
 
-            var s = await client.SubscribeAsync("Agent-Recruit-Commission", string.Empty, (bytes) =>
+            var s = await client.SubscribeAsync("OrderPlaced", string.Empty, (bytes) =>
             {
                 var sss = Encoding.UTF8.GetString(bytes.Data);
                 Console.WriteLine("收到消息 {0}", sss);
-
 
                 //SValue++;
 

@@ -54,6 +54,11 @@ namespace Hunter.NATS.Client
         /// </summary>
         private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
 
+        /// <summary>
+        /// 订阅消息处理器集合
+        /// </summary>
+        private readonly List<SubscriptionMessageHandler> _subscriptionMessageHandler;
+
         private static readonly Regex _publishSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
         private static readonly Regex _subscribeSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
 
@@ -63,9 +68,9 @@ namespace Hunter.NATS.Client
         {
             _options = options;
             _clientId = _options.ClientId;
+            _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _bootstrap = InitBootstrap();
             _logger = logger;
-            _localSubscriptionAsyncConfig = new Dictionary<string, NATSSubscriptionAsyncConfig>();
         }
 
         public NATSClient(
@@ -89,7 +94,6 @@ namespace Hunter.NATS.Client
                     channel.Pipeline.AddLast(NATSEncoder.Instance, NATSDecoder.Instance);
                     channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                     channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
-                    channel.Pipeline.AddLast(new MessagePacketHandler(MessageProcessingAsync));
                     channel.Pipeline.AddLast(new PingPacketHandler(_logger));
                     channel.Pipeline.AddLast(new PongPacketHandler(_logger));
                     channel.Pipeline.AddLast(new OKPacketHandler(_logger));
@@ -147,7 +151,7 @@ namespace Hunter.NATS.Client
 
         public async ValueTask DisposeAsync()
         {
-            await _channel.CloseAsync();
+            await _channel?.CloseAsync();
         }
     }
 }

@@ -203,6 +203,8 @@ namespace Hunter.STAN.Client
             {
                 _channel.Pipeline.Remove(messageHandler);
 
+                _subscriptionMessageHandler.Remove(messageHandler);
+
                 _logger.LogError($"订阅消息发生异常 错误信息 {SubscriptionResponseResult.Message.Error}");
 
                 //TODO:待完善异常
