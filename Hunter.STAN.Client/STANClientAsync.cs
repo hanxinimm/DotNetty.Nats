@@ -468,7 +468,7 @@ namespace Hunter.STAN.Client
         //TODO:待完善读取逻辑
         private async Task<Queue<STANMsgContent>> ReadAsync(string subject, int? count, STANSubscribeOptions subscribeOptions)
         {
-            var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
+            var SubscribePacket = new SubscribePacket();
 
             _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
@@ -488,6 +488,7 @@ namespace Hunter.STAN.Client
                     subscribeOptions.AckWaitInSecs ?? 30,
                     null,
                     subscribeOptions.Position);
+            
 
             if (subscribeOptions.StartSequence.HasValue)
             {
