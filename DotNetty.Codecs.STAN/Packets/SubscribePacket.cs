@@ -11,16 +11,15 @@ namespace DotNetty.Codecs.STAN.Packets
         [IgnoreDataMember]
         public override STANPacketType PacketType => STANPacketType.SUB;
 
-        public SubscribePacket(string id, string group)
+        public SubscribePacket(string subject)
         {
-            Id = id;
-            Subject = $"{STANInboxs.MsgProto}{Guid.NewGuid():N}";
-            Group = group;
+            Id = DateTime.Now.Ticks.ToString();
+            Subject = subject;
         }
 
-        public SubscribePacket(string id)
+        public SubscribePacket()
         {
-            Id = id;
+            Id = DateTime.Now.Ticks.ToString();
             Subject = $"{STANInboxs.MsgProto}{Guid.NewGuid():N}";
         }
     }

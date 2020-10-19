@@ -9,9 +9,9 @@ namespace DotNetty.Handlers.STAN
 {
     public class MessagePacketHandler : SimpleChannelInboundHandler<MsgProtoPacket>
     {
-        private readonly Action<IChannel,MsgProtoPacket> _messageAckCallback;
+        private readonly Action<IChannelHandlerContext, MsgProtoPacket> _messageAckCallback;
 
-        public MessagePacketHandler(Action<IChannel, MsgProtoPacket> messageAckCallback)
+        public MessagePacketHandler(Action<IChannelHandlerContext, MsgProtoPacket> messageAckCallback)
         {
             _messageAckCallback = messageAckCallback;
         }
@@ -19,7 +19,7 @@ namespace DotNetty.Handlers.STAN
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
-            _messageAckCallback(contex.Channel, msg);
+            _messageAckCallback(contex, msg);
         }
     }
 }

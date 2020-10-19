@@ -32,6 +32,10 @@ namespace Hunter.STAN.Client
             }
         }
 
+        public override bool IsSharable => true;
+
+        public STANSubscriptionConfig SubscriptionConfig => _subscriptionConfig;
+
         protected abstract bool MessageHandler(MsgProtoPacket msg);
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)

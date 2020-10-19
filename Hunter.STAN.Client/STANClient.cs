@@ -72,6 +72,8 @@ namespace Hunter.STAN.Client
         private ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule 
             = new ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>>();
 
+        private List<SubscriptionMessageHandler> _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
+
         public STANClient(
             ILogger<STANClient> logger,
             STANOptions options)
@@ -106,6 +108,7 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
+                
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_logger, _waitPubAckTaskSchedule));
                 channel.Pipeline.AddLast(new PubAckPacketAsynHandler(_logger));
                 channel.Pipeline.AddLast(new PingPacketHandler(_logger));
@@ -127,10 +130,9 @@ namespace Hunter.STAN.Client
             {
                 _logger.LogDebug("STAN 开始重新连接");
 
-                //await this.semaphoreSlim.WaitAsync();
                 try
                 {
-                    if (this.IsChannelInactive)
+                    if (IsChannelInactive)
                     {
                         while (true)
                         {
@@ -150,13 +152,11 @@ namespace Hunter.STAN.Client
                                 await Task.Delay(TimeSpan.FromSeconds(3));
                             }
                         }
-                        // this.clientRpcHandler = channel.Pipeline.Get<RpcClientHandler>();
                     }
                 }
                 finally
                 {
                     _logger.LogDebug("STAN 完成重新连接");
-                    //this.semaphoreSlim.Release();
                 }
             }
         }

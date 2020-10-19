@@ -65,7 +65,7 @@ namespace TestSTANClient
                 options.ClusterID = "main-cluster";
                 options.ClientId = $"Security-StatefulManagerService";
                 //options.Host = "mq.stan.yidujob.com";
-                options.Host = "192.168.4.138";
+                options.Host = "127.0.0.1";
                 options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
@@ -97,17 +97,17 @@ namespace TestSTANClient
 
             //var lastValue = 0;
             ////"KeepLast"
-            //var s = client.Subscribe("OrderPlaced", string.Empty, string.Empty, (bytes) =>
-            //{
-            //    var sss = Encoding.UTF8.GetString(bytes);
-            //    //var nowValue = int.Parse(sss.Split(' ')[0]);
-            //    //if (lastValue != 0 && (nowValue - lastValue) != 1)
-            //    //{
-            //    //    Console.WriteLine("ERROR ==========================================================");
-            //    //}
-            //    //lastValue = nowValue;
-            //    Console.WriteLine(sss);
-            //});
+            var s = client.SubscribeAsync("OrderPlaced", (bytes) =>
+            {
+                var sss = Encoding.UTF8.GetString(bytes.Data);
+                //var nowValue = int.Parse(sss.Split(' ')[0]);
+                //if (lastValue != 0 && (nowValue - lastValue) != 1)
+                //{
+                //    Console.WriteLine("ERROR ==========================================================");
+                //}
+                //lastValue = nowValue;
+                Console.WriteLine(sss);
+            });
 
             //// 防止此主机进程终止，以使服务保持运行。
 
@@ -168,7 +168,7 @@ namespace TestSTANClient
 
                 for (int j = 0; j < 1; j++)
                 {
-                    await client.PublishAsync("Test-Security-App-1", Testbytes);
+                    await client.PublishAsync("OrderPlaced", Testbytes);
                 }
                 //if (Rlt == null) Console.WriteLine("发送失败");
                 

@@ -51,6 +51,8 @@ namespace Hunter.STAN.Client
                 await SubscribeHeartBeatInboxAsync();
 
                 await SubscribeReplyInboxAsync();
+
+                await SubscriptionMessageAsync();
             }
         }
 
@@ -100,6 +102,21 @@ namespace Hunter.STAN.Client
             _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
         }
 
+
+        private async Task SubscriptionMessageAsync()
+        {
+            foreach (var subscriptionMessageHandler in _subscriptionMessageHandler)
+            {
+                _logger.LogDebug($"开始设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
+
+                _channel.Pipeline.AddLast(subscriptionMessageHandler);
+
+                await _channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.Inbox));
+
+                _logger.LogDebug($"完成设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
+            }
+        }
+
         /// <summary>
         /// 订阅
         /// </summary>
@@ -116,7 +133,7 @@ namespace Hunter.STAN.Client
              STANSubscribeOptions subscribeOptions,
              Func<STANSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup)
         {
-            var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
+            var SubscribePacket = new SubscribePacket();
 
             _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
@@ -161,6 +178,9 @@ namespace Hunter.STAN.Client
 
             //订阅消息处理器
             var messageHandler = messageHandlerSetup(SubscriptionConfig);
+
+            //添加消息处理到消息处理集合
+            _subscriptionMessageHandler.Add(messageHandler);
 
             //订阅消息处理器添加到管道
             _channel.Pipeline.AddLast(messageHandler);
