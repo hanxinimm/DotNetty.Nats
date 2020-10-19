@@ -28,12 +28,12 @@ namespace Hunter.NATS.Client
 
             if (_channel != null)
             {
-                _logger.LogDebug("STAN 开始释放断开的通讯连接频道");
+                _logger.LogDebug("NATS 开始释放断开的通讯连接频道");
 
                 await _channel.DisconnectAsync();
                 await _channel.CloseAsync();
 
-                _logger.LogDebug("STAN 完成释放断开的通讯连接频道");
+                _logger.LogDebug("NATS 完成释放断开的通讯连接频道");
             }
 
             _channel = await _bootstrap.ConnectAsync(ClusterNode);

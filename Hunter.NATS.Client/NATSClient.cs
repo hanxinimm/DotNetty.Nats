@@ -109,7 +109,7 @@ namespace Hunter.NATS.Client
         {
             if (this.IsChannelInactive)
             {
-                _logger.LogDebug("STAN 开始重新连接");
+                _logger.LogDebug("NATS 开始重新连接");
 
                 //await this.semaphoreSlim.WaitAsync();
                 try
@@ -120,17 +120,17 @@ namespace Hunter.NATS.Client
                         {
                             try
                             {
-                                _logger.LogDebug("STAN 开始尝试重新连接");
+                                _logger.LogDebug("NATS 开始尝试重新连接");
 
                                 await ConnectAsync();
 
-                                _logger.LogDebug("STAN 结束尝试重新连接");
+                                _logger.LogDebug("NATS 结束尝试重新连接");
 
                                 break;
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogError(ex, "STAN 尝试重新连接异常");
+                                _logger.LogError(ex, "NATS 尝试重新连接异常");
                                 await Task.Delay(TimeSpan.FromSeconds(3));
                             }
                         }
@@ -139,7 +139,7 @@ namespace Hunter.NATS.Client
                 }
                 finally
                 {
-                    _logger.LogDebug("STAN 完成重新连接");
+                    _logger.LogDebug("NATS 完成重新连接");
                     //this.semaphoreSlim.Release();
                 }
             }
