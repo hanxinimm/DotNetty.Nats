@@ -176,7 +176,17 @@ namespace TestSTANSubscription
 
             await client.ContentcAsync();
 
-            var sss = await client.ReadFirstOrDefaultAsync("Agent-Recruit-Commission-32470", 5);
+            //var s = await client.SubscribeAsync("Agent-Recruit-Commission",
+            //    new STANSubscribeOptions() { Position = StartPosition.First },
+            //    (content) =>
+            //{
+
+            //    var data = Encoding.UTF8.GetString(content.Data);
+            //    Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
+            //    return new ValueTask<bool>(true);
+            //});
+
+            var sss = await client.ReadFirstOrDefaultAsync("Agent-Recruit-Commission", 57);
 
             //for (int i = 0; i < 20; i++)
             //{

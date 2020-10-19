@@ -107,7 +107,7 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_logger, _waitPubAckTaskSchedule));
-                channel.Pipeline.AddLast(new PubAckPacketAsynSyncHandler(_logger));
+                channel.Pipeline.AddLast(new PubAckPacketAsynHandler(_logger));
                 channel.Pipeline.AddLast(new PingPacketHandler(_logger));
                 channel.Pipeline.AddLast(new PongPacketHandler(_logger));
             }));

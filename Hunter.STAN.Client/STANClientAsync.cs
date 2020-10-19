@@ -434,7 +434,7 @@ namespace Hunter.STAN.Client
 
         public Task<Queue<STANMsgContent>> ReadAsync(string subject, long start)
         {
-            return ReadAsync(subject, null, new STANSubscribeOptions()
+            return ReadAsync(subject, null,new STANSubscribeOptions()
             { Position = StartPosition.SequenceStart, StartSequence = (ulong)(start < 1 ? 1 : start) });
         }
 
@@ -446,8 +446,6 @@ namespace Hunter.STAN.Client
         //TODO:待完善读取逻辑
         private async Task<Queue<STANMsgContent>> ReadAsync(string subject, int? count, STANSubscribeOptions subscribeOptions)
         {
-            //return new Queue<STANMsgContent>();
-
             var SubscribePacket = new SubscribePacket(DateTime.Now.Ticks.ToString());
 
             _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
@@ -480,7 +478,8 @@ namespace Hunter.STAN.Client
             }
 
             //订阅配置信息
-            var SubscriptionConfig = new STANSubscriptionConfig(subject, Packet.ReplyTo, Packet.Message.Inbox);
+            var SubscriptionConfig = count.HasValue ? new STANSubscriptionConfig(subject, Packet.ReplyTo, Packet.Message.Inbox, count.Value) :
+                new STANSubscriptionConfig(subject, Packet.ReplyTo, Packet.Message.Inbox);
 
             //订阅响应任务源
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>(SubscriptionConfig);
@@ -524,12 +523,6 @@ namespace Hunter.STAN.Client
             }
 
             _logger.LogDebug($"成功订阅消息 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
-
-
-            var subscriptionCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-            //设置任务超时时间 -- 5秒钟超时
-            subscriptionCancellationToken.Token.Register(() => SubscriptionMsgContentReady.TrySetCanceled());
 
             var msgContents = await SubscriptionMsgContentReady.Task;
 

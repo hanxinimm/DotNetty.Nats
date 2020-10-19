@@ -13,11 +13,11 @@ namespace DotNetty.Handlers.STAN
     using Google.Protobuf;
     using Microsoft.Extensions.Logging;
 
-    public class PubAckPacketAsynSyncHandler : PubAckPacketHandler
+    public class PubAckPacketAsynHandler : PubAckPacketHandler
     {
 
         private readonly ILogger _logger;
-        public PubAckPacketAsynSyncHandler(ILogger logger)
+        public PubAckPacketAsynHandler(ILogger logger)
         {
             _logger = logger;
         }
@@ -26,11 +26,11 @@ namespace DotNetty.Handlers.STAN
         {
             if (!string.IsNullOrEmpty(msg.Message.Error))
             {
-                _logger.LogError($"[PubAckPacketAsynSyncHandler]消息标识 {msg.Message.Guid} 错误信息 {msg.Message.Error}");
+                _logger.LogError($"[PubAckPacketAsynHandler]消息标识 {msg.Message.Guid} 错误信息 {msg.Message.Error}");
             }
             else
             {
-                _logger.LogDebug($"[PubAckPacketAsynSyncHandler]消息标识 {msg.Message.Guid}  发布成功");
+                _logger.LogDebug($"[PubAckPacketAsynHandler]消息标识 {msg.Message.Guid}  发布成功");
             }
         }
     }
