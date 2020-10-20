@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
@@ -45,7 +46,15 @@ namespace TestNATSClient
 
             await using var client = _serviceProvider.GetRequiredService<NATSClient>();
 
-            await client.ConnectAsync();
+            var s1 = new List<Task>();
+
+            for (int i = 0; i < 5; i++)
+            {
+                s1.Add( client.ConnectAsync());
+            }
+
+            await Task.WhenAll(s1.ToArray());
+
 
             int SValue = 0;
 
