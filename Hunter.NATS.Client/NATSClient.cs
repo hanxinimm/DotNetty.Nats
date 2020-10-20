@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hunter.NATS.Client
@@ -59,6 +60,11 @@ namespace Hunter.NATS.Client
         /// </summary>
         private readonly List<SubscriptionMessageHandler> _subscriptionMessageHandler;
 
+        /// <summary>
+        /// 限制并发线程
+        /// </summary>
+        private readonly SemaphoreSlim _semaphoreSlim;
+
         private static readonly Regex _publishSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
         private static readonly Regex _subscribeSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
 
@@ -69,6 +75,7 @@ namespace Hunter.NATS.Client
             _options = options;
             _clientId = _options.ClientId;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
+            _semaphoreSlim = new SemaphoreSlim(1);
             _bootstrap = InitBootstrap();
             _logger = logger;
         }
@@ -111,42 +118,37 @@ namespace Hunter.NATS.Client
 
         private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
         {
-            if (this.IsChannelInactive)
+            await _semaphoreSlim.WaitAsync();
+
+            if (IsChannelInactive)
             {
                 _logger.LogDebug("NATS 开始重新连接");
 
-                //await this.semaphoreSlim.WaitAsync();
-                try
+
+                while (true)
                 {
-                    if (this.IsChannelInactive)
+                    try
                     {
-                        while (true)
-                        {
-                            try
-                            {
-                                _logger.LogDebug("NATS 开始尝试重新连接");
+                        _logger.LogDebug("NATS 开始尝试重新连接");
 
-                                await ConnectAsync();
+                        await ConnectAsync(true);
 
-                                _logger.LogDebug("NATS 结束尝试重新连接");
+                        _logger.LogDebug("NATS 结束尝试重新连接");
 
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, "NATS 尝试重新连接异常");
-                                await Task.Delay(TimeSpan.FromSeconds(3));
-                            }
-                        }
-                        // this.clientRpcHandler = channel.Pipeline.Get<RpcClientHandler>();
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "NATS 尝试重新连接异常");
+                        await Task.Delay(TimeSpan.FromSeconds(3));
                     }
                 }
-                finally
-                {
-                    _logger.LogDebug("NATS 完成重新连接");
-                    //this.semaphoreSlim.Release();
-                }
+
+
+                _logger.LogDebug("NATS 完成重新连接");
             }
+
+            _semaphoreSlim.Release();
         }
 
         public async ValueTask DisposeAsync()

@@ -46,15 +46,9 @@ namespace TestNATSClient
 
             await using var client = _serviceProvider.GetRequiredService<NATSClient>();
 
-            var s1 = new List<Task>();
 
-            for (int i = 0; i < 5; i++)
-            {
-                s1.Add( client.ConnectAsync());
-            }
-
-            await Task.WhenAll(s1.ToArray());
-
+            await client.ConnectAsync();
+            
 
             int SValue = 0;
 
