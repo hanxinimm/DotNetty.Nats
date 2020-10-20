@@ -14,8 +14,16 @@ namespace Hunter.STAN.Client
 {
     public sealed partial class STANClient
     {
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(bool isReconnect = false)
         {
+            if (!isReconnect)
+            {
+                await _semaphoreSlim.WaitAsync();
+
+                if (_channel != null)
+                    return;
+            }
+
             if (!_options.ClusterNodes.Any())
             {
                 IPHostEntry hostInfo = Dns.GetHostEntry(_options.Host);
@@ -54,6 +62,9 @@ namespace Hunter.STAN.Client
 
                 await SubscriptionMessageAsync();
             }
+
+
+            _semaphoreSlim.Release();
         }
 
         private async Task<STANConnectionConfig> ConnectRequestAsync()

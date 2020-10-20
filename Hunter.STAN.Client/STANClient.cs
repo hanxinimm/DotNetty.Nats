@@ -77,6 +77,11 @@ namespace Hunter.STAN.Client
         /// </summary>
         private readonly List<SubscriptionMessageHandler> _subscriptionMessageHandler;
 
+        /// <summary>
+        /// 限制并发线程
+        /// </summary>
+        private readonly SemaphoreSlim _semaphoreSlim;
+
         public STANClient(
             ILogger<STANClient> logger,
             STANOptions options)
@@ -87,6 +92,7 @@ namespace Hunter.STAN.Client
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
+            _semaphoreSlim = new SemaphoreSlim(1);
             _bootstrap = InitBootstrap();
             _logger = logger;
         }
@@ -130,7 +136,9 @@ namespace Hunter.STAN.Client
 
         private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
         {
-            if (this.IsChannelInactive)
+            await _semaphoreSlim.WaitAsync();
+
+            if (IsChannelInactive)
             {
                 _logger.LogDebug("STAN 开始重新连接");
 
@@ -144,7 +152,7 @@ namespace Hunter.STAN.Client
                             {
                                 _logger.LogDebug("STAN 开始尝试重新连接");
 
-                                await ConnectAsync();
+                                await ConnectAsync(true);
 
                                 _logger.LogDebug("STAN 结束尝试重新连接");
 
@@ -163,6 +171,8 @@ namespace Hunter.STAN.Client
                     _logger.LogDebug("STAN 完成重新连接");
                 }
             }
+
+            _semaphoreSlim.Release();
         }
 
         #region 消息发送确认
