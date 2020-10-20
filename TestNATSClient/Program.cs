@@ -53,7 +53,6 @@ namespace TestNATSClient
             int SValue = 0;
 
 
-
             var s = await client.SubscribeAsync("OrderPlaced", string.Empty, (bytes) =>
             {
                 var sss = Encoding.UTF8.GetString(bytes.Data);

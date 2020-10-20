@@ -21,6 +21,37 @@ namespace Hunter.NATS.Client
                     return;
             }
 
+            try
+            {
+                int retryCount = 0;
+
+                while (true)
+                {
+                    try
+                    {
+                        await TryConnectAsync();
+
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (isReconnect)
+                            throw ex;
+
+                        _logger.LogError(ex, $"NATS 连接服务器异常 第 {++retryCount} 次尝试");
+                        await Task.Delay(TimeSpan.FromSeconds(3));
+                    }
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        public async Task TryConnectAsync()
+        {
+            
             if (!_options.ClusterNodes.Any())
             {
                 IPHostEntry hostInfo = Dns.GetHostEntry(_options.Host);
@@ -53,9 +84,8 @@ namespace Hunter.NATS.Client
 
                 await SubscriptionMessageAsync();
             }
-
-            _semaphoreSlim.Release();
         }
+
         private async Task<InfoPacket> ConnectRequestAsync()
         {
 

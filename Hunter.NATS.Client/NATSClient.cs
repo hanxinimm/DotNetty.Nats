@@ -144,7 +144,6 @@ namespace Hunter.NATS.Client
                     }
                 }
 
-
                 _logger.LogDebug("NATS 完成重新连接");
             }
 
