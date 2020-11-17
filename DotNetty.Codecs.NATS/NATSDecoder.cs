@@ -7,17 +7,23 @@ namespace DotNetty.Codecs.NATS
     using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Codecs.Protocol;
     using DotNetty.Transport.Channels;
+    using Microsoft.Extensions.Logging;
     using System;
 
     public sealed class NATSDecoder : ZeroAllocationByteDecoder
     {
-        public static NATSDecoder Instance => new NATSDecoder();
-        protected override ProtocolPacket DecodePacket(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        public NATSDecoder(ILogger logger) : base(logger)
+        { }
+
+        protected override ProtocolPacket DecodePacket(
+            IByteBuffer buffer, 
+            string packetSignature,
+            IChannelHandlerContext context)
         {
             return DecodePacketInternal(buffer, packetSignature, context);
         }
 
-        static NATSPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        NATSPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             switch (packetSignature)
             {
@@ -43,7 +49,7 @@ namespace DotNetty.Codecs.NATS
             }
         }
 
-        static NATSPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        NATSPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             if (TryGetStringFromNewlineDelimiter(buffer, ProtocolSignatures.INFO, out var infoJson))
             {
@@ -52,7 +58,7 @@ namespace DotNetty.Codecs.NATS
             return null;
         }
 
-        static NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
+        NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
 
             if (TryGetStringFromFieldDelimiter(buffer, ProtocolSignatures.MSG, out var subject))
@@ -86,7 +92,7 @@ namespace DotNetty.Codecs.NATS
             return null;
         }
 
-        static NATSPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        NATSPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             if (TryGetStringFromNewlineDelimiter(buffer, ProtocolSignatures.ERR, out var error))
             {

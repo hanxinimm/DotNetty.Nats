@@ -10,13 +10,14 @@ namespace DotNetty.Codecs.STAN
     using DotNetty.Codecs.STAN.Protocol;
     using DotNetty.Transport.Channels;
     using Google.Protobuf;
+    using Microsoft.Extensions.Logging;
     using System;
     using System.Collections.Generic;
     using System.Text;
 
     public sealed class STANDecoder : ZeroAllocationByteDecoder
     {
-        public static STANDecoder Instance => new STANDecoder();
+        public STANDecoder(ILogger logger) : base(logger) { }
 
         protected override ProtocolPacket DecodePacket(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
@@ -32,7 +33,7 @@ namespace DotNetty.Codecs.STAN
             return string.Empty;
         }
 
-        static STANPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        STANPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             switch (packetSignature)
             {
@@ -58,7 +59,7 @@ namespace DotNetty.Codecs.STAN
             }
         }
 
-        static STANPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        STANPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             if (TryGetStringFromNewlineDelimiter(buffer, STANSignatures.INFO, out var infoJson))
             {
@@ -67,7 +68,7 @@ namespace DotNetty.Codecs.STAN
             return null;
         }
 
-        static STANPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
+        STANPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
 
             if (TryGetStringFromFieldDelimiter(buffer, STANSignatures.MSG, out var subject))
@@ -145,7 +146,7 @@ namespace DotNetty.Codecs.STAN
             return Packet;
         }
 
-        static STANPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
+        STANPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
             if (TryGetStringFromNewlineDelimiter(buffer, STANSignatures.ERR, out var error))
             {

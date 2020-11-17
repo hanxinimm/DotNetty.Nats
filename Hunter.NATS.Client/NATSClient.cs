@@ -19,6 +19,7 @@ namespace Hunter.NATS.Client
     public partial class NATSClient : IAsyncDisposable
     {
         private readonly ILogger _logger;
+        private readonly NATSDecoder _natsDecoder;
 
         /// <summary>
         /// NATS配置
@@ -78,6 +79,7 @@ namespace Hunter.NATS.Client
             _semaphoreSlim = new SemaphoreSlim(1);
             _bootstrap = InitBootstrap();
             _logger = logger;
+            _natsDecoder = new NATSDecoder(logger);
         }
 
         public NATSClient(
@@ -98,7 +100,7 @@ namespace Hunter.NATS.Client
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
-                    channel.Pipeline.AddLast(NATSEncoder.Instance, NATSDecoder.Instance);
+                    channel.Pipeline.AddLast(NATSEncoder.Instance, _natsDecoder);
                     channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                     channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                     channel.Pipeline.AddLast(new PingPacketHandler(_logger));

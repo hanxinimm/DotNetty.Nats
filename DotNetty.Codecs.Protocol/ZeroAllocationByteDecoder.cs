@@ -1,5 +1,6 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,10 +11,12 @@ namespace DotNetty.Codecs.Protocol
 
     public abstract class ZeroAllocationByteDecoder : ReplayingDecoder<ParseState>
     {
-        public ZeroAllocationByteDecoder()
+        private readonly ILogger _logger;
+
+        public ZeroAllocationByteDecoder(ILogger logger)
             : base(ParseState.Ready)
         {
-
+            _logger = logger;
         }
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
@@ -69,7 +72,7 @@ namespace DotNetty.Codecs.Protocol
             return packet != null;
         }
 
-        protected static string GetSignature(IByteBuffer input)
+        protected string GetSignature(IByteBuffer input)
         {
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
@@ -93,17 +96,15 @@ namespace DotNetty.Codecs.Protocol
                                     return ProtocolSignatures.PONG;
                                 default:
 #if DEBUG
-                                    throw new FormatException($"NATS Newlines is invalid.");
-#else
-                                    return string.Empty;
+                                    _logger.LogWarning($"NATS Newlines is invalid.");
 #endif
+                                    return string.Empty;
                             }
                         }
 #if DEBUG
-                        throw new FormatException($"NATS Newlines is invalid.");
-#else
-                        break;
+                        _logger.LogWarning("NATS Newlines is invalid.");
 #endif
+                        break;
                     default:
                         break;
                 }
@@ -111,7 +112,7 @@ namespace DotNetty.Codecs.Protocol
             return string.Empty;
         }
 
-        protected static bool TryGetStringFromFieldDelimiter(IByteBuffer input, string packetSignature, out string value)
+        protected bool TryGetStringFromFieldDelimiter(IByteBuffer input, string packetSignature, out string value)
         {
             value = null;
             int startIndex = input.ReaderIndex;
@@ -126,10 +127,9 @@ namespace DotNetty.Codecs.Protocol
                     case ProtocolConstants.NEWLINES_CR:
                     case ProtocolConstants.NEWLINES_LF:
 #if DEBUG
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-#else
-                        return false;
+                        _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
 #endif
+                        return false;
                     default:
                         break;
                 }
@@ -137,7 +137,7 @@ namespace DotNetty.Codecs.Protocol
             return false;
         }
 
-        protected static string GetStringFromFieldDelimiter(IByteBuffer input, string packetSignature)
+        protected string GetStringFromFieldDelimiter(IByteBuffer input, string packetSignature)
         {
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
@@ -154,10 +154,9 @@ namespace DotNetty.Codecs.Protocol
                             return string.Empty;
                         }
 #if DEBUG
-                        throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-#else
-                    break;
+                        _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
 #endif
+                        break;
                     default:
                         break;
                 }
@@ -165,7 +164,7 @@ namespace DotNetty.Codecs.Protocol
             return string.Empty;
         }
 
-        protected static bool TryGetStringFromNewlineDelimiter(IByteBuffer input, string packetSignature, out string value)
+        protected bool TryGetStringFromNewlineDelimiter(IByteBuffer input, string packetSignature, out string value)
         {
             value = null;
             int startIndex = input.ReaderIndex;
@@ -179,16 +178,15 @@ namespace DotNetty.Codecs.Protocol
                         return true;
                     }
 #if DEBUG
-                    throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-#else
-                    break;
+                    _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
 #endif
+                    break;
                 }
             }
             return false;
         }
 
-        protected static bool TryGetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature, out byte[] value)
+        protected bool TryGetBytesFromNewlineDelimiter(IByteBuffer input, int payloadSize, string packetSignature, out byte[] value)
         {
             value = null;
 
@@ -205,15 +203,14 @@ namespace DotNetty.Codecs.Protocol
                     return true;
                 }
 #if DEBUG
-                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
-#else
-                return false;
+                _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
 #endif
+                return false;
             }
 
             if (ProtocolConstants.NEWLINES_CR != input.GetByte(input.ReaderIndex + payloadSize) || ProtocolConstants.NEWLINES_LF != input.GetByte(input.ReaderIndex + payloadSize + 1))
 #if DEBUG
-                throw new FormatException($"NATS protocol name of `{packetSignature}` is invalid.");
+                _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
 #else
                 return false;
 #endif
