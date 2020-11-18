@@ -13,7 +13,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static void AddNATSServer(this IServiceCollection services, Action<NATSOptions> steup)
         {
             services.Configure(steup);
-            services.AddTransient<NATSClient>();
+            services.AddSingleton<NATSClient>();
         }
 
         public static void AddNATSServer(this IServiceCollection services, IConfigurationRoot configuration)

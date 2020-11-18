@@ -17,7 +17,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static void AddSTANServer(this IServiceCollection services, Action<STANOptions> steup)
         {
             services.Configure(steup);
-            services.AddTransient<STANClient>();
+            services.AddSingleton<STANClient>();
         }
 
         public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration)
@@ -27,7 +27,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ClientId = "STANClientId";
                 configuration.GetSection("STANOptions").Bind(options);
             });
-            services.AddTransient<STANClient>();
+            services.AddSingleton<STANClient>();
         }
 
         public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration, string clientId)
@@ -37,7 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ClientId = _clientIdReplacer.Replace(clientId, "_");
                 configuration.GetSection("STANOptions").Bind(options);
             });
-            services.AddTransient<STANClient>();
+            services.AddSingleton<STANClient>();
         }
     }
 }
