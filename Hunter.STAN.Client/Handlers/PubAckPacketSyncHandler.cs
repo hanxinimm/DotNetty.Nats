@@ -17,8 +17,11 @@ namespace DotNetty.Handlers.STAN
     {
         private readonly ILogger _logger;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule;
-        public PubAckPacketSyncHandler(ILogger logger, ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> waitPubAckTaskSchedule)
+        public PubAckPacketSyncHandler(
+            ILogger logger,
+            ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> waitPubAckTaskSchedule)
         {
+            _logger = logger;
             _waitPubAckTaskSchedule = waitPubAckTaskSchedule;
         }
 

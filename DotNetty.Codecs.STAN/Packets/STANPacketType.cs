@@ -91,6 +91,14 @@ namespace DotNetty.Codecs.STAN.Packets
         /// </summary>
         Ack,
         /// <summary>
+        /// Ping sent to server to detect connection loss
+        /// </summary>
+        ConnectPing,
+        /// <summary>
+        /// Result of a Ping
+        /// </summary>
+        ConnectPingResponse,
+        /// <summary>
         /// Client	Request sent to close the connection to the NATS Streaming Server
         /// </summary>
         CloseRequest,

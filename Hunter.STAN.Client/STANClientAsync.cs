@@ -33,7 +33,7 @@ namespace Hunter.STAN.Client
                 {
                     try
                     {
-                        await TryConnectAsync();
+                        await TryConnectAsync(isReconnect);
 
                         break;
                     }
@@ -54,7 +54,7 @@ namespace Hunter.STAN.Client
             }
         }
 
-        public async Task TryConnectAsync()
+        public async Task TryConnectAsync(bool isReconnect = false)
         {
 
             if (!_options.ClusterNodes.Any())
@@ -75,62 +75,123 @@ namespace Hunter.STAN.Client
                 _logger.LogDebug("STAN 完成释放断开的通讯连接频道");
             }
 
-            if (_config == null)
+
+            _logger.LogDebug("STAN 开始连接频道");
+
+            _channel = await _bootstrap.ConnectAsync(ClusterNode);
+
+            _logger.LogDebug("STAN 开始订阅心跳箱");
+
+            await SubscribeHeartBeatInboxAsync();
+
+            _logger.LogDebug("STAN 完成订阅心跳箱");
+
+            _logger.LogDebug("STAN 开始订阅答复箱");
+
+            await SubscribeReplyInboxAsync();
+
+            _logger.LogDebug("STAN 完成订阅答复箱");
+
+
+            if (isReconnect)
             {
-                _logger.LogDebug("STAN 开始连接频道");
+                var pingResponse = await ConnectPingAsync();
 
-                _channel = await _bootstrap.ConnectAsync(ClusterNode);
+                if (!string.IsNullOrEmpty(pingResponse.Error))
+                {
+                    _logger.LogError($"STAN 连接不再有效 错误:{pingResponse.Error}");
 
-                _logger.LogDebug("STAN 开始订阅心跳箱");
+                    _logger.LogDebug("STAN 开始客户端连接请求");
 
-                await SubscribeHeartBeatInboxAsync();
+                    _config = await ConnectRequestAsync();
 
-                _logger.LogDebug("STAN 完成订阅心跳箱");
-
-                _logger.LogDebug("STAN 开始订阅答复箱");
-
-                await SubscribeReplyInboxAsync();
-
-                _logger.LogDebug("STAN 完成订阅答复箱");
-
-                _config = await ConnectRequestAsync();
-
-                _logger.LogDebug("STAN 完成连接频道");
-
-            }
-            else
-            {
-                _logger.LogDebug("STAN 开始连接频道");
-
-                _channel = await _bootstrap.ConnectAsync(ClusterNode);
-
-                _logger.LogDebug("STAN 开始订阅心跳箱");
-
-                await SubscribeHeartBeatInboxAsync();
-
-                _logger.LogDebug("STAN 完成订阅心跳箱");
-
-                _logger.LogDebug("STAN 开始订阅答复箱");
-
-                await SubscribeReplyInboxAsync();
-
-                _logger.LogDebug("STAN 完成订阅答复箱");
+                    _logger.LogDebug("STAN 完成客户端连接请求");
+                }
 
                 _logger.LogDebug("STAN 开始订阅之前订阅的消息");
 
                 await SubscriptionMessageAsync();
 
                 _logger.LogDebug("STAN 完成订阅之前订阅的消息");
+            }
+            else
+            {
+                _logger.LogDebug("STAN 开始客户端连接请求");
 
-                _logger.LogDebug("STAN 完成连接频道");
+                _config = await ConnectRequestAsync();
+
+                _logger.LogDebug("STAN 完成客户端连接请求");
 
             }
+
+            _logger.LogDebug("STAN 完成连接频道");
+
+            #region;
+
+            //if (_config == null)
+            //{
+            //    _logger.LogDebug("STAN 开始连接频道");
+
+            //    _channel = await _bootstrap.ConnectAsync(ClusterNode);
+
+            //    _logger.LogDebug("STAN 开始订阅心跳箱");
+
+            //    await SubscribeHeartBeatInboxAsync();
+
+            //    _logger.LogDebug("STAN 完成订阅心跳箱");
+
+            //    _logger.LogDebug("STAN 开始订阅答复箱");
+
+            //    await SubscribeReplyInboxAsync();
+
+            //    _logger.LogDebug("STAN 完成订阅答复箱");
+
+            //    _config = await ConnectRequestAsync();
+
+            //    _logger.LogDebug("STAN 完成连接频道");
+
+            //}
+            //else
+            //{
+            //    _logger.LogDebug("STAN 开始连接频道");
+
+            //    _channel = await _bootstrap.ConnectAsync(ClusterNode);
+
+            //    _logger.LogDebug("STAN 开始订阅心跳箱");
+
+            //    await SubscribeHeartBeatInboxAsync();
+
+            //    _logger.LogDebug("STAN 完成订阅心跳箱");
+
+            //    _logger.LogDebug("STAN 开始订阅答复箱");
+
+            //    await SubscribeReplyInboxAsync();
+
+            //    _logger.LogDebug("STAN 完成订阅答复箱");
+
+            //    _logger.LogDebug("STAN 开始订阅之前订阅的消息");
+
+            //    await SubscriptionMessageAsync();
+
+            //    _logger.LogDebug("STAN 完成订阅之前订阅的消息");
+
+            //    _logger.LogDebug("STAN 完成连接频道");
+
+            //}
+
+            #endregion;
         }
 
         private async Task<STANConnectionConfig> ConnectRequestAsync()
         {
+            var ConnectId = Guid.NewGuid().ToString("N");
 
-            var Packet = new ConnectRequestPacket(_replyInboxId, _options.ClusterID, _clientId, _heartbeatInboxId);
+            var Packet = new ConnectRequestPacket(
+                _replyInboxId,
+                _options.ClusterID,
+                _clientId,
+                ConnectId,
+                _heartbeatInboxId);
 
             var ConnectResponseReady = new TaskCompletionSource<ConnectResponsePacket>();
 
@@ -145,6 +206,7 @@ namespace Hunter.STAN.Client
             _channel.Pipeline.Remove(Handler);
 
             return new STANConnectionConfig(
+                ConnectId,
                 ConnectResponse.Message.PubPrefix,
                 ConnectResponse.Message.SubRequests,
                 ConnectResponse.Message.UnsubRequests,
@@ -162,6 +224,29 @@ namespace Hunter.STAN.Client
             await _channel.WriteAndFlushAsync(Packet);
 
             _logger.LogDebug("结束订阅消息服务器心跳消息");
+        }
+
+        private async Task<PingResponse> ConnectPingAsync()
+        {
+            _logger.LogDebug($"开始Ping消息服务器 Ping = {_config.ConnectionId}");
+
+            var Packet = new ConnectPingPacket(_replyInboxId, _config.SubRequests, _config.ConnectionId);
+
+            var ConnectPingResponseReady = new TaskCompletionSource<ConnectPingResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<ConnectPingResponsePacket>(Packet.ReplyTo, ConnectPingResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var ConnectPingResponse = await ConnectPingResponseReady.Task;
+
+            _channel.Pipeline.Remove(Handler);
+
+            _logger.LogDebug("结束Ping消息服务器");
+
+            return ConnectPingResponse.Message;
         }
 
         private async Task SubscribeReplyInboxAsync()

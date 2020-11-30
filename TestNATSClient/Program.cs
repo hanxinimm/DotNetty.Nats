@@ -48,9 +48,6 @@ namespace TestNATSClient
 
 
             await client.ConnectAsync();
-            
-
-            int SValue = 0;
 
 
             var s = await client.SubscribeAsync("OrderPlaced", string.Empty, (bytes) =>

@@ -6,8 +6,16 @@ namespace Hunter.STAN.Client
 {
     public class STANConnectionConfig
     {
-        public STANConnectionConfig(string pubPrefix, string subRequests, string unsubRequests, string closeRequests, string subCloseRequests, string publicKey)
+        public STANConnectionConfig(
+            string connectionId,
+            string pubPrefix,
+            string subRequests,
+            string unsubRequests,
+            string closeRequests,
+            string subCloseRequests,
+            string publicKey)
         {
+            ConnectionId = connectionId;
             PubPrefix = pubPrefix;
             SubRequests = subRequests;
             UnsubRequests = unsubRequests;
@@ -16,6 +24,10 @@ namespace Hunter.STAN.Client
             PublicKey = publicKey;
         }
 
+        /// <summary>
+        /// 连接编号
+        /// </summary>
+        public readonly string ConnectionId;
         /// <summary>
         /// 发布时使用的前缀
         /// </summary>

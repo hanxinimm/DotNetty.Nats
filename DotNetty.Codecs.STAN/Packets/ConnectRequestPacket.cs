@@ -1,4 +1,5 @@
 ﻿using DotNetty.Codecs.STAN.Protocol;
+using Google.Protobuf;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,11 +20,26 @@ namespace DotNetty.Codecs.STAN.Packets
         /// <param name="clusterID"></param>
         /// <param name="clientID"></param>
         /// <param name="discoverPrefix"></param>
-        public ConnectRequestPacket(string inboxId, string clusterID, string clientID, string heartbeatInbox, string discoverPrefix = ProtocolConstants.DiscoverPrefix)
+        public ConnectRequestPacket(
+            string inboxId,
+            string clusterID, 
+            string clientID, 
+            string connectID,
+            string heartbeatInbox,
+            int pingMaxOut = 0,
+            int pingInterval = 0,
+            string discoverPrefix = ProtocolConstants.DiscoverPrefix)
         {
             Subject = $"{discoverPrefix}.{clusterID}";
             ReplyTo = $"{STANInboxs.ConnectResponse}{inboxId}.{Guid.NewGuid():N}";
-            Message = new ConnectRequest() { ClientID = clientID, HeartbeatInbox = $"{STANInboxs.Heartbeat}{heartbeatInbox}" };
+            Message = new ConnectRequest()
+            {
+                ClientID = clientID,
+                ConnID = ByteString.CopyFrom(Encoding.UTF8.GetBytes(connectID)),
+                HeartbeatInbox = $"{STANInboxs.Heartbeat}{heartbeatInbox}",
+                PingMaxOut = pingMaxOut,
+                PingInterval = pingInterval
+            };
         }
 
         [IgnoreDataMember]

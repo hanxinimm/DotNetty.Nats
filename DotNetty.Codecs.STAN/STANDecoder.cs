@@ -110,6 +110,8 @@ namespace DotNetty.Codecs.STAN
                     return GetMessagePacket<PubAckPacket, PubAck>(subject, replyTo, payloadSize, payload);
                 case STANInboxs.MsgProto:
                     return GetMessagePacket<MsgProtoPacket, MsgProto>(subject, replyTo, payloadSize, payload);
+                case STANInboxs.PingResponse:
+                    return GetMessagePacket<ConnectPingResponsePacket, PingResponse>(subject, replyTo, payloadSize, payload);
                 case STANInboxs.CloseResponse:
                     return GetMessagePacket<CloseResponsePacket, CloseResponse>(subject, replyTo, payloadSize, payload);
                 default:
