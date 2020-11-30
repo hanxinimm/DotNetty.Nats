@@ -21,7 +21,6 @@ namespace Hunter.STAN.Client
     public partial class STANClient : IAsyncDisposable
     {
         private readonly ILogger _logger;
-        private readonly STANDecoder _stanDecoder;
 
         /// <summary>
         /// STAN配置
@@ -97,7 +96,6 @@ namespace Hunter.STAN.Client
             _semaphoreSlim = new SemaphoreSlim(1);
             _bootstrap = InitBootstrap();
             _logger = logger;
-            _stanDecoder = new STANDecoder(logger);
         }
 
         public STANClient(
@@ -117,7 +115,7 @@ namespace Hunter.STAN.Client
             .Option(ChannelOption.TcpNodelay, false)
             .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
             {
-                channel.Pipeline.AddLast(STANEncoder.Instance, _stanDecoder);
+                channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder(_logger));
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
