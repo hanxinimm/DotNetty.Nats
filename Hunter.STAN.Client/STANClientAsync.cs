@@ -77,23 +77,53 @@ namespace Hunter.STAN.Client
 
             if (_config == null)
             {
+                _logger.LogDebug("STAN 开始连接频道");
+
                 _channel = await _bootstrap.ConnectAsync(ClusterNode);
+
+                _logger.LogDebug("STAN 开始订阅心跳箱");
 
                 await SubscribeHeartBeatInboxAsync();
 
+                _logger.LogDebug("STAN 完成订阅心跳箱");
+
+                _logger.LogDebug("STAN 开始订阅答复箱");
+
                 await SubscribeReplyInboxAsync();
 
+                _logger.LogDebug("STAN 完成订阅答复箱");
+
                 _config = await ConnectRequestAsync();
+
+                _logger.LogDebug("STAN 完成连接频道");
+
             }
             else
             {
+                _logger.LogDebug("STAN 开始连接频道");
+
                 _channel = await _bootstrap.ConnectAsync(ClusterNode);
+
+                _logger.LogDebug("STAN 开始订阅心跳箱");
 
                 await SubscribeHeartBeatInboxAsync();
 
+                _logger.LogDebug("STAN 完成订阅心跳箱");
+
+                _logger.LogDebug("STAN 开始订阅答复箱");
+
                 await SubscribeReplyInboxAsync();
 
+                _logger.LogDebug("STAN 完成订阅答复箱");
+
+                _logger.LogDebug("STAN 开始订阅之前订阅的消息");
+
                 await SubscriptionMessageAsync();
+
+                _logger.LogDebug("STAN 完成订阅之前订阅的消息");
+
+                _logger.LogDebug("STAN 完成连接频道");
+
             }
         }
 

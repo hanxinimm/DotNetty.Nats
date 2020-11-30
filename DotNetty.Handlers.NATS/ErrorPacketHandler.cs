@@ -25,7 +25,6 @@ namespace DotNetty.Handlers.NATS
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception ex)
         {
             _logger.LogError(ex, "[ErrorPacketHandler]NATS消息服务发生异常");
-            contex.CloseAsync();
         }
     }
 }

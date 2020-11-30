@@ -25,8 +25,7 @@ namespace DotNetty.Handlers.STAN
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception ex)
         {
-            _logger.LogError(ex, "[ErrorPacketHandler]STAN消息服务发生异常");
-            contex.CloseAsync();
+            _logger.LogError(ex, "[ErrorPacketHandler]STAN消息服务发生异常");      
         }
     }
 }
