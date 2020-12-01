@@ -20,11 +20,18 @@ namespace DotNetty.Codecs.STAN.Packets
         /// <param name="clientID"></param>
         /// <param name="subject"></param>
         /// <param name="data"></param>
-        public PubMsgPacket(string inboxId, string pubPrefix, string clientID, string subject, byte[] data)
+        public PubMsgPacket(string inboxId, string pubPrefix, string clientID, ByteString connectID, string subject, byte[] data)
         {
             Subject = $"{pubPrefix}.{subject}";
             ReplyTo = $"{STANInboxs.PubAck}{inboxId}.{Guid.NewGuid().ToString("N")}";
-            Message = new PubMsg() { ClientID = clientID, Guid = Guid.NewGuid().ToString(), Subject = subject, Data = ByteString.CopyFrom(data) };
+            Message = new PubMsg()
+            {
+                ClientID = clientID,
+                Guid = Guid.NewGuid().ToString(),
+                Subject = subject,
+                Data = ByteString.CopyFrom(data),
+                ConnID = connectID,
+            };
         }
 
         /// <summary>

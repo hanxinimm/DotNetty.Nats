@@ -21,7 +21,11 @@ namespace DotNetty.Codecs.STAN.Packets
         public AckPacket(string ackInboxId, string subject, ulong sequence)
         {
             Subject = ackInboxId;
-            Message = new Ack() { Subject = subject, Sequence = sequence };
+            Message = new Ack()
+            {
+                Subject = subject,
+                Sequence = sequence
+            };
         }
 
         public override STANPacketType PacketType => STANPacketType.Ack;

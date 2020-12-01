@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Protobuf;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -19,7 +20,7 @@ namespace Hunter.STAN.Client
             int protocol,
             string publicKey)
         {
-            ConnectionId = connectionId;
+            ConnectionId = ByteString.CopyFrom(Encoding.UTF8.GetBytes(connectionId));
             PubPrefix = pubPrefix;
             SubRequests = subRequests;
             UnsubRequests = unsubRequests;
@@ -35,7 +36,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 连接编号
         /// </summary>
-        public readonly string ConnectionId;
+        public readonly ByteString ConnectionId;
         /// <summary>
         /// 发布时使用的前缀
         /// </summary>

@@ -13,13 +13,13 @@ namespace DotNetty.Codecs.STAN.Packets
         public ConnectPingPacket(
             string inboxId,
             string pingRequests,
-            string connectID)
+            ByteString connectID)
         {
             Subject = pingRequests;
             ReplyTo = $"{STANInboxs.PingResponse}{inboxId}.{Guid.NewGuid():N}";
             Message = new Ping()
             {
-                ConnID = ByteString.CopyFrom(Encoding.UTF8.GetBytes(connectID)),
+                ConnID = connectID,
             };
         }
 

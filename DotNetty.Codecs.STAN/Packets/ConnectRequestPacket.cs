@@ -26,6 +26,7 @@ namespace DotNetty.Codecs.STAN.Packets
             string clientID, 
             string connectID,
             string heartbeatInbox,
+            int protocol= 1,
             int pingMaxOut = 3,
             int pingInterval = 5,
             string discoverPrefix = ProtocolConstants.DiscoverPrefix)
@@ -38,7 +39,8 @@ namespace DotNetty.Codecs.STAN.Packets
                 ConnID = ByteString.CopyFrom(Encoding.UTF8.GetBytes(connectID)),
                 HeartbeatInbox = $"{STANInboxs.Heartbeat}{heartbeatInbox}",
                 PingMaxOut = pingMaxOut,
-                PingInterval = pingInterval
+                PingInterval = pingInterval,
+                Protocol = protocol,
             };
         }
 

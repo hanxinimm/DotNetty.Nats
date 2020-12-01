@@ -738,7 +738,13 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public async Task<PubAckPacket> PublishWaitAckAsync(string subject, byte[] data)
         {
-            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+            var Packet = new PubMsgPacket(
+                _replyInboxId,
+                _config.PubPrefix, 
+                _clientId,
+                _config.ConnectionId,
+                subject, 
+                data);
 
             var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
@@ -760,7 +766,13 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public Task PublishAsync(string subject, byte[] data)
         {
-            var Packet = new PubMsgPacket(_replyInboxId, _config.PubPrefix, _clientId, subject, data);
+            var Packet = new PubMsgPacket(
+                _replyInboxId,
+                _config.PubPrefix,
+                _clientId,
+                _config.ConnectionId,
+                subject,
+                data);
 
             return _channel.WriteAndFlushAsync(Packet);
         }

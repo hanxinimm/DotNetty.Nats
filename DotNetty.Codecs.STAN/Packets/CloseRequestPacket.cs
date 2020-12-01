@@ -21,7 +21,10 @@ namespace DotNetty.Codecs.STAN.Packets
         {
             Subject = subRequests;
             ReplyTo = $"{STANInboxs.CloseResponse}{inboxId}.{Guid.NewGuid().ToString("N")}";
-            Message = new CloseRequest() { ClientID = clientID };
+            Message = new CloseRequest()
+            {
+                ClientID = clientID
+            };
         }
 
 
