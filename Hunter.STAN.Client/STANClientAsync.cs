@@ -811,5 +811,15 @@ namespace Hunter.STAN.Client
             await CloseRequestAsync();
             await _channel.CloseAsync();
         }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_channel != null)
+            {
+                if(_channel.Active && _channel.Open)
+                    await CloseRequestAsync();
+                await _channel.CloseAsync();
+            }
+        }
     }
 }
