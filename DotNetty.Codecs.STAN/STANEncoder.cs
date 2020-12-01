@@ -89,6 +89,9 @@ namespace DotNetty.Codecs.STAN
                 case STANPacketType.PONG:
                     EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
                     break;
+                case STANPacketType.ConnectPing:
+                    EncodePublishMessage(bufferAllocator, (ConnectPingPacket)packet, output);
+                    break;
                 default:
                     throw new ArgumentException("Unknown packet type: " + packet.PacketType, nameof(packet));
             }

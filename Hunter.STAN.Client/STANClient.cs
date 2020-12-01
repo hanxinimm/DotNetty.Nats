@@ -186,14 +186,5 @@ namespace Hunter.STAN.Client
         {
             if (string.IsNullOrEmpty(queueGroup)) throw new ArgumentNullException(nameof(queueGroup));
         }
-
-        public async ValueTask DisposeAsync()
-        {
-            if (_channel != null)
-            {
-                await CloseRequestAsync();
-                await _channel.CloseAsync();
-            }
-        }
     }
 }
