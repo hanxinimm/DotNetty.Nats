@@ -212,6 +212,10 @@ namespace Hunter.STAN.Client
                 ConnectResponse.Message.UnsubRequests,
                 ConnectResponse.Message.CloseRequests,
                 ConnectResponse.Message.SubCloseRequests,
+                ConnectResponse.Message.PingRequests,
+                ConnectResponse.Message.PingInterval,
+                ConnectResponse.Message.PingMaxOut,
+                ConnectResponse.Message.Protocol,
                 ConnectResponse.Message.PublicKey);
         }
 
@@ -230,7 +234,7 @@ namespace Hunter.STAN.Client
         {
             _logger.LogDebug($"开始Ping消息服务器 Ping = {_config.ConnectionId}");
 
-            var Packet = new ConnectPingPacket(_replyInboxId, _config.SubRequests, _config.ConnectionId);
+            var Packet = new ConnectPingPacket(_replyInboxId, _config.PingRequests, _config.ConnectionId);
 
             var ConnectPingResponseReady = new TaskCompletionSource<ConnectPingResponsePacket>();
 

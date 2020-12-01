@@ -12,10 +12,10 @@ namespace DotNetty.Codecs.STAN.Packets
     {
         public ConnectPingPacket(
             string inboxId,
-            string subRequests,
+            string pingRequests,
             string connectID)
         {
-            Subject = subRequests;
+            Subject = pingRequests;
             ReplyTo = $"{STANInboxs.PingResponse}{inboxId}.{Guid.NewGuid():N}";
             Message = new Ping()
             {

@@ -13,6 +13,10 @@ namespace Hunter.STAN.Client
             string unsubRequests,
             string closeRequests,
             string subCloseRequests,
+            string pingRequests,
+            int pingInterval,
+            int pingMaxOut,
+            int protocol,
             string publicKey)
         {
             ConnectionId = connectionId;
@@ -21,6 +25,10 @@ namespace Hunter.STAN.Client
             UnsubRequests = unsubRequests;
             CloseRequests = closeRequests;
             SubCloseRequests = subCloseRequests;
+            PingRequests = pingRequests;
+            PingInterval = pingInterval;
+            PingMaxOut = pingMaxOut;
+            Protocol = protocol;
             PublicKey = publicKey;
         }
 
@@ -48,6 +56,27 @@ namespace Hunter.STAN.Client
         /// 关闭连接的主题
         /// </summary>
         public readonly string SubCloseRequests;
+
+        /// <summary>
+        /// 适用于PING请求   
+        /// </summary>
+        public readonly string PingRequests;
+
+        /// <summary>
+        /// 客户端发送PING的时间间隔(以秒为单位)
+        /// </summary>
+        public readonly int PingInterval;
+
+        /// <summary>
+        /// 没有响应的PING的最大数量，之后可以认为连接丢失
+        /// </summary>
+        public readonly int PingMaxOut;
+
+        /// <summary>
+        /// 服务器所在的协议版本
+        /// </summary>
+        public readonly int Protocol;
+
         /// <summary>
         /// 保留供将来使用
         /// </summary>

@@ -26,8 +26,8 @@ namespace DotNetty.Codecs.STAN.Packets
             string clientID, 
             string connectID,
             string heartbeatInbox,
-            int pingMaxOut = 0,
-            int pingInterval = 0,
+            int pingMaxOut = 3,
+            int pingInterval = 5,
             string discoverPrefix = ProtocolConstants.DiscoverPrefix)
         {
             Subject = $"{discoverPrefix}.{clusterID}";
