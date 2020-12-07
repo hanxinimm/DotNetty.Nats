@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using System;
 using System.Text.RegularExpressions;
+using Hunter.Extensions.Cryptography;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -13,6 +14,14 @@ namespace Microsoft.Extensions.DependencyInjection
         public static void AddNATSServer(this IServiceCollection services, Action<NATSOptions> steup)
         {
             services.Configure(steup);
+            services.PostConfigure<NATSOptions>(options =>
+            {
+                if (options.IsAuthentication && AppEnvironment.IsProduction)
+                {
+                    options.UserName = options.UserName.DecryptDES();
+                    options.Password = options.Password.DecryptDES();
+                }
+            });
             services.AddSingleton<NATSClient>();
         }
 
@@ -22,6 +31,13 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 options.ClientId = "NATSClientId";
                 configuration.GetSection("NATSOptions").Bind(options);
+            });
+            services.PostConfigure<NATSOptions>(options =>
+            {
+                if (options.IsAuthentication && AppEnvironment.IsProduction) {
+                    options.UserName = options.UserName.DecryptDES();
+                    options.Password = options.Password.DecryptDES();
+                }
             });
             services.AddSingleton<NATSClient>();
         }
@@ -33,7 +49,14 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ClientId = _clientIdReplacer.Replace(clientId, "_");
                 configuration.GetSection("NATSOptions").Bind(options);
             });
-
+            services.PostConfigure<NATSOptions>(options =>
+            {
+                if (options.IsAuthentication && AppEnvironment.IsProduction)
+                {
+                    options.UserName = options.UserName.DecryptDES();
+                    options.Password = options.Password.DecryptDES();
+                }
+            });
             services.AddSingleton<NATSClient>();
         }
     }

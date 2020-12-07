@@ -56,5 +56,20 @@ namespace Hunter.NATS.Client
         /// 通讯端口
         /// </summary>
         public int Port { get; set; }
+
+        /// <summary>
+        /// 是否需要认证
+        /// </summary>
+        public bool IsAuthentication { get; set; }
+
+        /// <summary>
+        /// 用户名
+        /// </summary>
+        public string UserName { get; set; }
+
+        /// <summary>
+        /// 密码
+        /// </summary>
+        public string Password { get; set; }
     }
 }

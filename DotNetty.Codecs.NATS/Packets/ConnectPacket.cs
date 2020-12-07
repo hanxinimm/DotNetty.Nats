@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATS.Packets
         public override NATSPacketType PacketType => NATSPacketType.CONNECT;
 
         /// <summary>
-        /// TODO:写成包内可以访问
+        /// 需要验证的
         /// </summary>
         /// <param name="isVerbose"></param>
         /// <param name="pedantic"></param>
@@ -25,6 +25,7 @@ namespace DotNetty.Codecs.NATS.Packets
         /// <param name="token"></param>
         public ConnectPacket(bool isVerbose, bool pedantic, bool isSSLRequired, string user, string password, string clientName, string token)
         {
+            AuthRequired = true;
             IsVerbose = isVerbose;
             IsPedantic = pedantic;
             IsSSLRequired = isSSLRequired;
@@ -32,6 +33,24 @@ namespace DotNetty.Codecs.NATS.Packets
             Password = password;
             ClientName = clientName;
             AuthToken = token;
+        }
+
+        /// <summary>
+        /// 无需验证的
+        /// </summary>
+        /// <param name="isVerbose"></param>
+        /// <param name="pedantic"></param>
+        /// <param name="isSSLRequired"></param>
+        /// <param name="user"></param>
+        /// <param name="password"></param>
+        /// <param name="clientName"></param>
+        /// <param name="token"></param>
+        public ConnectPacket(bool isVerbose, bool pedantic, bool isSSLRequired, string clientName)
+        {
+            IsVerbose = isVerbose;
+            IsPedantic = pedantic;
+            IsSSLRequired = isSSLRequired;
+            ClientName = clientName;
         }
 
         /// <summary>
@@ -51,6 +70,11 @@ namespace DotNetty.Codecs.NATS.Packets
         /// </summary>
         [DataMember(Name = "ssl_required")]
         public bool IsSSLRequired { get; set; }
+
+        /// <summary>
+        /// 是否需要认证
+        /// </summary>
+        public bool AuthRequired { get; set; }
 
         /// <summary>
         /// 客户端授权令牌
@@ -98,7 +122,7 @@ namespace DotNetty.Codecs.NATS.Packets
         {
             get
             {
-                if (IsSSLRequired)
+                if (AuthRequired)
                     return $"{{\"verbose\":{(IsVerbose ? "true" : "false")},\"pedantic\":{(IsPedantic ? "true" : "false")},\"tls_required\":true,\"user\":\"{User}\",\"pass\":\"{Password}\",\"name\":\"{ClientName}\",\"lang\":\".net_core\",\"version\":\"{Version}\",\"protocol\":1}}";
                 else
                     return $"{{\"verbose\":{(IsVerbose ? "true" : "false")},\"pedantic\":{(IsPedantic ? "true" : "false")},\"tls_required\":false,\"name\":\"{ClientName}\",\"lang\":\".net_core\",\"version\":\"{Version}\",\"protocol\":1}}";

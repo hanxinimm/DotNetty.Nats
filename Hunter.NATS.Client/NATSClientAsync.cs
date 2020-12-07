@@ -88,8 +88,9 @@ namespace Hunter.NATS.Client
 
         private async Task<InfoPacket> ConnectRequestAsync()
         {
-
-            var Packet = new ConnectPacket(true, false, false, null, null, _clientId, null);
+            var Packet = _options.IsAuthentication ?
+                new ConnectPacket(true, false, false, _options.UserName, _options.Password, _clientId, null)
+                : new ConnectPacket(true, false, false, _clientId);
 
             _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
 

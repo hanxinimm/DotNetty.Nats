@@ -33,11 +33,11 @@ namespace TestNATSClient
 
             services.AddNATSServer(options =>
             {
-                options.ClusterID = "main-cluster";
+                options.ClusterID = "nats-k8s-cluster";
                 options.ClientId = "TestClientId";
                 ///options.Host = "mq.stan.yd.com";
-                options.Host = "127.0.0.1";
-                options.Port = 4221;
+                options.Host = "mq.nats.laboroa.cn";
+                options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
 
