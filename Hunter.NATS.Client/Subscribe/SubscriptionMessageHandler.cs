@@ -47,7 +47,7 @@ namespace Hunter.NATS.Client
 
         private void EndlessMessageHandler(IChannelHandlerContext contex, MessagePacket msg)
         {
-            if (msg.Subject == _subscriptionConfig.Subject)
+            if (msg.SubscribeId == _subscriptionConfig.SubscribeId)
             {
                 try
                 {
@@ -66,7 +66,7 @@ namespace Hunter.NATS.Client
 
         private void LimitedMessageHandler(IChannelHandlerContext contex, MessagePacket msg)
         {
-            if (msg.Subject == _subscriptionConfig.Subject)
+            if (msg.SubscribeId == _subscriptionConfig.SubscribeId)
             {
                 if (_messageHandlerCounter < _subscriptionConfig.MaxMsg)
                 {

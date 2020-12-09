@@ -33,11 +33,11 @@ namespace TestNATSClient
 
             services.AddNATSServer(options =>
             {
-                options.ClusterID = "nats-k8s-cluster";
+                options.ClusterID = "main-cluster";
                 options.ClientId = "TestClientId";
-                ///options.Host = "mq.stan.yd.com";
-                options.Host = "mq.nats.laboroa.cn";
-                options.Port = 4222;
+                options.Host = "mq.nats.yd.com";
+                //options.Host = "mq.nats.laboroa.cn";
+                options.Port = 4221;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
 
@@ -50,7 +50,7 @@ namespace TestNATSClient
             await client.ConnectAsync();
 
 
-            var s = await client.SubscribeAsync("OrderPlaced", string.Empty, (bytes) =>
+            var s = await client.SubscribeAsync("ApiGateway.*", string.Empty, (bytes) =>
             {
                 var sss = Encoding.UTF8.GetString(bytes.Data);
                 Console.WriteLine("收到消息 {0}", sss);
@@ -87,7 +87,7 @@ namespace TestNATSClient
 
                     var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    await client.PublishAsync("OrderPlaced", Testbytes);
+                    await client.PublishAsync("ApiGateway.EventTrigger.4343", Testbytes);
                 }
 
                 stopwatch.Stop(); //  停止监视  
