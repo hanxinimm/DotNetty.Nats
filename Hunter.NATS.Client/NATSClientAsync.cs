@@ -1,4 +1,5 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
+using DotNetty.Handlers.NATS;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,9 @@ namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
-        public async Task ConnectAsync(bool isReconnect = false)
+        public async Task ConnectAsync()
         {
-            if (!isReconnect)
+            if (_connectionState != NATSConnectionState.Reconnecting)
             {
                 await _semaphoreSlim.WaitAsync();
 
@@ -29,13 +30,17 @@ namespace Hunter.NATS.Client
                 {
                     try
                     {
-                        await TryConnectAsync();
+
+                        if (_connectionState != NATSConnectionState.Dispose)
+                        {
+                            await TryConnectAsync();
+                        }
 
                         break;
                     }
                     catch (Exception ex)
                     {
-                        if (isReconnect)
+                        if (_connectionState != NATSConnectionState.Reconnecting)
                             throw ex;
 
                         _logger.LogError(ex, $"NATS 连接服务器异常 第 {++retryCount} 次尝试");
@@ -51,7 +56,11 @@ namespace Hunter.NATS.Client
 
         public async Task TryConnectAsync()
         {
-            
+            if (_connectionState == NATSConnectionState.Dispose)
+                return;
+
+            _connectionState = NATSConnectionState.Connecting;
+
             if (!_options.ClusterNodes.Any())
             {
                 IPHostEntry hostInfo = Dns.GetHostEntry(_options.Host);
@@ -65,7 +74,6 @@ namespace Hunter.NATS.Client
                 _logger.LogDebug("NATS 开始释放断开的通讯连接频道");
 
                 await _channel.DisconnectAsync();
-                await _channel.CloseAsync();
 
                 _logger.LogDebug("NATS 完成释放断开的通讯连接频道");
             }
@@ -84,6 +92,9 @@ namespace Hunter.NATS.Client
 
                 await SubscriptionMessageAsync();
             }
+
+            if (_connectionState != NATSConnectionState.Dispose)
+                _connectionState = NATSConnectionState.Connected;
         }
 
         private async Task<InfoPacket> ConnectRequestAsync()
@@ -92,11 +103,17 @@ namespace Hunter.NATS.Client
                 new ConnectPacket(true, false, false, _options.UserName, _options.Password, _clientId, null)
                 : new ConnectPacket(true, false, false, _clientId);
 
-            _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
+             var InfoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
+
+            var infoPacketHandler = new InfoPacketHandler(InfoTaskCompletionSource);
+
+            _channel.Pipeline.AddLast(infoPacketHandler);
 
             await _channel.WriteAndFlushAsync(Packet);
 
-            var ConnectInfoResult = await _infoTaskCompletionSource.Task;
+            var ConnectInfoResult = await InfoTaskCompletionSource.Task;
+
+            _channel.Pipeline.Remove(infoPacketHandler);
 
             return ConnectInfoResult;
         }
@@ -238,14 +255,11 @@ namespace Hunter.NATS.Client
             return _channel.WriteAndFlushAsync(Packet);
         }
 
-        protected void InfoAsync(InfoPacket info)
+        public async ValueTask DisposeAsync()
         {
-            _infoTaskCompletionSource.TrySetResult(info);
-        }
+            await _channel?.CloseAsync();
 
-        public Task CloseAsync()
-        {
-            return _channel.CloseAsync();
+            _connectionState = NATSConnectionState.Dispose;
         }
     }
 }

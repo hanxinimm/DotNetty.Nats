@@ -70,7 +70,6 @@ namespace Hunter.STAN.Client
                 _logger.LogDebug("STAN 开始释放断开的通讯连接频道");
 
                 await _channel.DisconnectAsync();
-                await _channel.CloseAsync();
 
                 _logger.LogDebug("STAN 完成释放断开的通讯连接频道");
             }
@@ -815,13 +814,6 @@ namespace Hunter.STAN.Client
             _channel.Pipeline.Remove(Handler);
 
             return Result;
-        }
-
-
-        public async Task CloseAsync()
-        {
-            await CloseRequestAsync();
-            await _channel.CloseAsync();
         }
 
         public async ValueTask DisposeAsync()

@@ -27,8 +27,8 @@ namespace TestNATSClient
             var services = new ServiceCollection();
 
             services.AddLogging(options => {
-                options.SetMinimumLevel(LogLevel.Debug);
-                options.AddConsole();
+                options.SetMinimumLevel(LogLevel.Information);
+                //options.AddConsole();
             });
 
             services.AddNATSServer(options =>
@@ -50,21 +50,21 @@ namespace TestNATSClient
             await client.ConnectAsync();
 
 
-            var s = await client.SubscribeAsync("ApiGateway.*", string.Empty, (bytes) =>
-            {
-                var sss = Encoding.UTF8.GetString(bytes.Data);
-                Console.WriteLine("收到消息 {0}", sss);
+            //var s = await client.SubscribeAsync("ApiGateway.*", string.Empty, (bytes) =>
+            //{
+            //    var sss = Encoding.UTF8.GetString(bytes.Data);
+            //    Console.WriteLine("收到消息 {0}", sss);
 
-                //SValue++;
+            //    //SValue++;
 
-                //if (SValue >= 10000) {
-                //    var sss = Encoding.UTF8.GetString(bytes.Data);
-                //    Console.WriteLine(sss);
-                //    Console.WriteLine(SValue);
-                //    SValue = 0;
-                //}
-                return new ValueTask();
-            });
+            //    //if (SValue >= 10000) {
+            //    //    var sss = Encoding.UTF8.GetString(bytes.Data);
+            //    //    Console.WriteLine(sss);
+            //    //    Console.WriteLine(SValue);
+            //    //    SValue = 0;
+            //    //}
+            //    return new ValueTask();
+            //});
 
             //Console.ReadLine();
 
@@ -82,7 +82,7 @@ namespace TestNATSClient
 
 
 
-                for (int i = 0; i < 1; i++)
+                for (int i = 0; i < 10000; i++)
                 {
 
                     var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));

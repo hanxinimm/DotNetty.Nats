@@ -46,14 +46,19 @@ namespace Hunter.NATS.Client
         private IChannel _channel;
 
         /// <summary>
+        /// 连接状态
+        /// </summary>
+        private NATSConnectionState _connectionState;
+
+        /// <summary>
         /// 连接配置
         /// </summary>
         private InfoPacket _info;
 
-        /// <summary>
-        /// 等待发送消息确认安排表
-        /// </summary>
-        private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
+        ///// <summary>
+        ///// 等待发送消息确认安排表
+        ///// </summary>
+        //private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
 
         /// <summary>
         /// 订阅消息处理器集合
@@ -104,7 +109,6 @@ namespace Hunter.NATS.Client
                     channel.Pipeline.AddLast(new PingPacketHandler(_logger));
                     channel.Pipeline.AddLast(new PongPacketHandler(_logger));
                     channel.Pipeline.AddLast(new OKPacketHandler(_logger));
-                    channel.Pipeline.AddLast(new InfoPacketHandler(InfoAsync));
                 }));
         }
 
@@ -120,6 +124,14 @@ namespace Hunter.NATS.Client
         {
             await _semaphoreSlim.WaitAsync();
 
+            if (_connectionState == NATSConnectionState.Dispose)
+            {
+                _semaphoreSlim.Release();
+                return;
+            }
+
+            _connectionState = NATSConnectionState.Reconnecting;
+
             if (IsChannelInactive)
             {
                 _logger.LogDebug("NATS 开始重新连接");
@@ -131,7 +143,8 @@ namespace Hunter.NATS.Client
                     {
                         _logger.LogDebug("NATS 开始尝试重新连接");
 
-                        await ConnectAsync(true);
+                        if (_connectionState != NATSConnectionState.Dispose)
+                            await ConnectAsync();
 
                         _logger.LogDebug("NATS 结束尝试重新连接");
 
@@ -150,9 +163,5 @@ namespace Hunter.NATS.Client
             _semaphoreSlim.Release();
         }
 
-        public async ValueTask DisposeAsync()
-        {
-            await _channel?.CloseAsync();
-        }
     }
 }
