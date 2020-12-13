@@ -779,16 +779,17 @@ namespace Hunter.STAN.Client
         {
             _isDispose = true;
 
-            _connectionState = STANConnectionState.Disconnected;
-
             if (_channel != null)
             {
                 if (_channel.Active && _channel.Open)
                     await CloseRequestAsync();
 
-                await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
                 await _channel.DisconnectAsync();
+                await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
             }
+
+            _connectionState = STANConnectionState.Disconnected;
+
         }
     }
 }
