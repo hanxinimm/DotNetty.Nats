@@ -28,7 +28,7 @@ namespace TestNATSClient
             var services = new ServiceCollection();
 
             services.AddLogging(options => {
-                options.SetMinimumLevel(LogLevel.Information);
+                options.SetMinimumLevel(LogLevel.Debug);
                 //options.AddConsole();
             });
 

@@ -227,6 +227,8 @@ namespace Hunter.NATS.Client
             await _channel.WriteAndFlushAsync(UnSubscribePacket);
         }
 
+        //TODO:待完善逻辑，增加消息队列服务器连接断开失败后的发送消息锁，和重连消息队列发送机制
+
         /// <summary>
         /// 异步发送
         /// </summary>
