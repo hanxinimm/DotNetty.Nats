@@ -11,15 +11,21 @@ namespace DotNetty.Handlers.NATS
 
     public class InfoPacketHandler : SimpleChannelInboundHandler<InfoPacket>
     {
-        private readonly TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
-        public InfoPacketHandler(TaskCompletionSource<InfoPacket> infoTaskCompletionSource)
+        private readonly Action<InfoPacket> _infoCallback;
+        public InfoPacketHandler(Action<InfoPacket> infoCallback)
         {
-            _infoTaskCompletionSource = infoTaskCompletionSource;
+            _infoCallback = infoCallback;
         }
         protected override void ChannelRead0(IChannelHandlerContext contex, InfoPacket msg)
         {
-            _infoTaskCompletionSource.SetResult(msg);
-            contex.FireChannelReadComplete();
+            _infoCallback(msg);
+        }
+
+        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
+        {
+            Console.WriteLine(DateTime.Now.Millisecond);
+            Console.WriteLine("{0}", e.StackTrace);
+            contex.CloseAsync();
         }
     }
 }

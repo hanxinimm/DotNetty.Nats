@@ -822,7 +822,9 @@ namespace Hunter.STAN.Client
             {
                 if(_channel.Active && _channel.Open)
                     await CloseRequestAsync();
-                await _channel.CloseAsync();
+
+                await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+                await _channel.DisconnectAsync();
             }
         }
     }

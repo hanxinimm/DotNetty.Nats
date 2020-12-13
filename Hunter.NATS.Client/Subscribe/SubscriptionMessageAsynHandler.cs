@@ -33,7 +33,14 @@ namespace Hunter.NATS.Client
 
         protected override void MessageHandler(MessagePacket msg)
         {
-            _messageHandler(PackMsgContent(msg)).GetAwaiter().GetResult();
+            Task.Factory.StartNew(async o =>
+            {
+                await _messageHandler(PackMsgContent(msg));
+            }, 
+            msg, 
+            default, 
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
         }
     }
 }

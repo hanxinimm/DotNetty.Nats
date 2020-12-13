@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -35,7 +36,8 @@ namespace TestNATSClient
             {
                 options.ClusterID = "main-cluster";
                 options.ClientId = "TestClientId";
-                options.Host = "mq.nats.yd.com";
+                options.Host = "127.0.0.1";
+                //options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
@@ -49,22 +51,30 @@ namespace TestNATSClient
 
             await client.ConnectAsync();
 
+            var httpClient = new HttpClient();
+            
 
-            //var s = await client.SubscribeAsync("ApiGateway.*", string.Empty, (bytes) =>
-            //{
-            //    var sss = Encoding.UTF8.GetString(bytes.Data);
-            //    Console.WriteLine("收到消息 {0}", sss);
+            var s = await client.SubscribeAsync("ApiGateway.>", string.Empty, async (bytes) =>
+            {
+                var sss = Encoding.UTF8.GetString(bytes.Data);
+                Console.WriteLine("收到消息 {0}", sss);
 
-            //    //SValue++;
+                var ss = await httpClient.GetAsync("https://www.bing.com");
+                if (ss.IsSuccessStatusCode)
+                {
+                    var ss1 = await ss.Content.ReadAsStringAsync();
+                }
 
-            //    //if (SValue >= 10000) {
-            //    //    var sss = Encoding.UTF8.GetString(bytes.Data);
-            //    //    Console.WriteLine(sss);
-            //    //    Console.WriteLine(SValue);
-            //    //    SValue = 0;
-            //    //}
-            //    return new ValueTask();
-            //});
+
+                //SValue++;
+
+                //if (SValue >= 10000) {
+                //    var sss = Encoding.UTF8.GetString(bytes.Data);
+                //    Console.WriteLine(sss);
+                //    Console.WriteLine(SValue);
+                //    SValue = 0;
+                //}
+            });
 
             //Console.ReadLine();
 
@@ -82,7 +92,7 @@ namespace TestNATSClient
 
 
 
-                for (int i = 0; i < 10000; i++)
+                for (int i = 0; i < 1; i++)
                 {
 
                     var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));

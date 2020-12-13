@@ -51,6 +51,7 @@ namespace Hunter.STAN.Client
                 try
                 {
                     var isAck = MessageHandler(msg);
+
                     _messageAckCallback(_subscriptionConfig, msg, isAck).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)

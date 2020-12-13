@@ -55,10 +55,15 @@ namespace Hunter.NATS.Client
         /// </summary>
         private InfoPacket _info;
 
-        ///// <summary>
-        ///// 等待发送消息确认安排表
-        ///// </summary>
-        //private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
+        /// <summary>
+        /// 是否释放资源
+        /// </summary>
+        private bool _isDispose;
+
+        /// <summary>
+        /// 等待发送消息确认安排表
+        /// </summary>
+        private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
 
         /// <summary>
         /// 订阅消息处理器集合
@@ -89,26 +94,29 @@ namespace Hunter.NATS.Client
             ILogger<NATSClient> logger,
             IOptions<NATSOptions> options) : this(logger, options.Value)
         {
-
+            
         }
 
         public bool IsOpen => _channel?.Open ?? false;
 
+        public NATSConnectionState ConnectionState => _connectionState;
+
         private Bootstrap InitBootstrap()
         {
-
             return new Bootstrap()
                 .Group(new MultithreadEventLoopGroup())
                 .Channel<TcpSocketChannel>()
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
-                    channel.Pipeline.AddLast(NATSEncoder.Instance, new NATSDecoder(_logger));
-                    channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
-                    channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
-                    channel.Pipeline.AddLast(new PingPacketHandler(_logger));
-                    channel.Pipeline.AddLast(new PongPacketHandler(_logger));
-                    channel.Pipeline.AddLast(new OKPacketHandler(_logger));
+                    channel.Pipeline.AddLast("NATSDecoder", new NATSDecoder(_logger));
+                    channel.Pipeline.AddLast("Reconnect", new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
+                    channel.Pipeline.AddLast("Ping", new PingPacketHandler(_logger));
+                    channel.Pipeline.AddLast("Pong", new PongPacketHandler(_logger));
+                    channel.Pipeline.AddLast("OK", new OKPacketHandler(_logger));
+                    channel.Pipeline.AddLast("INFO", new InfoPacketHandler(InfoAsync));
+                    channel.Pipeline.AddLast("NATSEncoder", NATSEncoder.Instance);
+                    channel.Pipeline.AddLast("Error", new ErrorPacketHandler(_logger));
                 }));
         }
 
@@ -124,7 +132,7 @@ namespace Hunter.NATS.Client
         {
             await _semaphoreSlim.WaitAsync();
 
-            if (_connectionState == NATSConnectionState.Dispose)
+            if (_isDispose)
             {
                 _semaphoreSlim.Release();
                 return;
@@ -143,8 +151,7 @@ namespace Hunter.NATS.Client
                     {
                         _logger.LogDebug("NATS 开始尝试重新连接");
 
-                        if (_connectionState != NATSConnectionState.Dispose)
-                            await ConnectAsync();
+                        await ReconnectAsync();
 
                         _logger.LogDebug("NATS 结束尝试重新连接");
 

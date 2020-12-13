@@ -63,6 +63,11 @@ namespace Hunter.STAN.Client
         private IChannel _channel;
 
         /// <summary>
+        /// 连接状态
+        /// </summary>
+        private STANConnectionState _connectionState;
+
+        /// <summary>
         /// 连接配置
         /// </summary>
         private STANConnectionConfig _config;

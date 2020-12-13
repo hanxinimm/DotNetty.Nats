@@ -14,13 +14,25 @@ namespace Hunter.NATS.Client
     {
         public async Task ConnectAsync()
         {
-            if (_connectionState != NATSConnectionState.Reconnecting)
-            {
-                await _semaphoreSlim.WaitAsync();
+            await _semaphoreSlim.WaitAsync();
 
-                if (_channel != null)
-                    return;
+            try
+            {
+                if (_channel == null)
+                {
+                    await TryConnectAsync();
+                }
             }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        private async Task ReconnectAsync()
+        {
+            if (_isDispose)
+                return;
 
             try
             {
@@ -30,8 +42,7 @@ namespace Hunter.NATS.Client
                 {
                     try
                     {
-
-                        if (_connectionState != NATSConnectionState.Dispose)
+                        if (!_isDispose)
                         {
                             await TryConnectAsync();
                         }
@@ -40,9 +51,6 @@ namespace Hunter.NATS.Client
                     }
                     catch (Exception ex)
                     {
-                        if (_connectionState != NATSConnectionState.Reconnecting)
-                            throw ex;
-
                         _logger.LogError(ex, $"NATS 连接服务器异常 第 {++retryCount} 次尝试");
                         await Task.Delay(TimeSpan.FromSeconds(3));
                     }
@@ -54,13 +62,11 @@ namespace Hunter.NATS.Client
             }
         }
 
-        public async Task TryConnectAsync()
+        private async Task TryConnectAsync()
         {
-            if (_connectionState == NATSConnectionState.Dispose)
-                return;
-
             _connectionState = NATSConnectionState.Connecting;
 
+            //TODO:集群节点待优化
             if (!_options.ClusterNodes.Any())
             {
                 IPHostEntry hostInfo = Dns.GetHostEntry(_options.Host);
@@ -93,8 +99,7 @@ namespace Hunter.NATS.Client
                 await SubscriptionMessageAsync();
             }
 
-            if (_connectionState != NATSConnectionState.Dispose)
-                _connectionState = NATSConnectionState.Connected;
+            _connectionState = NATSConnectionState.Connected;
         }
 
         private async Task<InfoPacket> ConnectRequestAsync()
@@ -103,19 +108,13 @@ namespace Hunter.NATS.Client
                 new ConnectPacket(true, false, false, _options.UserName, _options.Password, _clientId, null)
                 : new ConnectPacket(true, false, false, _clientId);
 
-             var InfoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
-
-            var infoPacketHandler = new InfoPacketHandler(InfoTaskCompletionSource);
-
-            _channel.Pipeline.AddLast(infoPacketHandler);
+            _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
 
             await _channel.WriteAndFlushAsync(Packet);
 
-            var ConnectInfoResult = await InfoTaskCompletionSource.Task;
+            _info = await _infoTaskCompletionSource.Task;
 
-            _channel.Pipeline.Remove(infoPacketHandler);
-
-            return ConnectInfoResult;
+            return _info;
         }
 
         private async Task SubscriptionMessageAsync()
@@ -241,6 +240,11 @@ namespace Hunter.NATS.Client
             return _channel.WriteAndFlushAsync(Packet);
         }
 
+        protected void InfoAsync(InfoPacket info)
+        {
+            _infoTaskCompletionSource.TrySetResult(info);
+        }
+
         public Task PingAsync()
         {
             var Packet = new PingPacket();
@@ -257,9 +261,10 @@ namespace Hunter.NATS.Client
 
         public async ValueTask DisposeAsync()
         {
-            await _channel?.CloseAsync();
+            _isDispose = true;
 
-            _connectionState = NATSConnectionState.Dispose;
+            await _channel?.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+            await _channel?.DisconnectAsync();
         }
     }
 }
