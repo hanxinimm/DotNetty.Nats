@@ -16,6 +16,8 @@ namespace Hunter.NATS.Client
         {
             await _semaphoreSlim.WaitAsync();
 
+            _connectionState = NATSConnectionState.Connecting;
+
             try
             {
                 if (_channel == null)
@@ -64,8 +66,6 @@ namespace Hunter.NATS.Client
 
         private async Task TryConnectAsync()
         {
-            _connectionState = NATSConnectionState.Connecting;
-
             //TODO:集群节点待优化
             if (!_options.ClusterNodes.Any())
             {
@@ -264,6 +264,8 @@ namespace Hunter.NATS.Client
         public async ValueTask DisposeAsync()
         {
             _isDispose = true;
+
+            _connectionState = NATSConnectionState.Disconnected;
 
             await _channel?.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
             await _channel?.DisconnectAsync();

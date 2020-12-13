@@ -1,5 +1,6 @@
 ﻿using DotNetty.Codecs.STAN.Packets;
 using DotNetty.Transport.Channels;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -12,28 +13,45 @@ namespace Hunter.STAN.Client
         private readonly Func<STANMsgContent, bool> _messageHandler;
 
         public SubscriptionMessageAckSyncHandler(
+            ILogger logger,
             STANSubscriptionConfig subscriptionConfig,
             Func<STANMsgContent, bool> messageHandler,
             Func<STANSubscriptionConfig, MsgProtoPacket, bool, Task> messageAckCallback)
-            : base(subscriptionConfig, messageAckCallback)
+            : base(logger, subscriptionConfig, messageAckCallback)
         {
             _messageHandler = messageHandler;
         }
 
         public SubscriptionMessageAckSyncHandler(
+            ILogger logger,
             STANSubscriptionConfig subscriptionConfig,
             Func<STANMsgContent, bool> messageHandler,
             Func<STANSubscriptionConfig, MsgProtoPacket, bool, Task> messageAckCallback,
             Func<STANSubscriptionConfig, Task> unSubscriptionCallback)
-            : base(subscriptionConfig, messageAckCallback, unSubscriptionCallback)
+            : base(logger, subscriptionConfig, messageAckCallback, unSubscriptionCallback)
         {
             _messageHandler = messageHandler;
         }
 
 
-        protected override bool MessageHandler(MsgProtoPacket msg)
+        protected override void MessageHandler(MsgProtoPacket msg, Func<STANSubscriptionConfig, MsgProtoPacket, bool, Task> ackCallback)
         {
-            return _messageHandler(PackMsgContent(msg));
+            Task.Factory.StartNew(async o =>
+            {
+                try
+                {
+                    var isAck = _messageHandler(PackMsgContent(msg));
+                    await ackCallback(_subscriptionConfig, msg, isAck);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "消息处理发生异常");
+                }
+            },
+            msg,
+            default,
+            TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
         }
     }
 }

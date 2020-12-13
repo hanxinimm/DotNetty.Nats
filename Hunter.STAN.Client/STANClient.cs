@@ -68,6 +68,11 @@ namespace Hunter.STAN.Client
         private STANConnectionState _connectionState;
 
         /// <summary>
+        /// 是否释放资源
+        /// </summary>
+        private bool _isDispose;
+
+        /// <summary>
         /// 连接配置
         /// </summary>
         private STANConnectionConfig _config;
@@ -112,6 +117,8 @@ namespace Hunter.STAN.Client
 
         public bool IsOpen => _channel?.Open ?? false;
 
+        public STANConnectionState ConnectionState => _connectionState;
+
         private Bootstrap InitBootstrap()
         {
             return new Bootstrap()
@@ -144,6 +151,14 @@ namespace Hunter.STAN.Client
         {
             await _semaphoreSlim.WaitAsync();
 
+            if (_isDispose)
+            {
+                _semaphoreSlim.Release();
+                return;
+            }
+
+            _connectionState = STANConnectionState.Reconnecting;
+
             if (IsChannelInactive)
             {
                 _logger.LogDebug("STAN 开始重新连接");
@@ -154,7 +169,7 @@ namespace Hunter.STAN.Client
                     {
                         _logger.LogDebug("STAN 开始尝试重新连接");
 
-                        await ConnectAsync(true);
+                        await ReconnectAsync();
 
                         _logger.LogDebug("STAN 结束尝试重新连接");
 

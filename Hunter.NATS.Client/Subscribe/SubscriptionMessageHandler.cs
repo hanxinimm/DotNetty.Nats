@@ -77,7 +77,7 @@ namespace Hunter.NATS.Client
                     }
                     catch (Exception ex)
                     {
-
+                        _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 主题 {_subscriptionConfig.Subject}");
                     }
                 }
                 else

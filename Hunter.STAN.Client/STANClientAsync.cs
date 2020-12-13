@@ -14,39 +14,18 @@ namespace Hunter.STAN.Client
 {
     public sealed partial class STANClient
     {
-        public async Task ConnectAsync(bool isReconnect = false)
+        public async Task ConnectAsync()
         {
-            if (!isReconnect)
-            {
-                await _semaphoreSlim.WaitAsync();
+            await _semaphoreSlim.WaitAsync();
 
-                if (_channel != null)
-                    return;
-            }
+            _connectionState = STANConnectionState.Connecting;
 
             try
             {
-
-                int retryCount = 0;
-
-                while (true)
+                if (_channel == null)
                 {
-                    try
-                    {
-                        await TryConnectAsync(isReconnect);
-
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        if (isReconnect)
-                            throw ex;
-
-                        _logger.LogError(ex, $"STAN 连接服务器异常 第 {++retryCount} 次尝试");
-                        await Task.Delay(TimeSpan.FromSeconds(3));
-                    }
+                    await TryConnectAsync();
                 }
-
             }
             finally
             {
@@ -54,7 +33,40 @@ namespace Hunter.STAN.Client
             }
         }
 
-        public async Task TryConnectAsync(bool isReconnect = false)
+        private async Task ReconnectAsync()
+        {
+            if (_isDispose)
+                return;
+
+            try
+            {
+                int retryCount = 0;
+
+                while (true)
+                {
+                    try
+                    {
+                        if (!_isDispose)
+                        {
+                            await TryConnectAsync();
+                        }
+
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"STAN 连接服务器异常 第 {++retryCount} 次尝试");
+                        await Task.Delay(TimeSpan.FromSeconds(3));
+                    }
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        public async Task TryConnectAsync()
         {
 
             if (!_options.ClusterNodes.Any())
@@ -92,7 +104,7 @@ namespace Hunter.STAN.Client
             _logger.LogDebug("STAN 完成订阅答复箱");
 
 
-            if (isReconnect)
+            if (_connectionState == STANConnectionState.Reconnecting)
             {
                 var pingResponse = await ConnectPingAsync();
 
@@ -125,60 +137,7 @@ namespace Hunter.STAN.Client
 
             _logger.LogDebug("STAN 完成连接频道");
 
-            #region;
-
-            //if (_config == null)
-            //{
-            //    _logger.LogDebug("STAN 开始连接频道");
-
-            //    _channel = await _bootstrap.ConnectAsync(ClusterNode);
-
-            //    _logger.LogDebug("STAN 开始订阅心跳箱");
-
-            //    await SubscribeHeartBeatInboxAsync();
-
-            //    _logger.LogDebug("STAN 完成订阅心跳箱");
-
-            //    _logger.LogDebug("STAN 开始订阅答复箱");
-
-            //    await SubscribeReplyInboxAsync();
-
-            //    _logger.LogDebug("STAN 完成订阅答复箱");
-
-            //    _config = await ConnectRequestAsync();
-
-            //    _logger.LogDebug("STAN 完成连接频道");
-
-            //}
-            //else
-            //{
-            //    _logger.LogDebug("STAN 开始连接频道");
-
-            //    _channel = await _bootstrap.ConnectAsync(ClusterNode);
-
-            //    _logger.LogDebug("STAN 开始订阅心跳箱");
-
-            //    await SubscribeHeartBeatInboxAsync();
-
-            //    _logger.LogDebug("STAN 完成订阅心跳箱");
-
-            //    _logger.LogDebug("STAN 开始订阅答复箱");
-
-            //    await SubscribeReplyInboxAsync();
-
-            //    _logger.LogDebug("STAN 完成订阅答复箱");
-
-            //    _logger.LogDebug("STAN 开始订阅之前订阅的消息");
-
-            //    await SubscriptionMessageAsync();
-
-            //    _logger.LogDebug("STAN 完成订阅之前订阅的消息");
-
-            //    _logger.LogDebug("STAN 完成连接频道");
-
-            //}
-
-            #endregion;
+            _connectionState = STANConnectionState.Connected;
         }
 
         private async Task<STANConnectionConfig> ConnectRequestAsync()
@@ -400,7 +359,7 @@ namespace Hunter.STAN.Client
             //TODO:待完善业务逻辑
             //CheckQueueGroup(queueGroup);
             return HandleSubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions,
-                (subscriptionConfig) => new SubscriptionMessageAsynHandler(subscriptionConfig, handler, AckAsync));
+                (subscriptionConfig) => new SubscriptionMessageAsynHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
 
@@ -422,7 +381,7 @@ namespace Hunter.STAN.Client
         public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
         {
             return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
-                (subscriptionConfig) => new SubscriptionMessageAsynHandler(subscriptionConfig, handler, AckAsync));
+                (subscriptionConfig) => new SubscriptionMessageAsynHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
         #endregion;
@@ -470,7 +429,7 @@ namespace Hunter.STAN.Client
         public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
         {
             return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
-                (subscriptionConfig) => new SubscriptionMessageSyncHandler(subscriptionConfig, handler, AckAsync));
+                (subscriptionConfig) => new SubscriptionMessageSyncHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
         #endregion;
@@ -519,7 +478,7 @@ namespace Hunter.STAN.Client
         public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
         {
             return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
-                (subscriptionConfig) => new SubscriptionMessageAckSyncHandler(subscriptionConfig, handler, AckAsync));
+                (subscriptionConfig) => new SubscriptionMessageAckSyncHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
         #endregion;
@@ -569,7 +528,7 @@ namespace Hunter.STAN.Client
         public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
-                (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(subscriptionConfig, handler, AckAsync));
+                (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
         #endregion;
@@ -600,7 +559,7 @@ namespace Hunter.STAN.Client
         public Task SubscribeAsync(string subject, string queueGroup, string PersistenceName, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
             return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
-                (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(subscriptionConfig, handler, AckAsync, UnSubscribeAsync));
+                (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(_logger,subscriptionConfig, handler, AckAsync, UnSubscribeAsync));
         }
 
         #endregion;
@@ -818,9 +777,13 @@ namespace Hunter.STAN.Client
 
         public async ValueTask DisposeAsync()
         {
+            _isDispose = true;
+
+            _connectionState = STANConnectionState.Disconnected;
+
             if (_channel != null)
             {
-                if(_channel.Active && _channel.Open)
+                if (_channel.Active && _channel.Open)
                     await CloseRequestAsync();
 
                 await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
