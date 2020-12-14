@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Text.RegularExpressions;
 using Hunter.Extensions.Cryptography;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -11,7 +12,9 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         private static readonly Regex _clientIdReplacer = new Regex("[^A-Za-z0-9_]");
 
-        public static void AddNATSServer(this IServiceCollection services, Action<NATSOptions> steup)
+        public static void AddNATSServer(this IServiceCollection services,
+            Action<NATSOptions> steup,
+            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure(steup);
             services.PostConfigure<NATSOptions>(options =>
@@ -22,10 +25,12 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.Password = options.Password.DecryptDES();
                 }
             });
-            services.AddSingleton<NATSClient>();
+            services.Add(new ServiceDescriptor(typeof(NATSClient), serviceLifetime));
         }
 
-        public static void AddNATSServer(this IServiceCollection services, IConfigurationRoot configuration)
+        public static void AddNATSServer(this IServiceCollection services,
+            IConfigurationRoot configuration, 
+            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure<NATSOptions>(options =>
             {
@@ -34,15 +39,20 @@ namespace Microsoft.Extensions.DependencyInjection
             });
             services.PostConfigure<NATSOptions>(options =>
             {
-                if (options.IsAuthentication && AppEnvironment.IsProduction) {
+                if (options.IsAuthentication && AppEnvironment.IsProduction)
+                {
                     options.UserName = options.UserName.DecryptDES();
                     options.Password = options.Password.DecryptDES();
                 }
             });
-            services.AddSingleton<NATSClient>();
+
+            services.Add(new ServiceDescriptor(typeof(NATSClient), serviceLifetime));
         }
 
-        public static void AddNATSServer(this IServiceCollection services, IConfigurationRoot configuration, string clientId)
+        public static void AddNATSServer(this IServiceCollection services,
+            IConfigurationRoot configuration,
+            string clientId,
+            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure<NATSOptions>(options =>
             {
@@ -57,7 +67,7 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.Password = options.Password.DecryptDES();
                 }
             });
-            services.AddSingleton<NATSClient>();
+            services.Add(new ServiceDescriptor(typeof(NATSClient), serviceLifetime));
         }
     }
 }

@@ -14,30 +14,37 @@ namespace Microsoft.Extensions.DependencyInjection
     {
         private static readonly Regex _clientIdReplacer = new Regex("[^A-Za-z0-9_]");
 
-        public static void AddSTANServer(this IServiceCollection services, Action<STANOptions> steup)
+        public static void AddSTANServer(this IServiceCollection services, 
+            Action<STANOptions> steup,
+            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure(steup);
-            services.AddSingleton<STANClient>();
+            services.Add(new ServiceDescriptor(typeof(STANClient), serviceLifetime));
         }
 
-        public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration)
+        public static void AddSTANServer(this IServiceCollection services,
+            IConfigurationRoot configuration,
+            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure<STANOptions>(options =>
             {
                 options.ClientId = "STANClientId";
                 configuration.GetSection("STANOptions").Bind(options);
             });
-            services.AddSingleton<STANClient>();
+            services.Add(new ServiceDescriptor(typeof(STANClient), serviceLifetime));
         }
 
-        public static void AddSTANServer(this IServiceCollection services, IConfigurationRoot configuration, string clientId)
+        public static void AddSTANServer(this IServiceCollection services,
+            IConfigurationRoot configuration, 
+            string clientId,
+            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure<STANOptions>(options =>
             {
                 options.ClientId = _clientIdReplacer.Replace(clientId, "_");
                 configuration.GetSection("STANOptions").Bind(options);
             });
-            services.AddSingleton<STANClient>();
+            services.Add(new ServiceDescriptor(typeof(STANClient), serviceLifetime));
         }
     }
 }
