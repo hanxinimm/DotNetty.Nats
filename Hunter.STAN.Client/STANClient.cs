@@ -143,6 +143,7 @@ namespace Hunter.STAN.Client
         {
             get
             {
+                if (_channel == null) return true;
                 return !_channel.Active;
             }
         }

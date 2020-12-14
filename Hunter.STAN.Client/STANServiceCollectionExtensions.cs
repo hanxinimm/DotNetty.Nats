@@ -2,6 +2,7 @@
 using Hunter.STAN.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,9 @@ namespace Microsoft.Extensions.DependencyInjection
             ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure(steup);
-            services.Add(new ServiceDescriptor(typeof(STANClient), serviceLifetime));
+            services.Add(new ServiceDescriptor(typeof(STANClient),
+                spr => new STANClient(spr.GetService<ILogger<STANClient>>(), spr.GetService<IOptions<STANOptions>>()),
+                serviceLifetime));
         }
 
         public static void AddSTANServer(this IServiceCollection services,
@@ -31,7 +34,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ClientId = "STANClientId";
                 configuration.GetSection("STANOptions").Bind(options);
             });
-            services.Add(new ServiceDescriptor(typeof(STANClient), serviceLifetime));
+            services.Add(new ServiceDescriptor(typeof(STANClient),
+                spr => new STANClient(spr.GetService<ILogger<STANClient>>(), spr.GetService<IOptions<STANOptions>>()),
+                serviceLifetime));
         }
 
         public static void AddSTANServer(this IServiceCollection services,
@@ -44,7 +49,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.ClientId = _clientIdReplacer.Replace(clientId, "_");
                 configuration.GetSection("STANOptions").Bind(options);
             });
-            services.Add(new ServiceDescriptor(typeof(STANClient), serviceLifetime));
+            services.Add(new ServiceDescriptor(typeof(STANClient),
+                spr => new STANClient(spr.GetService<ILogger<STANClient>>(), spr.GetService<IOptions<STANOptions>>()),
+                serviceLifetime));
         }
     }
 }

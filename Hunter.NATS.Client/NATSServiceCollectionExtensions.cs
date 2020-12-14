@@ -5,6 +5,7 @@ using System;
 using System.Text.RegularExpressions;
 using Hunter.Extensions.Cryptography;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,7 +26,9 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.Password = options.Password.DecryptDES();
                 }
             });
-            services.Add(new ServiceDescriptor(typeof(NATSClient), serviceLifetime));
+            services.Add(new ServiceDescriptor(typeof(NATSClient),
+                spr => new NATSClient(spr.GetService<ILogger<NATSClient>>(), spr.GetService<IOptions<NATSOptions>>()),
+                serviceLifetime));
         }
 
         public static void AddNATSServer(this IServiceCollection services,
@@ -46,7 +49,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 }
             });
 
-            services.Add(new ServiceDescriptor(typeof(NATSClient), serviceLifetime));
+            services.Add(new ServiceDescriptor(typeof(NATSClient),
+                spr => new NATSClient(spr.GetService<ILogger<NATSClient>>(), spr.GetService<IOptions<NATSOptions>>()),
+                serviceLifetime));
         }
 
         public static void AddNATSServer(this IServiceCollection services,
@@ -67,7 +72,9 @@ namespace Microsoft.Extensions.DependencyInjection
                     options.Password = options.Password.DecryptDES();
                 }
             });
-            services.Add(new ServiceDescriptor(typeof(NATSClient), serviceLifetime));
+            services.Add(new ServiceDescriptor(typeof(NATSClient),
+                spr => new NATSClient(spr.GetService<ILogger<NATSClient>>(), spr.GetService<IOptions<NATSOptions>>()),
+                serviceLifetime));
         }
     }
 }

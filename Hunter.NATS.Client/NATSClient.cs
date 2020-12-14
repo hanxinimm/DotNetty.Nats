@@ -124,6 +124,7 @@ namespace Hunter.NATS.Client
         {
             get
             {
+                if (_channel == null) return true;
                 return !_channel.Active;
             }
         }
