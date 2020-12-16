@@ -34,8 +34,8 @@ namespace TestNATSClient
 
             services.AddNATSServer(options =>
             {
-                options.ClusterID = "main-cluster";
-                options.ClientId = "TestClientId";
+                options.ClusterID = "main-cluster" ;
+                options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
                 options.Host = "127.0.0.1";
                 //options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
