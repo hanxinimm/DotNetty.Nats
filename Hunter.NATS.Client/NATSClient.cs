@@ -109,13 +109,13 @@ namespace Hunter.NATS.Client
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
+                    channel.Pipeline.AddLast("NATSEncoder", NATSEncoder.Instance);
                     channel.Pipeline.AddLast("NATSDecoder", new NATSDecoder(_logger));
                     channel.Pipeline.AddLast("Reconnect", new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                     channel.Pipeline.AddLast("Ping", new PingPacketHandler(_logger));
                     channel.Pipeline.AddLast("Pong", new PongPacketHandler(_logger));
                     channel.Pipeline.AddLast("OK", new OKPacketHandler(_logger));
-                    channel.Pipeline.AddLast("INFO", new InfoPacketHandler(InfoAsync));
-                    channel.Pipeline.AddLast("NATSEncoder", NATSEncoder.Instance);
+                    channel.Pipeline.AddLast("INFO", new InfoPacketHandler(_logger, InfoAsync));
                     channel.Pipeline.AddLast("Error", new ErrorPacketHandler(_logger));
                 }));
         }

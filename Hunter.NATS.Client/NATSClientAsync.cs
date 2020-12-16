@@ -265,8 +265,11 @@ namespace Hunter.NATS.Client
         {
             _isDispose = true;
 
-            await _channel?.DisconnectAsync();
-            await _channel?.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+            if (_channel != null)
+                await _channel?.DisconnectAsync();
+
+            if (_channel != null)
+                await _channel?.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
 
             _connectionState = NATSConnectionState.Disconnected;
         }

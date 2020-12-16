@@ -29,7 +29,7 @@ namespace TestNATSClient
 
             services.AddLogging(options => {
                 options.SetMinimumLevel(LogLevel.Debug);
-                //options.AddConsole();
+                options.AddConsole();
             });
 
             services.AddNATSServer(options =>
@@ -58,22 +58,6 @@ namespace TestNATSClient
             {
                 var sss = Encoding.UTF8.GetString(bytes.Data);
                 Console.WriteLine("收到消息 {0}", sss);
-
-                var ss = await httpClient.GetAsync("https://www.bing.com");
-                if (ss.IsSuccessStatusCode)
-                {
-                    var ss1 = await ss.Content.ReadAsStringAsync();
-                }
-
-
-                //SValue++;
-
-                //if (SValue >= 10000) {
-                //    var sss = Encoding.UTF8.GetString(bytes.Data);
-                //    Console.WriteLine(sss);
-                //    Console.WriteLine(SValue);
-                //    SValue = 0;
-                //}
             });
 
             //Console.ReadLine();

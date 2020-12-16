@@ -7,13 +7,16 @@ namespace DotNetty.Handlers.NATS
     using System.Threading.Tasks;
     using DotNetty.Codecs.NATS.Packets;
     using DotNetty.Transport.Channels;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
 
     public class InfoPacketHandler : SimpleChannelInboundHandler<InfoPacket>
     {
+        private readonly ILogger _logger;
         private readonly Action<InfoPacket> _infoCallback;
-        public InfoPacketHandler(Action<InfoPacket> infoCallback)
+        public InfoPacketHandler(ILogger logger, Action<InfoPacket> infoCallback)
         {
+            _logger = logger;
             _infoCallback = infoCallback;
         }
         protected override void ChannelRead0(IChannelHandlerContext contex, InfoPacket msg)
@@ -21,10 +24,9 @@ namespace DotNetty.Handlers.NATS
             _infoCallback(msg);
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext contex, Exception e)
+        public override void ExceptionCaught(IChannelHandlerContext contex, Exception ex)
         {
-            Console.WriteLine(DateTime.Now.Millisecond);
-            Console.WriteLine("{0}", e.StackTrace);
+            _logger.LogError(ex, "[InfoPacketHandler]NATS消息服务信息异常");
             contex.CloseAsync();
         }
     }
