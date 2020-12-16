@@ -105,8 +105,8 @@ namespace Hunter.NATS.Client
         private async Task<InfoPacket> ConnectRequestAsync()
         {
             var Packet = _options.IsAuthentication ?
-                new ConnectPacket(true, false, false, _options.UserName, _options.Password, _clientId, null)
-                : new ConnectPacket(true, false, false, _clientId);
+                new ConnectPacket(_options.IsVerbose, false, false, _options.UserName, _options.Password, _clientId, null)
+                : new ConnectPacket(_options.IsVerbose, false, false, _clientId);
 
             _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
 
@@ -158,7 +158,7 @@ namespace Hunter.NATS.Client
 
             await _channel.WriteAndFlushAsync(SubscribePacket);
 
-            _logger.LogDebug($"开始发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
+            _logger.LogDebug($"结束发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
 
             //添加消息处理到消息处理集合
             _subscriptionMessageHandler.Add(messageHandler);

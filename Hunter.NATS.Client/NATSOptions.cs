@@ -58,6 +58,11 @@ namespace Hunter.NATS.Client
         public int Port { get; set; }
 
         /// <summary>
+        /// 是否OK确认
+        /// </summary>
+        public bool IsVerbose { get; set; }
+
+        /// <summary>
         /// 是否需要认证
         /// </summary>
         public bool IsAuthentication { get; set; }

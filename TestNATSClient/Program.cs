@@ -23,7 +23,7 @@ namespace TestNATSClient
             //options.ClusterID = "main-cluster";
             //options.ClientId = "TestClientId";
             //options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("mq.stan.yd.com"), 4221));
-
+            Environment.SetEnvironmentVariable("NETCOREAPP_ENVIRONMENT", "Production");
 
             var services = new ServiceCollection();
 
@@ -34,12 +34,15 @@ namespace TestNATSClient
 
             services.AddNATSServer(options =>
             {
-                options.ClusterID = "main-cluster" ;
+                options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                options.Host = "127.0.0.1";
+                //options.Host = "127.0.0.1";
                 //options.Host = "mq.nats.yd.com";
-                //options.Host = "mq.nats.laboroa.cn";
-                options.Port = 4221;
+                options.Host = "mq.nats.laboroa.cn";
+                options.Port = 4222;
+                options.IsAuthentication = true;
+                options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
+                options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
 
@@ -54,8 +57,9 @@ namespace TestNATSClient
             var httpClient = new HttpClient();
             
 
-            var s = await client.SubscribeAsync("ApiGateway.>", string.Empty, async (bytes) =>
+            var s = await client.SubscribeAsync("ApiGateway.>", "ApiGateway.Test", async (bytes) =>
             {
+                Console.WriteLine("开始接受收消息");
                 var sss = Encoding.UTF8.GetString(bytes.Data);
                 Console.WriteLine("收到消息 {0}", sss);
             });
