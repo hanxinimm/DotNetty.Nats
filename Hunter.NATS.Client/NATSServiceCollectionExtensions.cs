@@ -20,7 +20,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.Configure(steup);
             services.PostConfigure<NATSOptions>(options =>
             {
-                if (options.IsAuthentication && AppEnvironment.IsProduction)
+                if (options.IsAuthentication && (AppEnvironment.IsProduction || HostEnvironment.IsProduction))
                 {
                     options.UserName = options.UserName.DecryptDES();
                     options.Password = options.Password.DecryptDES();
@@ -42,7 +42,7 @@ namespace Microsoft.Extensions.DependencyInjection
             });
             services.PostConfigure<NATSOptions>(options =>
             {
-                if (options.IsAuthentication && AppEnvironment.IsProduction)
+                if (options.IsAuthentication && (AppEnvironment.IsProduction || HostEnvironment.IsProduction))
                 {
                     options.UserName = options.UserName.DecryptDES();
                     options.Password = options.Password.DecryptDES();
@@ -66,7 +66,7 @@ namespace Microsoft.Extensions.DependencyInjection
             });
             services.PostConfigure<NATSOptions>(options =>
             {
-                if (options.IsAuthentication && AppEnvironment.IsProduction)
+                if (options.IsAuthentication && (AppEnvironment.IsProduction || HostEnvironment.IsProduction))
                 {
                     options.UserName = options.UserName.DecryptDES();
                     options.Password = options.Password.DecryptDES();
