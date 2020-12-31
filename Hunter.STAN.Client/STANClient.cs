@@ -162,7 +162,7 @@ namespace Hunter.STAN.Client
 
             if (IsChannelInactive)
             {
-                _logger.LogDebug("STAN 开始重新连接");
+                _logger.LogWarning("STAN 开始重新连接");
 
                 while (true)
                 {
@@ -183,7 +183,7 @@ namespace Hunter.STAN.Client
                     }
                 }
 
-                _logger.LogDebug("STAN 完成重新连接");
+                _logger.LogWarning("STAN 完成重新连接");
             }
 
             _semaphoreSlim.Release();

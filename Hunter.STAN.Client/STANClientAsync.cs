@@ -16,6 +16,8 @@ namespace Hunter.STAN.Client
     {
         public async Task ConnectAsync()
         {
+            _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
+
             await _semaphoreSlim.WaitAsync();
 
             _connectionState = STANConnectionState.Connecting;
@@ -31,6 +33,8 @@ namespace Hunter.STAN.Client
             {
                 _semaphoreSlim.Release();
             }
+
+            _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
         }
 
         private async Task ReconnectAsync()
@@ -79,11 +83,11 @@ namespace Hunter.STAN.Client
 
             if (_channel != null)
             {
-                _logger.LogDebug("STAN 开始释放断开的通讯连接频道");
+                _logger.LogWarning("STAN 开始释放断开的通讯连接频道");
 
                 await _channel.DisconnectAsync();
 
-                _logger.LogDebug("STAN 完成释放断开的通讯连接频道");
+                _logger.LogWarning("STAN 完成释放断开的通讯连接频道");
             }
 
 
@@ -777,6 +781,8 @@ namespace Hunter.STAN.Client
 
         public async ValueTask DisposeAsync()
         {
+            _logger.LogWarning($"开始释放Stan客户端 客户端编号 {_clientId}");
+
             _isDispose = true;
 
             if (_channel != null)
@@ -790,6 +796,7 @@ namespace Hunter.STAN.Client
 
             _connectionState = STANConnectionState.Disconnected;
 
+            _logger.LogWarning($"结束释放Stan客户端 客户端编号 {_clientId}");
         }
     }
 }

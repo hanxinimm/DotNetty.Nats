@@ -14,6 +14,8 @@ namespace Hunter.NATS.Client
     {
         public async Task ConnectAsync()
         {
+            _logger.LogInformation($"开始连接Nats客户端 客户端编号 {_clientId}");
+
             await _semaphoreSlim.WaitAsync();
 
             _connectionState = NATSConnectionState.Connecting;
@@ -29,6 +31,8 @@ namespace Hunter.NATS.Client
             {
                 _semaphoreSlim.Release();
             }
+
+            _logger.LogInformation($"结束连接Nats客户端 客户端编号 {_clientId}");
         }
 
         private async Task ReconnectAsync()
@@ -263,6 +267,8 @@ namespace Hunter.NATS.Client
 
         public async ValueTask DisposeAsync()
         {
+            _logger.LogWarning($"开始释放Nats客户端 客户端编号 {_clientId}");
+
             _isDispose = true;
 
             if (_channel != null)
@@ -272,6 +278,9 @@ namespace Hunter.NATS.Client
                 await _channel?.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
 
             _connectionState = NATSConnectionState.Disconnected;
+
+            _logger.LogWarning($"结束释放Nats客户端 客户端编号 {_clientId}");
+
         }
     }
 }

@@ -143,7 +143,7 @@ namespace Hunter.NATS.Client
 
             if (IsChannelInactive)
             {
-                _logger.LogDebug("NATS 开始重新连接");
+                _logger.LogWarning("NATS 开始重新连接");
 
 
                 while (true)
@@ -165,7 +165,7 @@ namespace Hunter.NATS.Client
                     }
                 }
 
-                _logger.LogDebug("NATS 完成重新连接");
+                _logger.LogWarning("NATS 完成重新连接");
             }
 
             _semaphoreSlim.Release();
