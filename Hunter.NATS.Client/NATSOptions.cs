@@ -58,6 +58,16 @@ namespace Hunter.NATS.Client
         public int Port { get; set; }
 
         /// <summary>
+        /// HTTP端口
+        /// </summary>
+        public int HttpPort { get; set; }
+
+        /// <summary>
+        /// 节点端口
+        /// </summary>
+        public int ClusterPort { get; set; }
+
+        /// <summary>
         /// 是否OK确认
         /// </summary>
         public bool IsVerbose { get; set; }

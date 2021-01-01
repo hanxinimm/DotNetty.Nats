@@ -39,6 +39,16 @@ namespace Hunter.STAN.Client
         public int Port { get; set; }
 
         /// <summary>
+        /// HTTP端口
+        /// </summary>
+        public int HttpPort { get; set; }
+
+        /// <summary>
+        /// 节点端口
+        /// </summary>
+        public int ClusterPort { get; set; }
+
+        /// <summary>
         /// 链接超时时间
         /// </summary>
         public TimeSpan ConnectTimeout { get; set; }
