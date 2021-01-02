@@ -1,4 +1,5 @@
 ﻿
+using Hunter.Extensions.Cryptography;
 using Hunter.STAN.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,14 @@ namespace Microsoft.Extensions.DependencyInjection
             ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
         {
             services.Configure(steup);
+            services.PostConfigure<STANOptions>(options =>
+            {
+                if (options.IsAuthentication && (AppEnvironment.IsProduction || HostEnvironment.IsProduction))
+                {
+                    options.UserName = options.UserName.DecryptDES();
+                    options.Password = options.Password.DecryptDES();
+                }
+            });
             services.Add(new ServiceDescriptor(typeof(STANClient),
                 spr => new STANClient(spr.GetService<ILogger<STANClient>>(), spr.GetService<IOptions<STANOptions>>()),
                 serviceLifetime));
@@ -33,6 +42,14 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 options.ClientId = $"STANClient_{Guid.NewGuid():N}";
                 configuration.GetSection("STANOptions").Bind(options);
+            });
+            services.PostConfigure<STANOptions>(options =>
+            {
+                if (options.IsAuthentication && (AppEnvironment.IsProduction || HostEnvironment.IsProduction))
+                {
+                    options.UserName = options.UserName.DecryptDES();
+                    options.Password = options.Password.DecryptDES();
+                }
             });
             services.Add(new ServiceDescriptor(typeof(STANClient),
                 spr => new STANClient(spr.GetService<ILogger<STANClient>>(), spr.GetService<IOptions<STANOptions>>()),
@@ -48,6 +65,14 @@ namespace Microsoft.Extensions.DependencyInjection
             {
                 options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}_{Guid.NewGuid():N}";
                 configuration.GetSection("STANOptions").Bind(options);
+            });
+            services.PostConfigure<STANOptions>(options =>
+            {
+                if (options.IsAuthentication && (AppEnvironment.IsProduction || HostEnvironment.IsProduction))
+                {
+                    options.UserName = options.UserName.DecryptDES();
+                    options.Password = options.Password.DecryptDES();
+                }
             });
             services.Add(new ServiceDescriptor(typeof(STANClient),
                 spr => new STANClient(spr.GetService<ILogger<STANClient>>(), spr.GetService<IOptions<STANOptions>>()),
