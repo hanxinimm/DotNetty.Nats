@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TestNATSClient
@@ -17,6 +18,52 @@ namespace TestNATSClient
         private static readonly Regex _clientIdReplacer = new Regex("\\W\\D");
         static async Task Main(string[] args)
         {
+
+           // var SubscriptionMsgContentReady = new TaskCompletionSource<bool>();
+
+
+           // await Task.Factory.StartNew(async () =>
+           //{
+           //    var rlt = await SubscriptionMsgContentReady.Task;
+           //    if (rlt)
+           //    {
+           //        Console.WriteLine("1链接成功");
+           //    }
+           //    else
+           //    {
+           //        Console.WriteLine("1链接失败");
+           //    }
+           //},new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token);
+
+           // await Task.Factory.StartNew(async () =>
+           // {
+           //     var rlt = await SubscriptionMsgContentReady.Task;
+           //     if (rlt)
+           //     {
+           //         Console.WriteLine("2链接成功");
+           //     }
+           //     else
+           //     {
+           //         Console.WriteLine("2链接失败");
+           //     }
+           // });
+
+           // await Task.Factory.StartNew(() =>
+           // {
+           //     Console.WriteLine("等待开始");
+           //     System.Threading.Thread.Sleep(1000 * 5);
+           //     Console.WriteLine("等待完成");
+
+           //     SubscriptionMsgContentReady.SetResult(true);
+
+           // });
+
+           // Console.ReadLine();
+
+           // Console.WriteLine("完成");
+
+           // return;
+
             //var ss = Guid.NewGuid().ToString("N");
 
             //var options = new NATSOptions();
@@ -36,10 +83,10 @@ namespace TestNATSClient
             {
                 options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                //options.Host = "127.0.0.1";
+                options.Host = "192.168.4.131";
                 //options.Host = "mq.nats.yd.com";
-                options.Host = "mq.nats.laboroa.cn";
-                options.Port = 4222;
+                //options.Host = "mq.nats.laboroa.cn";
+                options.Port = 4221;
                 options.IsAuthentication = true;
                 options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
                 options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
@@ -52,7 +99,7 @@ namespace TestNATSClient
             await using var client = _serviceProvider.GetRequiredService<NATSClient>();
 
 
-            await client.ConnectAsync();
+            //await client.ConnectAsync();
 
             var httpClient = new HttpClient();
             

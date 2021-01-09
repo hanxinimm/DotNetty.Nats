@@ -17,8 +17,13 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// The <see cref="IChannel"/> is disconnected.
         /// </summary>
-        Disconnected = 0,
-        
+        Disconnected,
+
+        /// <summary>
+        /// The <see cref="IChannel"/> is disconnecting.
+        /// </summary>
+        Disconnecting,
+
         /// <summary>
         /// The <see cref="IChannel"/> is connected to a NATS Server.
         /// </summary>

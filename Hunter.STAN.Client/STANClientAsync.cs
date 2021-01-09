@@ -20,13 +20,16 @@ namespace Hunter.STAN.Client
 
             await _semaphoreSlim.WaitAsync();
 
+            if (_connectionState == STANConnectionState.Connected)
+                throw new InvalidOperationException("Stan Client Is Connected");
+
             _connectionState = STANConnectionState.Connecting;
 
             try
             {
                 if (_channel == null)
                 {
-                    await TryConnectAsync();
+                    await ExecuteConnectAsync();
                 }
             }
             finally
@@ -35,6 +38,44 @@ namespace Hunter.STAN.Client
             }
 
             _logger.LogInformation($"结束连接Stan客户端 客户端编号 {_clientId}");
+        }
+
+        public async Task<bool> TryConnectAsync()
+        {
+            _logger.LogInformation($"开始尝试连接Stan客户端 客户端编号 {_clientId}");
+
+            if (_connectionState == STANConnectionState.Connected)
+            {
+                return true;
+            }
+
+            await Task.Run(_semaphoreSlim.WaitAsync, new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
+
+            if (_isDispose || _connectionState == STANConnectionState.Connected)
+            {
+                _semaphoreSlim.Release();
+                return _connectionState == STANConnectionState.Connected;
+            }
+
+            _connectionState = STANConnectionState.Connecting;
+
+            try
+            {
+                if (_channel == null)
+                {
+                    await ExecuteConnectAsync();
+                } 
+            }
+            finally
+            {
+                if (_connectionState == STANConnectionState.Connected)
+                    _semaphoreSlim.Release();
+            }
+
+            _logger.LogInformation($"结束尝试连接Stan客户端 客户端编号 {_clientId}");
+
+            return _connectionState == STANConnectionState.Connected;
+
         }
 
         private async Task ReconnectAsync()
@@ -52,7 +93,7 @@ namespace Hunter.STAN.Client
                     {
                         if (!_isDispose)
                         {
-                            await TryConnectAsync();
+                            await ExecuteConnectAsync();
                         }
 
                         break;
@@ -70,7 +111,7 @@ namespace Hunter.STAN.Client
             }
         }
 
-        public async Task TryConnectAsync()
+        public async Task ExecuteConnectAsync()
         {
 
             if (!_options.ClusterNodes.Any())
@@ -340,29 +381,29 @@ namespace Hunter.STAN.Client
 
         #region 订阅自动确认 异步回调
 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, Func<STANMsgContent, ValueTask> handler)
+        public async Task<STANSubscriptionConfig> SubscribeAsync(string subject, Func<STANMsgContent, ValueTask> handler)
         {
             CheckSubject(subject);
-            return SubscribeAsync(subject, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+            return await SubscribeAsync(subject, string.Empty, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
+        public async Task<STANSubscriptionConfig> SubscribeAsync(string subject, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
         {
             CheckSubject(subject);
-            return SubscribeAsync(subject, string.Empty, subscribeOptions, handler);
+            return await SubscribeAsync(subject, string.Empty, subscribeOptions, handler);
         }
 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, Func<STANMsgContent, ValueTask> handler)
+        public async Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, Func<STANMsgContent, ValueTask> handler)
         {
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
-            return SubscribeAsync(subject, queueGroup, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+            return await SubscribeAsync(subject, queueGroup, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
+        public async Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
         {
             CheckSubject(subject);
-            //TODO:待完善业务逻辑
-            //CheckQueueGroup(queueGroup);
-            return HandleSubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions,
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+            return await HandleSubscribeAsync(subject, queueGroup, string.Empty, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAsynHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
@@ -382,9 +423,10 @@ namespace Hunter.STAN.Client
             return PersistenceSubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
 
-        public Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
+        public async Task<STANSubscriptionConfig> PersistenceSubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
         {
-            return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+            return await HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAsynHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
@@ -430,9 +472,10 @@ namespace Hunter.STAN.Client
             CheckQueueGroup(queueGroup);
             return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
+        public async Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Action<STANMsgContent> handler)
         {
-            return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+            return await HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageSyncHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
@@ -479,9 +522,10 @@ namespace Hunter.STAN.Client
             return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
+        public async Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, bool> handler)
         {
-            return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+            return await HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAckSyncHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
@@ -529,9 +573,10 @@ namespace Hunter.STAN.Client
             return SubscribeAsync(subject, queueGroup, PersistenceName, new STANSubscribeOptions() { Position = StartPosition.LastReceived }, handler);
         }
 
-        public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        public async Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, string PersistenceName, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
-            return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+            return await HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
                 (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(_logger, subscriptionConfig, handler, AckAsync));
         }
 
@@ -560,10 +605,11 @@ namespace Hunter.STAN.Client
             return SubscribeAsync(subject, queueGroup, string.Empty, maxMsg, subscribeOptions, handler);
         }
 
-        public Task SubscribeAsync(string subject, string queueGroup, string PersistenceName, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
+        public async Task SubscribeAsync(string subject, string queueGroup, string PersistenceName, int maxMsg, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask<bool>> handler)
         {
-            return HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
-                (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(_logger,subscriptionConfig, handler, AckAsync, UnSubscribeAsync));
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+            await HandleSubscribeAsync(subject, queueGroup, PersistenceName, subscribeOptions,
+               (subscriptionConfig) => new SubscriptionMessageAckAsynHandler(_logger, subscriptionConfig, handler, AckAsync, UnSubscribeAsync));
         }
 
         #endregion;
@@ -590,6 +636,8 @@ namespace Hunter.STAN.Client
         //TODO:待完善读取逻辑
         private async Task<Queue<STANMsgContent>> ReadAsync(string subject, int? count, STANSubscribeOptions subscribeOptions)
         {
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+
             var SubscribePacket = new SubscribePacket();
 
             _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
@@ -679,6 +727,7 @@ namespace Hunter.STAN.Client
 
         public async Task UnSubscribeAsync(STANSubscriptionConfig subscriptionConfig)
         {
+            if (!await TryConnectAsync()) throw new StanConnectionException();
 
             var Packet = new UnsubscribeRequestPacket(_replyInboxId,
                 _config.UnsubRequests,
@@ -700,6 +749,8 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public async Task<PubAckPacket> PublishWaitAckAsync(string subject, byte[] data)
         {
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+
             var Packet = new PubMsgPacket(
                 _replyInboxId,
                 _config.PubPrefix, 
@@ -726,8 +777,10 @@ namespace Hunter.STAN.Client
         /// <param name="subject">主体</param>
         /// <param name="data">数据</param>
         /// <returns></returns>
-        public Task PublishAsync(string subject, byte[] data)
+        public async Task PublishAsync(string subject, byte[] data)
         {
+            if (!await TryConnectAsync()) throw new StanConnectionException();
+
             var Packet = new PubMsgPacket(
                 _replyInboxId,
                 _config.PubPrefix,
@@ -736,7 +789,7 @@ namespace Hunter.STAN.Client
                 subject,
                 data);
 
-            return _channel.WriteAndFlushAsync(Packet);
+            await _channel.WriteAndFlushAsync(Packet);
         }
 
         #region 消息发送确认
@@ -758,7 +811,7 @@ namespace Hunter.STAN.Client
 
         #endregion;
 
-        public async Task<CloseResponsePacket> CloseRequestAsync()
+        private async Task<CloseResponsePacket> CloseRequestAsync()
         {
 
             var Packet = new CloseRequestPacket(_replyInboxId, _config.CloseRequests, _clientId);
@@ -782,6 +835,8 @@ namespace Hunter.STAN.Client
         public async ValueTask DisposeAsync()
         {
             _logger.LogWarning($"开始释放Stan客户端 客户端编号 {_clientId}");
+
+            _connectionState = STANConnectionState.Disconnecting;
 
             _isDispose = true;
 

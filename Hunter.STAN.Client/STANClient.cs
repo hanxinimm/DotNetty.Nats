@@ -191,11 +191,6 @@ namespace Hunter.STAN.Client
 
         #region 消息发送确认
 
-        private void PubAckCallback(PubAckPacket pubAck)
-        {
-            _options.PubAckCallback(new STANMsgPubAck(pubAck.Message.Guid, pubAck.Message.Error));
-        }
-
         #endregion;
 
         private void CheckSubject(string subject)

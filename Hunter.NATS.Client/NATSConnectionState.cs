@@ -20,6 +20,11 @@ namespace Hunter.NATS.Client
         Disconnected,
 
         /// <summary>
+        /// The <see cref="IChannel"/> is disconnecting.
+        /// </summary>
+        Disconnecting,
+
+        /// <summary>
         /// The <see cref="IChannel"/> is connected to a NATS Server.
         /// </summary>
         Connected,

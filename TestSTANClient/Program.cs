@@ -77,7 +77,7 @@ namespace TestSTANClient
 
             await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
-            await client.ConnectAsync();
+            //await client.ConnectAsync();
 
             Console.WriteLine("连接成功");
 
@@ -167,9 +167,14 @@ namespace TestSTANClient
                 var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 //client.Publish("test3", Testbytes);
 
-                for (int j = 0; j < 1; j++)
+                for (int j = 0; j < 3; j++)
                 {
-                    await client.PublishAsync("OrderPlaced", Testbytes);
+
+                    await Task.Factory.StartNew(async () =>
+                    {
+                        await client.PublishAsync("OrderPlaced", Testbytes);
+                    });
+
                 }
                 //if (Rlt == null) Console.WriteLine("发送失败");
                 

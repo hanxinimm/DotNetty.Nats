@@ -24,7 +24,7 @@ namespace Hunter.NATS.Client
             {
                 if (_channel == null)
                 {
-                    await TryConnectAsync();
+                    await ExecuteConnectAsync();
                 }
             }
             finally
@@ -34,6 +34,43 @@ namespace Hunter.NATS.Client
 
             _logger.LogInformation($"结束连接Nats客户端 客户端编号 {_clientId}");
         }
+
+        public async Task<bool> TryConnectAsync()
+        {
+            _logger.LogInformation($"开始尝试连接Nats客户端 客户端编号 {_clientId}");
+
+            if (_connectionState == NATSConnectionState.Connected)
+            {
+                return true;
+            }
+
+            await Task.Run(_semaphoreSlim.WaitAsync, new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
+
+            if (_isDispose || _connectionState == NATSConnectionState.Connected)
+            {
+                _semaphoreSlim.Release();
+                return _connectionState == NATSConnectionState.Connected;
+            }
+
+            _connectionState = NATSConnectionState.Connecting;
+
+            try
+            {
+                if (_channel == null)
+                {
+                    await ExecuteConnectAsync();
+                }
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+
+            _logger.LogInformation($"结束尝试连接Nats客户端 客户端编号 {_clientId}");
+
+            return _connectionState == NATSConnectionState.Connected;
+        }
+
 
         private async Task ReconnectAsync()
         {
@@ -50,7 +87,7 @@ namespace Hunter.NATS.Client
                     {
                         if (!_isDispose)
                         {
-                            await TryConnectAsync();
+                            await ExecuteConnectAsync();
                         }
 
                         break;
@@ -68,7 +105,7 @@ namespace Hunter.NATS.Client
             }
         }
 
-        private async Task TryConnectAsync()
+        private async Task ExecuteConnectAsync()
         {
             //TODO:集群节点待优化
             if (!_options.ClusterNodes.Any())
@@ -138,6 +175,8 @@ namespace Hunter.NATS.Client
         public async Task<string> HandleSubscribeAsync(string subject, string queueGroup,
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
+
+            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -226,6 +265,8 @@ namespace Hunter.NATS.Client
 
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
+            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+
             var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
             await _channel.WriteAndFlushAsync(UnSubscribePacket);
@@ -239,11 +280,13 @@ namespace Hunter.NATS.Client
         /// <param name="subject">主体</param>
         /// <param name="data">数据</param>
         /// <returns></returns>
-        public Task PublishAsync(string subject, byte[] data)
+        public async Task PublishAsync(string subject, byte[] data)
         {
+            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+
             var Packet = new PublishPacket(subject, data);
 
-            return _channel.WriteAndFlushAsync(Packet);
+            await _channel.WriteAndFlushAsync(Packet);
         }
 
         protected void InfoAsync(InfoPacket info)
@@ -251,23 +294,29 @@ namespace Hunter.NATS.Client
             _infoTaskCompletionSource.TrySetResult(info);
         }
 
-        public Task PingAsync()
+        public async Task PingAsync()
         {
+            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+
             var Packet = new PingPacket();
 
-            return _channel.WriteAndFlushAsync(Packet);
+            await _channel.WriteAndFlushAsync(Packet);
         }
 
-        public Task PongAsync()
+        public async Task PongAsync()
         {
+            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+
             var Packet = new PongPacket();
 
-            return _channel.WriteAndFlushAsync(Packet);
+            await _channel.WriteAndFlushAsync(Packet);
         }
 
         public async ValueTask DisposeAsync()
         {
             _logger.LogWarning($"开始释放Nats客户端 客户端编号 {_clientId}");
+
+            _connectionState = NATSConnectionState.Disconnecting;
 
             _isDispose = true;
 
