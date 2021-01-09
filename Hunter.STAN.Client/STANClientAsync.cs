@@ -34,7 +34,7 @@ namespace Hunter.STAN.Client
                 _semaphoreSlim.Release();
             }
 
-            _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
+            _logger.LogInformation($"结束连接Stan客户端 客户端编号 {_clientId}");
         }
 
         private async Task ReconnectAsync()

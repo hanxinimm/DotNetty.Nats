@@ -18,7 +18,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static void AddSTANServer(this IServiceCollection services, 
             Action<STANOptions> steup,
-            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+            ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
         {
             services.Configure(steup);
             services.PostConfigure<STANOptions>(options =>
@@ -36,7 +36,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static void AddSTANServer(this IServiceCollection services,
             IConfigurationRoot configuration,
-            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+            ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
         {
             services.Configure<STANOptions>(options =>
             {
@@ -59,7 +59,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static void AddSTANServer(this IServiceCollection services,
             IConfigurationRoot configuration, 
             string clientId,
-            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+            ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
         {
             services.Configure<STANOptions>(options =>
             {

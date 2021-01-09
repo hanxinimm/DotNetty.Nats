@@ -15,7 +15,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static void AddNATSServer(this IServiceCollection services,
             Action<NATSOptions> steup,
-            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+            ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
         {
             services.Configure(steup);
             services.PostConfigure<NATSOptions>(options =>
@@ -33,7 +33,7 @@ namespace Microsoft.Extensions.DependencyInjection
 
         public static void AddNATSServer(this IServiceCollection services,
             IConfigurationRoot configuration, 
-            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+            ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
         {
             services.Configure<NATSOptions>(options =>
             {
@@ -57,7 +57,7 @@ namespace Microsoft.Extensions.DependencyInjection
         public static void AddNATSServer(this IServiceCollection services,
             IConfigurationRoot configuration,
             string clientId,
-            ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
+            ServiceLifetime serviceLifetime = ServiceLifetime.Transient)
         {
             services.Configure<NATSOptions>(options =>
             {
