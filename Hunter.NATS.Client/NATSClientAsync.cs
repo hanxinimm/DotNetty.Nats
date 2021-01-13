@@ -37,12 +37,13 @@ namespace Hunter.NATS.Client
 
         public async Task<bool> TryConnectAsync()
         {
-            _logger.LogInformation($"开始尝试连接Nats客户端 客户端编号 {_clientId}");
-
             if (_connectionState == NATSConnectionState.Connected)
             {
                 return true;
             }
+
+            _logger.LogInformation($"开始尝试连接Nats客户端 客户端编号 {_clientId}");
+
 
             await Task.Run(_semaphoreSlim.WaitAsync, new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
 

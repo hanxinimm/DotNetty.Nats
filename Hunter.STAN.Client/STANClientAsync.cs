@@ -42,12 +42,13 @@ namespace Hunter.STAN.Client
 
         public async Task<bool> TryConnectAsync()
         {
-            _logger.LogInformation($"开始尝试连接Stan客户端 客户端编号 {_clientId}");
 
             if (_connectionState == STANConnectionState.Connected)
             {
                 return true;
             }
+
+            _logger.LogInformation($"开始尝试连接Stan客户端 客户端编号 {_clientId}");
 
             await Task.Run(_semaphoreSlim.WaitAsync, new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
 

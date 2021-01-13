@@ -83,13 +83,13 @@ namespace TestNATSClient
             {
                 options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                options.Host = "192.168.4.131";
-                //options.Host = "mq.nats.yd.com";
+                //options.Host = "192.168.4.131";
+                options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
-                options.IsAuthentication = true;
-                options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
-                options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
+                //options.IsAuthentication = true;
+                //options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
+                //options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
 
