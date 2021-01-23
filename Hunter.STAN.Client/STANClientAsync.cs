@@ -830,6 +830,8 @@ namespace Hunter.STAN.Client
 
             _channel.Pipeline.Remove(Handler);
 
+            _config = null;
+
             return Result;
         }
 
@@ -841,9 +843,9 @@ namespace Hunter.STAN.Client
 
             _isDispose = true;
 
-            if (_channel != null)
+            if (_channel != null && _channel.Active)
             {
-                if (_channel.Active && _channel.Open)
+                if (_channel.Open && _config != null)
                     await CloseRequestAsync();
 
                 await _channel.DisconnectAsync();

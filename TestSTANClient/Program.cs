@@ -77,6 +77,23 @@ namespace TestSTANClient
 
             await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
+
+            await client.DisposeAsync();
+
+            await client.ConnectAsync();
+
+            await client.DisposeAsync();
+
+            await client.DisposeAsync();
+
+            await client.DisposeAsync();
+
+            await client.ConnectAsync();
+
+            await client.DisposeAsync();
+
+            await client.DisposeAsync();
+
             //await client.ConnectAsync();
 
             Console.WriteLine("连接成功");
@@ -191,6 +208,8 @@ namespace TestSTANClient
 
                 i++;
             }
+
+
 
             #endregion;
 
