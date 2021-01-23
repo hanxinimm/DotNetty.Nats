@@ -68,9 +68,9 @@ namespace Hunter.STAN.Client
         private STANConnectionState _connectionState;
 
         /// <summary>
-        /// 是否释放资源
+        /// 是否正在释放资源
         /// </summary>
-        private bool _isDispose;
+        private bool _isDisposing;
 
         /// <summary>
         /// 连接配置
@@ -152,7 +152,7 @@ namespace Hunter.STAN.Client
         {
             await _semaphoreSlim.WaitAsync();
 
-            if (_isDispose)
+            if (_isDisposing)
             {
                 _semaphoreSlim.Release();
                 return;

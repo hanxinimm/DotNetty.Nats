@@ -58,7 +58,7 @@ namespace Hunter.NATS.Client
         /// <summary>
         /// 是否释放资源
         /// </summary>
-        private bool _isDispose;
+        private bool _isDisposing;
 
         /// <summary>
         /// 等待发送消息确认安排表
@@ -133,7 +133,7 @@ namespace Hunter.NATS.Client
         {
             await _semaphoreSlim.WaitAsync();
 
-            if (_isDispose)
+            if (_isDisposing)
             {
                 _semaphoreSlim.Release();
                 return;

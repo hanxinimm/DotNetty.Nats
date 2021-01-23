@@ -44,10 +44,15 @@ namespace Hunter.NATS.Client
 
             _logger.LogInformation($"开始尝试连接Nats客户端 客户端编号 {_clientId}");
 
+            if (_isDisposing)
+            {
+                _logger.LogWarning($"Nats 资源开始释放,不在尝试连接 客户端编号 {_clientId}");
+                return false;
+            }
 
             await Task.Run(_semaphoreSlim.WaitAsync, new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
 
-            if (_isDispose || _connectionState == NATSConnectionState.Connected)
+            if (_isDisposing || _connectionState == NATSConnectionState.Connected)
             {
                 _semaphoreSlim.Release();
                 return _connectionState == NATSConnectionState.Connected;
@@ -75,8 +80,11 @@ namespace Hunter.NATS.Client
 
         private async Task ReconnectAsync()
         {
-            if (_isDispose)
+            if (_isDisposing)
+            {
+                _logger.LogWarning($"NATS 资源开始释放,不在尝试重试连接 客户端编号 {_clientId}");
                 return;
+            }
 
             try
             {
@@ -86,9 +94,13 @@ namespace Hunter.NATS.Client
                 {
                     try
                     {
-                        if (!_isDispose)
+                        if (!_isDisposing)
                         {
                             await ExecuteConnectAsync();
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"NATS 资源开始释放,跳出尝试重试连接 客户端编号 {_clientId}");
                         }
 
                         break;
@@ -319,7 +331,7 @@ namespace Hunter.NATS.Client
 
             _connectionState = NATSConnectionState.Disconnecting;
 
-            _isDispose = true;
+            _isDisposing = true;
 
             if (_channel != null && _channel.Active)
             {
@@ -327,6 +339,8 @@ namespace Hunter.NATS.Client
 
                 await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
             }
+
+            _isDisposing = false;
 
             _connectionState = NATSConnectionState.Disconnected;
 

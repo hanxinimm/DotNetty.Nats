@@ -50,9 +50,15 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation($"开始尝试连接Stan客户端 客户端编号 {_clientId}");
 
+            if (_isDisposing)
+            {
+                _logger.LogWarning($"资源开始释放,不在尝试连接 客户端编号 {_clientId}");
+                return false;
+            }
+
             await Task.Run(_semaphoreSlim.WaitAsync, new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
 
-            if (_isDispose || _connectionState == STANConnectionState.Connected)
+            if (_isDisposing || _connectionState == STANConnectionState.Connected)
             {
                 _semaphoreSlim.Release();
                 return _connectionState == STANConnectionState.Connected;
@@ -81,8 +87,11 @@ namespace Hunter.STAN.Client
 
         private async Task ReconnectAsync()
         {
-            if (_isDispose)
+            if (_isDisposing)
+            {
+                _logger.LogWarning($"STAN 资源开始释放,不在尝试重试连接 客户端编号 {_clientId}");
                 return;
+            }
 
             try
             {
@@ -92,9 +101,13 @@ namespace Hunter.STAN.Client
                 {
                     try
                     {
-                        if (!_isDispose)
+                        if (!_isDisposing)
                         {
                             await ExecuteConnectAsync();
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"STAN 资源开始释放,跳出尝试重试连接 客户端编号 {_clientId}");
                         }
 
                         break;
@@ -841,7 +854,7 @@ namespace Hunter.STAN.Client
 
             _connectionState = STANConnectionState.Disconnecting;
 
-            _isDispose = true;
+            _isDisposing = true;
 
             if (_channel != null && _channel.Active)
             {
@@ -851,6 +864,8 @@ namespace Hunter.STAN.Client
                 await _channel.DisconnectAsync();
                 await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
             }
+
+            _isDisposing = false;
 
             _connectionState = STANConnectionState.Disconnected;
 
