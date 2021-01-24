@@ -60,6 +60,9 @@ namespace Hunter.STAN.Client
 
             if (_isDisposing || _connectionState == STANConnectionState.Connected)
             {
+                if(_connectionState == STANConnectionState.Connected)
+                    _logger.LogWarning($"客户端已连接 客户端编号 {_clientId}");
+
                 _semaphoreSlim.Release();
                 return _connectionState == STANConnectionState.Connected;
             }
@@ -127,6 +130,7 @@ namespace Hunter.STAN.Client
 
         public async Task ExecuteConnectAsync()
         {
+            _logger.LogInformation("STAN 执行客户端通讯连接频道");
 
             if (!_options.ClusterNodes.Any())
             {
@@ -700,7 +704,8 @@ namespace Hunter.STAN.Client
             var SubscriptionMsgContentReady = new TaskCompletionSource<Queue<STANMsgContent>>(SubscriptionConfig);
 
             //订阅消息处理器
-            var messageHandler = new ReadMessageHandler(SubscriptionConfig, SubscriptionMsgContentReady, UnSubscribeAsync);
+            var messageContents = new Queue<STANMsgContent>();
+            var messageHandler = new ReadMessageHandler(SubscriptionConfig, SubscriptionMsgContentReady, messageContents, UnSubscribeAsync);
 
             //订阅消息处理器添加到管道
             _channel.Pipeline.AddLast(messageHandler);
@@ -730,6 +735,11 @@ namespace Hunter.STAN.Client
             }
 
             _logger.LogDebug($"成功订阅消息 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
+
+            new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token.Register(() =>
+            {
+                SubscriptionMsgContentReady.TrySetResult(messageContents);
+            });
 
             var msgContents = await SubscriptionMsgContentReady.Task;
 

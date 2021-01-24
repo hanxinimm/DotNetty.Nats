@@ -11,37 +11,32 @@ namespace Hunter.STAN.Client
     public class ReadMessageHandler : SimpleChannelInboundHandler<MsgProtoPacket>
     {
         private readonly STANSubscriptionConfig _subscriptionConfig;
-        private readonly Queue<STANMsgContent> _messageQueue;
+        private readonly Queue<STANMsgContent> _messageContents;
         private readonly TaskCompletionSource<Queue<STANMsgContent>> _messageTaskReady;
         private readonly Func<STANSubscriptionConfig, Task> _unSubscriptionCallback;
-        private readonly CancellationTokenSource _messageCancellationTokenSource;
         public ReadMessageHandler(
             STANSubscriptionConfig subscriptionConfig,
             TaskCompletionSource<Queue<STANMsgContent>> messageTaskReady,
+            Queue<STANMsgContent> msgContents,
             Func<STANSubscriptionConfig, Task> unSubscriptionCallback = null)
         {
             _subscriptionConfig = subscriptionConfig;
-            _messageQueue = new Queue<STANMsgContent>();
+            _messageContents = msgContents;
             _messageTaskReady = messageTaskReady;
             _unSubscriptionCallback = unSubscriptionCallback;
-
-            _messageCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-            //设置任务超时时间-- 5秒钟超时
-            _messageCancellationTokenSource.Token.Register(() => _messageTaskReady.TrySetResult(_messageQueue));
         }
         protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
             if (msg.Message.Subject == _subscriptionConfig.Subject)
             {
-                if (_messageQueue.Count < _subscriptionConfig.MaxMsg)
+                if (_messageContents.Count < _subscriptionConfig.MaxMsg)
                 {
-                    _messageQueue.Enqueue(PackMsgContent(msg));
+                    _messageContents.Enqueue(PackMsgContent(msg));
                 }
 
-                if (_messageQueue.Count >= _subscriptionConfig.MaxMsg)
+                if (_messageContents.Count >= _subscriptionConfig.MaxMsg)
                 {
-                    _messageTaskReady.SetResult(_messageQueue);
+                    _messageTaskReady.TrySetResult(_messageContents);
                     _unSubscriptionCallback(_subscriptionConfig);
                 }
             }

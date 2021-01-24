@@ -80,19 +80,61 @@ namespace TestSTANClient
 
             await client.DisposeAsync();
 
-            await client.ConnectAsync();
+            //client.ConnectAsync();
 
-            await client.DisposeAsync();
+            #region 无用代码
 
-            await client.DisposeAsync();
+            //for (int x = 0; x < 2; x++)//x是压测多少秒
+            //{
+            //    for (int j = 0; j < 4; j++)//j是并发数
+            //    {
+            //        Task.Run(async () =>
+            //        {
+            //            //for (int i = 0; ; i++)
+            //            for (int i = 0; i < 10; i++)//i是每个并发下执行多少次如果压测行为是起task的每秒钟的并发就是i*j
+            //            {
+            //                {
+            //                    DateTime tt1 = DateTime.Now;
+            //                    Task.Run(() =>
+            //                    {
+            //                        //压测行为
+            //                        client.TryConnectAsync();
 
-            await client.DisposeAsync();
+            //                    });
+            //                    double time = (DateTime.Now - tt1).TotalMilliseconds;
+            //                    if (time < 1000)
+            //                    {
+            //                        await Task.Delay((int)(1000 - time));
+            //                    }
+            //                }
+            //            }
+            //        });
+            //    }
+            //    System.Threading.Thread.Sleep(1000);
+            //    break;
+            //}
 
-            await client.ConnectAsync();
+            #endregion;
 
-            await client.DisposeAsync();
+            //client.TryConnectAsync();
 
-            await client.DisposeAsync();
+            //client.TryConnectAsync();
+
+            //await client.DisposeAsync();
+
+            //await client.DisposeAsync();
+
+            //await client.DisposeAsync();
+
+            Console.WriteLine("成功执行");
+
+            //Console.ReadLine();
+
+            await client.TryConnectAsync();
+
+            //await client.DisposeAsync();
+
+            //await client.DisposeAsync();
 
             //await client.ConnectAsync();
 
@@ -172,6 +214,11 @@ namespace TestSTANClient
             #region  发布测试
 
             int i = 0;
+
+            var s = await client.ReadAsync("OrderPlaced", 1,100);
+
+            Console.ReadLine();
+
 
             while (true)
             {
