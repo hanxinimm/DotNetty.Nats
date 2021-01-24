@@ -50,7 +50,8 @@ namespace Hunter.STAN.Client
 
         private void EndlessMessageHandler(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
-            if (msg.Message.Subject == _subscriptionConfig.Subject)
+            if (msg.Subject == _subscriptionConfig.Inbox &&
+                msg.Message.Subject == _subscriptionConfig.Subject)
             {
                 try
                 {
@@ -69,7 +70,8 @@ namespace Hunter.STAN.Client
 
         private void LimitedMessageHandler(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
-            if (msg.Subject == _subscriptionConfig.Subject)
+            if (msg.Subject == _subscriptionConfig.Inbox &&
+                msg.Subject == _subscriptionConfig.Subject)
             {
                 if (_messageHandlerCounter < _subscriptionConfig.MaxMsg)
                 {

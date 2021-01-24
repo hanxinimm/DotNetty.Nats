@@ -157,17 +157,17 @@ namespace TestSTANClient
 
             //var lastValue = 0;
             ////"KeepLast"
-            //var s = client.SubscribeAsync("OrderPlaced", (bytes) =>
-            //{
-            //    var sss = Encoding.UTF8.GetString(bytes.Data);
-            //    //var nowValue = int.Parse(sss.Split(' ')[0]);
-            //    //if (lastValue != 0 && (nowValue - lastValue) != 1)
-            //    //{
-            //    //    Console.WriteLine("ERROR ==========================================================");
-            //    //}
-            //    //lastValue = nowValue;
-            //    Console.WriteLine(sss);
-            //});
+            var s = client.SubscribeAsync("OrderPlaced", (bytes) =>
+            {
+                var sss = Encoding.UTF8.GetString(bytes.Data);
+                //var nowValue = int.Parse(sss.Split(' ')[0]);
+                //if (lastValue != 0 && (nowValue - lastValue) != 1)
+                //{
+                //    Console.WriteLine("ERROR ==========================================================");
+                //}
+                //lastValue = nowValue;
+                Console.WriteLine(sss);
+            });
 
             //// 防止此主机进程终止，以使服务保持运行。
 
@@ -215,7 +215,11 @@ namespace TestSTANClient
 
             int i = 0;
 
-            var s = await client.ReadAsync("OrderPlaced", 1,100);
+            var s0 = await client.ReadAsync("OrderPlaced", 1,10);
+
+            var s1 = await client.ReadAsync("OrderPlaced", 1, 10);
+
+            var s2 = await client.ReadAsync("OrderPlaced", 1, 10);
 
             Console.ReadLine();
 

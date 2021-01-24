@@ -25,6 +25,11 @@ namespace Hunter.STAN.Client
         }
 
         /// <summary>
+        /// 是否取消订阅
+        /// </summary>
+        public bool IsUnSubscribe { get; set; }
+
+        /// <summary>
         /// 主题
         /// </summary>
         public string Subject { get; protected set; }

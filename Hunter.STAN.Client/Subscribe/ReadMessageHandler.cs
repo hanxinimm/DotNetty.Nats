@@ -17,17 +17,17 @@ namespace Hunter.STAN.Client
         public ReadMessageHandler(
             STANSubscriptionConfig subscriptionConfig,
             TaskCompletionSource<Queue<STANMsgContent>> messageTaskReady,
-            Queue<STANMsgContent> msgContents,
             Func<STANSubscriptionConfig, Task> unSubscriptionCallback = null)
         {
             _subscriptionConfig = subscriptionConfig;
-            _messageContents = msgContents;
+            _messageContents = new Queue<STANMsgContent>();
             _messageTaskReady = messageTaskReady;
             _unSubscriptionCallback = unSubscriptionCallback;
         }
         protected override void ChannelRead0(IChannelHandlerContext contex, MsgProtoPacket msg)
         {
-            if (msg.Message.Subject == _subscriptionConfig.Subject)
+            if (msg.Subject == _subscriptionConfig.Inbox &&
+                msg.Message.Subject == _subscriptionConfig.Subject)
             {
                 if (_messageContents.Count < _subscriptionConfig.MaxMsg)
                 {
@@ -37,7 +37,6 @@ namespace Hunter.STAN.Client
                 if (_messageContents.Count >= _subscriptionConfig.MaxMsg)
                 {
                     _messageTaskReady.TrySetResult(_messageContents);
-                    _unSubscriptionCallback(_subscriptionConfig);
                 }
             }
             else

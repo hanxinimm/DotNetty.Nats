@@ -676,7 +676,7 @@ namespace Hunter.STAN.Client
                     subscribeOptions.AckWaitInSecs ?? 30,
                     null,
                     subscribeOptions.Position);
-            
+
 
             if (subscribeOptions.StartSequence.HasValue)
             {
@@ -704,8 +704,8 @@ namespace Hunter.STAN.Client
             var SubscriptionMsgContentReady = new TaskCompletionSource<Queue<STANMsgContent>>(SubscriptionConfig);
 
             //订阅消息处理器
-            var messageContents = new Queue<STANMsgContent>();
-            var messageHandler = new ReadMessageHandler(SubscriptionConfig, SubscriptionMsgContentReady, messageContents, UnSubscribeAsync);
+
+            var messageHandler = new ReadMessageHandler(SubscriptionConfig, SubscriptionMsgContentReady, UnSubscribeAsync);
 
             //订阅消息处理器添加到管道
             _channel.Pipeline.AddLast(messageHandler);
@@ -738,10 +738,14 @@ namespace Hunter.STAN.Client
 
             new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token.Register(() =>
             {
-                SubscriptionMsgContentReady.TrySetResult(messageContents);
+                SubscriptionMsgContentReady.TrySetResult(new Queue<STANMsgContent>());
             });
 
             var msgContents = await SubscriptionMsgContentReady.Task;
+
+            _channel.Pipeline.Remove(messageHandler);
+
+            await UnSubscribeAsync(SubscriptionConfig);
 
             return msgContents;
         }
@@ -751,6 +755,10 @@ namespace Hunter.STAN.Client
 
         public async Task UnSubscribeAsync(STANSubscriptionConfig subscriptionConfig)
         {
+            if (subscriptionConfig.IsUnSubscribe) return;
+
+            subscriptionConfig.IsUnSubscribe = true;
+
             if (!await TryConnectAsync()) throw new StanConnectionException();
 
             var Packet = new UnsubscribeRequestPacket(_replyInboxId,
