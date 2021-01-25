@@ -56,11 +56,6 @@ namespace Hunter.NATS.Client
         private InfoPacket _info;
 
         /// <summary>
-        /// 是否释放资源
-        /// </summary>
-        private bool _isDisposing;
-
-        /// <summary>
         /// 等待发送消息确认安排表
         /// </summary>
         private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
@@ -133,12 +128,6 @@ namespace Hunter.NATS.Client
         {
             await _semaphoreSlim.WaitAsync();
 
-            if (_isDisposing)
-            {
-                _semaphoreSlim.Release();
-                return;
-            }
-
             _connectionState = NATSConnectionState.Reconnecting;
 
             if (IsChannelInactive)
@@ -152,7 +141,14 @@ namespace Hunter.NATS.Client
                     {
                         _logger.LogDebug("NATS 开始尝试重新连接");
 
-                        await ReconnectAsync();
+                        if (_connectionState == NATSConnectionState.Reconnecting)
+                        {
+                            await ReconnectAsync();
+                        }
+                        else
+                        {
+                            _logger.LogWarning("NATS 连接状态发生改变,停止重试");
+                        }
 
                         _logger.LogDebug("NATS 结束尝试重新连接");
 

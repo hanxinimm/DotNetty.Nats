@@ -80,41 +80,54 @@ namespace TestSTANClient
 
             await client.DisposeAsync();
 
-            //client.ConnectAsync();
 
-            #region 无用代码
+            //client.TryConnectAsync();
 
-            //for (int x = 0; x < 2; x++)//x是压测多少秒
-            //{
-            //    for (int j = 0; j < 4; j++)//j是并发数
-            //    {
-            //        Task.Run(async () =>
-            //        {
-            //            //for (int i = 0; ; i++)
-            //            for (int i = 0; i < 10; i++)//i是每个并发下执行多少次如果压测行为是起task的每秒钟的并发就是i*j
-            //            {
-            //                {
-            //                    DateTime tt1 = DateTime.Now;
-            //                    Task.Run(() =>
-            //                    {
-            //                        //压测行为
-            //                        client.TryConnectAsync();
 
-            //                    });
-            //                    double time = (DateTime.Now - tt1).TotalMilliseconds;
-            //                    if (time < 1000)
-            //                    {
-            //                        await Task.Delay((int)(1000 - time));
-            //                    }
-            //                }
-            //            }
-            //        });
-            //    }
-            //    System.Threading.Thread.Sleep(1000);
-            //    break;
-            //}
+             client.ConnectAsync();
+
+
+                //client.ConnectAsync();
+
+                #region 无用代码
+
+                for (int x = 0; x < 2; x++)//x是压测多少秒
+            {
+                for (int j = 0; j < 4; j++)//j是并发数
+                {
+                    Task.Run(async () =>
+                    {
+                        //for (int i = 0; ; i++)
+                        for (int i = 0; i < 10; i++)//i是每个并发下执行多少次如果压测行为是起task的每秒钟的并发就是i*j
+                        {
+                            {
+                                DateTime tt1 = DateTime.Now;
+                                Task.Run(() =>
+                                {
+                                    
+                                    //压测行为
+                                    client.CheckConnectAsync();
+
+                                    //client.DisposeAsync();
+
+                                });
+                                double time = (DateTime.Now - tt1).TotalMilliseconds;
+                                if (time < 1000)
+                                {
+                                    await Task.Delay((int)(1000 - time));
+                                }
+                            }
+                        }
+                    });
+                }
+                System.Threading.Thread.Sleep(1000);
+                break;
+            }
 
             #endregion;
+
+
+
 
             //client.TryConnectAsync();
 
@@ -128,9 +141,9 @@ namespace TestSTANClient
 
             Console.WriteLine("成功执行");
 
-            //Console.ReadLine();
+            Console.ReadLine();
 
-            await client.TryConnectAsync();
+            await client.CheckConnectAsync();
 
             //await client.DisposeAsync();
 

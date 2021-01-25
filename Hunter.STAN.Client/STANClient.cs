@@ -68,11 +68,6 @@ namespace Hunter.STAN.Client
         private STANConnectionState _connectionState;
 
         /// <summary>
-        /// 是否正在释放资源
-        /// </summary>
-        private bool _isDisposing;
-
-        /// <summary>
         /// 连接配置
         /// </summary>
         private STANConnectionConfig _config;
@@ -103,7 +98,7 @@ namespace Hunter.STAN.Client
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
-            _semaphoreSlim = new SemaphoreSlim(1);
+            _semaphoreSlim = new SemaphoreSlim(1, 100);
             _bootstrap = InitBootstrap();
             _logger = logger;
         }
@@ -151,12 +146,6 @@ namespace Hunter.STAN.Client
         private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
         {
             await _semaphoreSlim.WaitAsync();
-
-            if (_isDisposing)
-            {
-                _semaphoreSlim.Release();
-                return;
-            }
 
             _connectionState = STANConnectionState.Reconnecting;
 

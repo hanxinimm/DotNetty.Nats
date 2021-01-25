@@ -14,9 +14,15 @@ namespace Hunter.NATS.Client
     {
         public async Task ConnectAsync()
         {
+            await _semaphoreSlim.WaitAsync();
+
             _logger.LogInformation($"开始连接Nats客户端 客户端编号 {_clientId}");
 
-            await _semaphoreSlim.WaitAsync();
+            if (_connectionState == NATSConnectionState.Connected)
+            {
+                _logger.LogError($"Nats客户端已经连接 客户端编号 {_clientId}");
+                return;
+            }
 
             _connectionState = NATSConnectionState.Connecting;
 
@@ -29,63 +35,37 @@ namespace Hunter.NATS.Client
             }
             finally
             {
-                _semaphoreSlim.Release();
+                _semaphoreSlim.Release(100);
             }
 
             _logger.LogInformation($"结束连接Nats客户端 客户端编号 {_clientId}");
         }
 
-        public async Task<bool> TryConnectAsync()
+        public async Task<bool> CheckConnectAsync()
         {
             if (_connectionState == NATSConnectionState.Connected)
             {
                 return true;
             }
 
-            _logger.LogInformation($"开始尝试连接Nats客户端 客户端编号 {_clientId}");
+            _logger.LogInformation($"开始等待Nats客户端连接 客户端编号 {_clientId}");
 
-            if (_isDisposing)
+            await _semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(15));
+
+            if (_connectionState == NATSConnectionState.Connected)
             {
-                _logger.LogWarning($"Nats 资源开始释放,不在尝试连接 客户端编号 {_clientId}");
-                return false;
+                _logger.LogInformation($"Nats客户端已连接 客户端编号 {_clientId}");
+                return true;
             }
 
-            await Task.Run(_semaphoreSlim.WaitAsync, new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token);
+            _logger.LogWarning($"Nats客户端未能正常连接 客户端编号 {_clientId}");
 
-            if (_isDisposing || _connectionState == NATSConnectionState.Connected)
-            {
-                _semaphoreSlim.Release();
-                return _connectionState == NATSConnectionState.Connected;
-            }
-
-            _connectionState = NATSConnectionState.Connecting;
-
-            try
-            {
-                if (_channel == null)
-                {
-                    await ExecuteConnectAsync();
-                }
-            }
-            finally
-            {
-                _semaphoreSlim.Release();
-            }
-
-            _logger.LogInformation($"结束尝试连接Nats客户端 客户端编号 {_clientId}");
-
-            return _connectionState == NATSConnectionState.Connected;
+            return false;
         }
 
 
         private async Task ReconnectAsync()
         {
-            if (_isDisposing)
-            {
-                _logger.LogWarning($"NATS 资源开始释放,不在尝试重试连接 客户端编号 {_clientId}");
-                return;
-            }
-
             try
             {
                 int retryCount = 0;
@@ -94,14 +74,7 @@ namespace Hunter.NATS.Client
                 {
                     try
                     {
-                        if (!_isDisposing)
-                        {
-                            await ExecuteConnectAsync();
-                        }
-                        else
-                        {
-                            _logger.LogWarning($"NATS 资源开始释放,跳出尝试重试连接 客户端编号 {_clientId}");
-                        }
+                        await ExecuteConnectAsync();
 
                         break;
                     }
@@ -129,7 +102,7 @@ namespace Hunter.NATS.Client
 
             var ClusterNode = _options.ClusterNodes.First();
 
-            if (_channel != null)
+            if (_channel != null && _channel.Active)
             {
                 _logger.LogDebug("NATS 开始释放断开的通讯连接频道");
 
@@ -189,7 +162,7 @@ namespace Hunter.NATS.Client
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
 
-            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -278,7 +251,7 @@ namespace Hunter.NATS.Client
 
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
-            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
 
             var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
@@ -295,7 +268,7 @@ namespace Hunter.NATS.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
 
             var Packet = new PublishPacket(subject, data);
 
@@ -309,7 +282,7 @@ namespace Hunter.NATS.Client
 
         public async Task PingAsync()
         {
-            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
 
             var Packet = new PingPacket();
 
@@ -318,7 +291,7 @@ namespace Hunter.NATS.Client
 
         public async Task PongAsync()
         {
-            if (!await TryConnectAsync()) throw new NATSConnectionFailureException();
+            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
 
             var Packet = new PongPacket();
 
@@ -327,11 +300,11 @@ namespace Hunter.NATS.Client
 
         public async ValueTask DisposeAsync()
         {
+            await _semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(20));
+
             _logger.LogWarning($"开始释放Nats客户端 客户端编号 {_clientId}");
 
             _connectionState = NATSConnectionState.Disconnecting;
-
-            _isDisposing = true;
 
             if (_channel != null && _channel.Active)
             {
@@ -340,12 +313,11 @@ namespace Hunter.NATS.Client
                 await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
             }
 
-            _isDisposing = false;
-
             _connectionState = NATSConnectionState.Disconnected;
 
             _logger.LogWarning($"结束释放Nats客户端 客户端编号 {_clientId}");
 
+            _semaphoreSlim.Release();
         }
     }
 }
