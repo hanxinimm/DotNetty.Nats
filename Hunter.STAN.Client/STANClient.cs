@@ -86,7 +86,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 限制并发线程
         /// </summary>
-        private readonly SemaphoreSlim _semaphoreSlim;
+        private readonly ManualResetEvent _manualResetEvent;
 
         public STANClient(
             ILogger<STANClient> logger,
@@ -98,7 +98,7 @@ namespace Hunter.STAN.Client
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
-            _semaphoreSlim = new SemaphoreSlim(1, 100);
+            _manualResetEvent = new ManualResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
         }
@@ -145,7 +145,8 @@ namespace Hunter.STAN.Client
 
         private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
         {
-            await _semaphoreSlim.WaitAsync();
+            _manualResetEvent.WaitOne();
+            _manualResetEvent.Reset();
 
             _connectionState = STANConnectionState.Reconnecting;
 
@@ -153,29 +154,24 @@ namespace Hunter.STAN.Client
             {
                 _logger.LogWarning("STAN 开始重新连接");
 
-                while (true)
+                try
                 {
-                    try
-                    {
-                        _logger.LogDebug("STAN 开始尝试重新连接");
+                    _logger.LogDebug("STAN 开始尝试重新连接");
 
-                        await ReconnectAsync();
+                    await ReconnectAsync();
 
-                        _logger.LogDebug("STAN 结束尝试重新连接");
-
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "STAN 尝试重新连接异常");
-                        await Task.Delay(TimeSpan.FromSeconds(3));
-                    }
+                    _logger.LogDebug("STAN 结束尝试重新连接");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "STAN 尝试重新连接异常");
+                    await Task.Delay(TimeSpan.FromSeconds(3));
                 }
 
                 _logger.LogWarning("STAN 完成重新连接");
             }
 
-            _semaphoreSlim.Release();
+            _manualResetEvent.Set();
         }
 
         #region 消息发送确认

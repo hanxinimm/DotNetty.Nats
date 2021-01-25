@@ -10,6 +10,7 @@ namespace DotNetty.Handlers.STAN
     using DotNetty.Codecs.STAN.Protocol;
     using DotNetty.Transport.Channels;
     using Google.Protobuf;
+    using Microsoft.Extensions.Logging;
 
     public class ReplyPacketHandler<TPacket> : SimpleChannelInboundHandler<TPacket>
         where TPacket : MessagePacket
@@ -26,7 +27,7 @@ namespace DotNetty.Handlers.STAN
         {
             if (msg.Subject == _replyTo)
             {
-                _completionSource.SetResult(msg);
+                _completionSource.TrySetResult(msg);
             }
             else
             {

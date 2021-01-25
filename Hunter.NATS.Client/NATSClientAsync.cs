@@ -123,6 +123,8 @@ namespace Hunter.NATS.Client
 
                 _info = await ConnectRequestAsync();
 
+                _info = await ConnectRequestAsync();
+
                 await SubscriptionMessageAsync();
             }
 
