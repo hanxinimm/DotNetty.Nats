@@ -19,8 +19,6 @@ namespace Hunter.STAN.Client
             _manualResetEvent.WaitOne();
             _manualResetEvent.Reset();
 
-            await Task.Delay(TimeSpan.FromSeconds(15));
-
             _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
 
             if (_connectionState == STANConnectionState.Connected)
