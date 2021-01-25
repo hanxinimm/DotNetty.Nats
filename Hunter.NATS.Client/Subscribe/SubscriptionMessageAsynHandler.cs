@@ -33,9 +33,9 @@ namespace Hunter.NATS.Client
 
         protected override void MessageHandler(MessagePacket msg)
         {
-            Task.Factory.StartNew(async o =>
+            Task.Factory.StartNew(async _msg =>
             {
-                await _messageHandler(PackMsgContent(msg));
+                await _messageHandler(PackMsgContent((MessagePacket)_msg));
             }, 
             msg, 
             default, 

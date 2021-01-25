@@ -14,7 +14,8 @@ namespace Hunter.NATS.Client
     {
         public async Task ConnectAsync()
         {
-            await _semaphoreSlim.WaitAsync();
+            _manualResetEvent.WaitOne();
+            _manualResetEvent.Reset();
 
             _logger.LogInformation($"开始连接Nats客户端 客户端编号 {_clientId}");
 
@@ -32,16 +33,20 @@ namespace Hunter.NATS.Client
                 {
                     await ExecuteConnectAsync();
                 }
+
+                _manualResetEvent.Set();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"连接Nats客户端异常 客户端编号 {_clientId}");
             }
             finally
             {
-                _semaphoreSlim.Release(100);
+                _logger.LogInformation($"结束连接Nats客户端 客户端编号 {_clientId}");
             }
-
-            _logger.LogInformation($"结束连接Nats客户端 客户端编号 {_clientId}");
         }
 
-        public async Task<bool> CheckConnectAsync()
+        public bool CheckConnect()
         {
             if (_connectionState == NATSConnectionState.Connected)
             {
@@ -50,7 +55,7 @@ namespace Hunter.NATS.Client
 
             _logger.LogInformation($"开始等待Nats客户端连接 客户端编号 {_clientId}");
 
-            await _semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(15));
+            _manualResetEvent.WaitOne(TimeSpan.FromSeconds(15));
 
             if (_connectionState == NATSConnectionState.Connected)
             {
@@ -66,28 +71,21 @@ namespace Hunter.NATS.Client
 
         private async Task ReconnectAsync()
         {
-            try
-            {
-                int retryCount = 0;
+            int retryCount = 0;
 
-                while (true)
+            while (true)
+            {
+                try
                 {
-                    try
-                    {
-                        await ExecuteConnectAsync();
+                    await ExecuteConnectAsync();
 
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"NATS 连接服务器异常 第 {++retryCount} 次尝试");
-                        await Task.Delay(TimeSpan.FromSeconds(3));
-                    }
+                    break;
                 }
-            }
-            finally
-            {
-                _semaphoreSlim.Release();
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"NATS 连接服务器异常 第 {++retryCount} 次尝试");
+                    await Task.Delay(TimeSpan.FromSeconds(3));
+                }
             }
         }
 
@@ -164,7 +162,7 @@ namespace Hunter.NATS.Client
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
 
-            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
+            if (!CheckConnect()) throw new NATSConnectionFailureException();
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -253,7 +251,7 @@ namespace Hunter.NATS.Client
 
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
-            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
+            if (!CheckConnect()) throw new NATSConnectionFailureException();
 
             var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
@@ -270,7 +268,7 @@ namespace Hunter.NATS.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
+            if (!CheckConnect()) throw new NATSConnectionFailureException();
 
             var Packet = new PublishPacket(subject, data);
 
@@ -284,7 +282,7 @@ namespace Hunter.NATS.Client
 
         public async Task PingAsync()
         {
-            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
+            if (!CheckConnect()) throw new NATSConnectionFailureException();
 
             var Packet = new PingPacket();
 
@@ -293,7 +291,7 @@ namespace Hunter.NATS.Client
 
         public async Task PongAsync()
         {
-            if (!await CheckConnectAsync()) throw new NATSConnectionFailureException();
+            if (!CheckConnect()) throw new NATSConnectionFailureException();
 
             var Packet = new PongPacket();
 
@@ -302,7 +300,7 @@ namespace Hunter.NATS.Client
 
         public async ValueTask DisposeAsync()
         {
-            await _semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(20));
+            _manualResetEvent.WaitOne(TimeSpan.FromSeconds(20));
 
             _logger.LogWarning($"开始释放Nats客户端 客户端编号 {_clientId}");
 
@@ -319,7 +317,7 @@ namespace Hunter.NATS.Client
 
             _logger.LogWarning($"结束释放Nats客户端 客户端编号 {_clientId}");
 
-            _semaphoreSlim.Release();
+            _manualResetEvent.Set();
         }
     }
 }

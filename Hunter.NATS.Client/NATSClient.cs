@@ -68,7 +68,7 @@ namespace Hunter.NATS.Client
         /// <summary>
         /// 限制并发线程
         /// </summary>
-        private readonly SemaphoreSlim _semaphoreSlim;
+        private readonly ManualResetEvent _manualResetEvent;
 
         private static readonly Regex _publishSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
         private static readonly Regex _subscribeSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
@@ -80,7 +80,7 @@ namespace Hunter.NATS.Client
             _options = options;
             _clientId = _options.ClientId;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
-            _semaphoreSlim = new SemaphoreSlim(1);
+            _manualResetEvent = new ManualResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
         }
@@ -126,7 +126,8 @@ namespace Hunter.NATS.Client
 
         private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
         {
-            await _semaphoreSlim.WaitAsync();
+            _manualResetEvent.WaitOne();
+            _manualResetEvent.Reset();
 
             _connectionState = NATSConnectionState.Reconnecting;
 
@@ -164,7 +165,7 @@ namespace Hunter.NATS.Client
                 _logger.LogWarning("NATS 完成重新连接");
             }
 
-            _semaphoreSlim.Release();
+            _manualResetEvent.Set();
         }
 
     }

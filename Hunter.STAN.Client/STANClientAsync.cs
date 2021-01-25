@@ -865,6 +865,8 @@ namespace Hunter.STAN.Client
             _connectionState = STANConnectionState.Disconnected;
 
             _logger.LogWarning($"结束释放Stan客户端 客户端编号 {_clientId}");
+
+            _manualResetEvent.Set();
         }
     }
 }
