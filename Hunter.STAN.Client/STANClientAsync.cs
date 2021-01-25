@@ -115,21 +115,21 @@ namespace Hunter.STAN.Client
             }
 
 
-            _logger.LogDebug("STAN 开始连接频道");
+            _logger.LogInformation("STAN 开始连接频道");
 
             _channel = await _bootstrap.ConnectAsync(ClusterNode);
 
-            _logger.LogDebug("STAN 开始订阅心跳箱");
+            _logger.LogInformation("STAN 开始订阅心跳箱");
 
             await SubscribeHeartBeatInboxAsync();
 
-            _logger.LogDebug("STAN 完成订阅心跳箱");
+            _logger.LogInformation("STAN 完成订阅心跳箱");
 
-            _logger.LogDebug("STAN 开始订阅答复箱");
+            _logger.LogInformation("STAN 开始订阅答复箱");
 
             await SubscribeReplyInboxAsync();
 
-            _logger.LogDebug("STAN 完成订阅答复箱");
+            _logger.LogInformation("STAN 完成订阅答复箱");
 
 
             if (_connectionState == STANConnectionState.Reconnecting)
@@ -140,30 +140,30 @@ namespace Hunter.STAN.Client
                 {
                     _logger.LogError($"STAN 连接不再有效 错误:{pingResponse.Error}");
 
-                    _logger.LogDebug("STAN 开始客户端连接请求");
+                    _logger.LogInformation("STAN 开始客户端连接请求");
 
                     _config = await ConnectRequestAsync();
 
-                    _logger.LogDebug("STAN 完成客户端连接请求");
+                    _logger.LogInformation("STAN 完成客户端连接请求");
                 }
 
-                _logger.LogDebug("STAN 开始订阅之前订阅的消息");
+                _logger.LogInformation("STAN 开始订阅之前订阅的消息");
 
                 await SubscriptionMessageAsync();
 
-                _logger.LogDebug("STAN 完成订阅之前订阅的消息");
+                _logger.LogInformation("STAN 完成订阅之前订阅的消息");
             }
             else
             {
-                _logger.LogDebug("STAN 开始客户端连接请求");
+                _logger.LogInformation("STAN 开始客户端连接请求");
 
                 _config = await ConnectRequestAsync();
 
-                _logger.LogDebug("STAN 完成客户端连接请求");
+                _logger.LogInformation("STAN 完成客户端连接请求");
 
             }
 
-            _logger.LogDebug("STAN 完成连接频道");
+            _logger.LogInformation("STAN 完成连接频道");
 
             _connectionState = STANConnectionState.Connected;
         }
