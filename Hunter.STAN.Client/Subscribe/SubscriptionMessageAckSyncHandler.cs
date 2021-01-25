@@ -36,12 +36,13 @@ namespace Hunter.STAN.Client
 
         protected override void MessageHandler(MsgProtoPacket msg, Func<STANSubscriptionConfig, MsgProtoPacket, bool, Task> ackCallback)
         {
-            Task.Factory.StartNew(async o =>
+            Task.Factory.StartNew(async _msg =>
             {
                 try
                 {
-                    var isAck = _messageHandler(PackMsgContent(msg));
-                    await ackCallback(_subscriptionConfig, msg, isAck);
+                    var current_msg = _msg as MsgProtoPacket;
+                    var isAck = _messageHandler(PackMsgContent(current_msg));
+                    await ackCallback(_subscriptionConfig, current_msg, isAck);
                 }
                 catch (Exception ex)
                 {
