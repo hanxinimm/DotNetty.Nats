@@ -20,9 +20,6 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
 
-            await Task.Delay(TimeSpan.FromSeconds(10));
-
-
             if (_connectionState == STANConnectionState.Connected)
             {
                 _logger.LogError($"Stan客户端已经连接 客户端编号 {_clientId}");
