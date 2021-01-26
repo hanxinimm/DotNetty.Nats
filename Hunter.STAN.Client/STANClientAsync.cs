@@ -36,10 +36,7 @@ namespace Hunter.STAN.Client
             {
                 try
                 {
-                    if (_channel == null)
-                    {
-                        await ExecuteConnectAsync();
-                    }
+                    await ExecuteConnectAsync();
 
                     _logger.LogInformation($"结束连接Stan客户端 客户端编号 {_clientId}");
 

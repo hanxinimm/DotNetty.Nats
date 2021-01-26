@@ -78,7 +78,7 @@ namespace TestSTANClient
 
             await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
-            client.ConnectAsync();
+            await client.ConnectAsync();
 
             //await client.DisposeAsync();
 
