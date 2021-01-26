@@ -69,7 +69,7 @@ namespace Hunter.STAN.Client
                 return true;
             }
 
-            _logger.LogWarning($"Stan客户端未能正常连接 客户端编号 {_clientId}");
+            _logger.LogWarning($"Stan客户端未能正常连接 当前状态 {_connectionState} 客户端编号 {_clientId}");
 
             return false;
         }
@@ -137,9 +137,9 @@ namespace Hunter.STAN.Client
             {
                 var pingResponse = await ConnectPingAsync();
 
-                if (!string.IsNullOrEmpty(pingResponse.Error))
+                if (pingResponse == null || !string.IsNullOrEmpty(pingResponse.Error))
                 {
-                    _logger.LogError($"STAN 连接不再有效 错误:{pingResponse.Error}");
+                    _logger.LogError($"STAN 连接不再有效 错误:{pingResponse?.Error}");
 
                     _logger.LogInformation("STAN 开始客户端连接请求");
 
@@ -245,13 +245,20 @@ namespace Hunter.STAN.Client
 
             await _channel.WriteAndFlushAsync(Packet);
 
+            var ConnectResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                ConnectPingResponseReady.TrySetResult(null);
+            });
+
             var ConnectPingResponse = await ConnectPingResponseReady.Task;
+
+            await ConnectResponseCancellationToken.DisposeAsync();
 
             _channel.Pipeline.Remove(Handler);
 
             _logger.LogDebug("结束Ping消息服务器");
 
-            return ConnectPingResponse.Message;
+            return ConnectPingResponse?.Message;
         }
 
         private async Task SubscribeReplyInboxAsync()

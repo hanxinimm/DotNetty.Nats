@@ -67,7 +67,7 @@ namespace Hunter.NATS.Client
                 return true;
             }
 
-            _logger.LogWarning($"Nats客户端未能正常连接 客户端编号 {_clientId}");
+            _logger.LogWarning($"Nats客户端未能正常连接 当前状态 {_connectionState} 客户端编号 {_clientId}");
 
             return false;
         }

@@ -78,7 +78,7 @@ namespace TestSTANClient
 
             await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
-            await client.ConnectAsync();
+            client.ConnectAsync();
 
             //await client.DisposeAsync();
 
@@ -90,11 +90,13 @@ namespace TestSTANClient
             //await client.ConnectAsync();
 
 
-                //client.ConnectAsync();
+            //client.ConnectAsync();
 
-                #region 无用代码
+            #region 无用代码
+            Console.ReadLine();
 
-                for (int x = 0; x < 2; x++)//x是压测多少秒
+
+            for (int x = 0; x < 2; x++)//x是压测多少秒
             {
                 for (int j = 0; j < 4; j++)//j是并发数
                 {
@@ -251,12 +253,12 @@ namespace TestSTANClient
                 var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 //client.Publish("test3", Testbytes);
 
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < 30; j++)
                 {
 
-                    await Task.Factory.StartNew(async () =>
+                     Task.Factory.StartNew(async () =>
                     {
-                        await client.PublishAsync("OrderPlaced", Testbytes);
+                        client.PublishAsync("OrderPlaced", Testbytes);
                     });
 
                 }
