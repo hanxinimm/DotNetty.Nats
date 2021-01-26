@@ -30,22 +30,28 @@ namespace Hunter.STAN.Client
 
             _connectionState = STANConnectionState.Connecting;
 
-            try
-            {
-                if (_channel == null)
-                {
-                    await ExecuteConnectAsync();
-                }
+            int retryCount = 0;
 
-                _manualResetEvent.Set();
-            }
-            catch (Exception ex)
+            while (true)
             {
-                _logger.LogError(ex, $"连接Stan客户端异常 客户端编号 {_clientId}");
-            }
-            finally
-            {
-                _logger.LogInformation($"结束连接Stan客户端 客户端编号 {_clientId}");
+                try
+                {
+                    if (_channel == null)
+                    {
+                        await ExecuteConnectAsync();
+                    }
+
+                    _logger.LogInformation($"结束连接Stan客户端 客户端编号 {_clientId}");
+
+                    _manualResetEvent.Set();
+
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"连接Stan客户端异常 客户端编号 {_clientId} 第 {++retryCount} 次尝试");
+                    await Task.Delay(TimeSpan.FromSeconds(3));
+                }
             }
         }
 
