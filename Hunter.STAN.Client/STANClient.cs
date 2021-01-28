@@ -148,15 +148,17 @@ namespace Hunter.STAN.Client
             _manualResetEvent.WaitOne();
             _manualResetEvent.Reset();
 
-            _connectionState = STANConnectionState.Reconnecting;
 
             if (IsChannelInactive)
             {
+
                 _logger.LogWarning("STAN 开始重新连接");
 
                 try
                 {
                     _logger.LogDebug("STAN 开始尝试重新连接");
+
+                    _connectionState = STANConnectionState.Reconnecting;
 
                     await ReconnectAsync();
 

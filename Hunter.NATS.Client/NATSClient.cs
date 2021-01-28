@@ -129,37 +129,24 @@ namespace Hunter.NATS.Client
             _manualResetEvent.WaitOne();
             _manualResetEvent.Reset();
 
-            _connectionState = NATSConnectionState.Reconnecting;
-
             if (IsChannelInactive)
             {
                 _logger.LogWarning("NATS 开始重新连接");
 
-
-                while (true)
+                try
                 {
-                    try
-                    {
-                        _logger.LogDebug("NATS 开始尝试重新连接");
+                    _logger.LogDebug("NATS 开始尝试重新连接");
 
-                        if (_connectionState == NATSConnectionState.Reconnecting)
-                        {
-                            await ReconnectAsync();
-                        }
-                        else
-                        {
-                            _logger.LogWarning("NATS 连接状态发生改变,停止重试");
-                        }
+                    _connectionState = NATSConnectionState.Reconnecting;
 
-                        _logger.LogDebug("NATS 结束尝试重新连接");
+                    await ReconnectAsync();
 
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "NATS 尝试重新连接异常");
-                        await Task.Delay(TimeSpan.FromSeconds(3));
-                    }
+                    _logger.LogDebug("NATS 结束尝试重新连接");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "NATS 尝试重新连接异常");
+                    await Task.Delay(TimeSpan.FromSeconds(3));
                 }
 
                 _logger.LogWarning("NATS 完成重新连接");
