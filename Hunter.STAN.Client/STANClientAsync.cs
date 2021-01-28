@@ -199,12 +199,12 @@ namespace Hunter.STAN.Client
 
             _channel.Pipeline.Remove(Handler);
 
+            if (ConnectResponse == null) throw new StanConnectRequestException();
+
             if (!string.IsNullOrEmpty(ConnectResponse.Message.Error))
             {
                 _logger.LogError("STAN 连接请求发生异常 {0}", ConnectResponse.Message.Error);
             }
-
-            if (ConnectResponse == null) throw new StanConnectRequestException();
 
             return new STANConnectionConfig(
                 ConnectId,
