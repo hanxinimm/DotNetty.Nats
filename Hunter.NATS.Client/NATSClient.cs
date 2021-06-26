@@ -7,9 +7,12 @@ using DotNetty.Transport.Channels.Sockets;
 using Hunter.NATS.Client.Handlers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Timeout;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,6 +73,16 @@ namespace Hunter.NATS.Client
         /// </summary>
         private readonly ManualResetEvent _manualResetEvent;
 
+        /// <summary>
+        /// 连接故障策略
+        /// </summary>
+        private readonly AsyncPolicy _connectPolicy;
+
+        /// <summary>
+        /// 执行故障策略
+        /// </summary>
+        private readonly AsyncPolicy _policy;
+
         private static readonly Regex _publishSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
         private static readonly Regex _subscribeSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
 
@@ -83,6 +96,64 @@ namespace Hunter.NATS.Client
             _manualResetEvent = new ManualResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
+
+            #region Connect;
+
+            //重试
+            var connectPolicyRetry = Policy
+                .Handle<ConnectException>()
+                .Or<SocketException>()
+                .Or<TimeoutException>()
+                .WaitAndRetryAsync(3,
+                (retryAttempt) =>
+                {
+                    logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    return TimeSpan.FromSeconds(retryAttempt);
+                },
+                (ex, retrySecond, context) =>
+                {
+                    logger.LogError(ex, $"连接Stan客户端异常 客户端标识{_clientId}  将在 {retrySecond} 秒后重试");
+                });
+
+            //短路保护
+            var connectPolicyBreaker = Policy
+                .Handle<ConnectException>()
+                .Or<TimeoutException>()
+                .Or<SocketException>()
+                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
+
+            _connectPolicy = Policy.WrapAsync(connectPolicyRetry, connectPolicyBreaker);
+
+            #endregion;
+
+            #region Execute;
+
+            //重试
+            var policyRetry = Policy
+                .Handle<TimeoutRejectedException>()
+                .Or<TimeoutException>()
+                .WaitAndRetryAsync(3,
+                (retryAttempt) =>
+                {
+                    logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    return TimeSpan.FromSeconds(retryAttempt);
+                },
+                (ex, retrySecond, context) =>
+                {
+                    logger.LogError(ex, $"重新执行当前命令 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
+                });
+
+            //超时
+            var policyTimeout = Policy.TimeoutAsync(10, TimeoutStrategy.Pessimistic);
+
+            //短路保护
+            var policyBreaker = Policy.Handle<TimeoutRejectedException>()
+                    .CircuitBreakerAsync(50, TimeSpan.FromSeconds(15))
+                    .WrapAsync(policyTimeout);
+
+            _policy = Policy.WrapAsync(policyRetry, policyBreaker);
+
+            #endregion;
         }
 
         public NATSClient(
@@ -133,21 +204,7 @@ namespace Hunter.NATS.Client
             {
                 _logger.LogWarning("NATS 开始重新连接");
 
-                try
-                {
-                    _logger.LogDebug("NATS 开始尝试重新连接");
-
-                    _connectionState = NATSConnectionState.Reconnecting;
-
-                    await ReconnectAsync();
-
-                    _logger.LogDebug("NATS 结束尝试重新连接");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "NATS 尝试重新连接异常");
-                    await Task.Delay(TimeSpan.FromSeconds(3));
-                }
+                await _connectPolicy.ExecuteAsync(ExecuteConnectAsync);
 
                 _logger.LogWarning("NATS 完成重新连接");
             }

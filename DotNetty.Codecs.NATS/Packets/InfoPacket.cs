@@ -50,6 +50,31 @@ namespace DotNetty.Codecs.NATS.Packets
         public long MaxPayloadCapacity { get; set; }
 
         /// <summary>
+        /// 最大的内存。
+        /// </summary>
+        [DataMember(Name = "max_memory")]
+        public long MaxMemory { get; set; }
+
+        /// <summary>
+        /// 最大的存储。
+        /// </summary>
+        [DataMember(Name = "max_storage")]
+        public long MaxStorage { get; set; }
+
+        /// <summary>
+        /// 最大的流数量。
+        /// </summary>
+        [DataMember(Name = "max_streams")]
+        public long MaxStreams { get; set; }
+
+        /// <summary>
+        /// 最大的消费者数量。
+        /// </summary>
+        [DataMember(Name = "max_consumers")]
+        public long MaxConsumers { get; set; }
+
+
+        /// <summary>
         /// 如果已设置，则客户端应尝试在连接时进行身份验证。
         /// </summary>
         [DataMember(Name = "auth_required")]
@@ -68,7 +93,31 @@ namespace DotNetty.Codecs.NATS.Packets
         /// 客户端可以连接到的服务器URL的可选列表。
         /// </summary>
         [DataMember(Name = "connect_urls")]
-        public string[] ClusterRoutes { get; set; }
+        public List<string> ClusterRoutes { get; set; }
+
+        /// <summary>
+        /// 头部
+        /// </summary>
+        [DataMember(Name = "headers")]
+        public bool Headers { get; set; }
+
+        /// <summary>
+        /// JetStream 流
+        /// </summary>
+        [DataMember(Name = "jetstream")]
+        public bool JetStream { get; set; }
+
+        /// <summary>
+        /// 客户端编号
+        /// </summary>
+        [DataMember(Name = "client_id")]
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// 客户端编号
+        /// </summary>
+        [DataMember(Name = "client_ip")]
+        public string ClientIP { get; set; }
 
         public static InfoPacket CreateFromJson(string json)
         {

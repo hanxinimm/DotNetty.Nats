@@ -27,38 +27,13 @@ namespace Hunter.NATS.Client
 
             _connectionState = NATSConnectionState.Connecting;
 
-            int retryCount = 0;
+            await _connectPolicy.ExecuteAsync((_) => ExecuteConnectAsync(), cancellationToken);
 
-            while (true)
-            {
-
-                try
-                {
-                    if (cancellationToken != null)
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                    await ExecuteConnectAsync();
-
-                    _logger.LogInformation($"结束连接Nats客户端 客户端编号 {_clientId}");
-
-                    _manualResetEvent.Set();
-
-                    break;
-                }
-                catch (OperationCanceledException oex)
-                {
-                    _logger.LogError(oex, $"连接Nats客户端被取消 客户端编号 {_clientId} 第 {++retryCount} 次尝试");
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"连接Nats客户端异常 客户端编号 {_clientId} 第 {++retryCount} 次尝试");
-                    await Task.Delay(TimeSpan.FromSeconds(3));
-                }
-            }
+            _manualResetEvent.Set();
         }
+    
 
-        public bool CheckConnect()
+        public async Task<bool> CheckConnectAsync()
         {
             if (_connectionState == NATSConnectionState.Connected)
             {
@@ -67,7 +42,7 @@ namespace Hunter.NATS.Client
 
             _logger.LogInformation($"开始等待Nats客户端连接 客户端编号 {_clientId}");
 
-            _manualResetEvent.WaitOne(TimeSpan.FromSeconds(15));
+            await ConnectAsync();
 
             if (_connectionState == NATSConnectionState.Connected)
             {
@@ -78,27 +53,6 @@ namespace Hunter.NATS.Client
             _logger.LogWarning($"Nats客户端未能正常连接 当前状态 {_connectionState} 客户端编号 {_clientId}");
 
             return false;
-        }
-
-
-        private async Task ReconnectAsync()
-        {
-            int retryCount = 0;
-
-            while (true)
-            {
-                try
-                {
-                    await ExecuteConnectAsync();
-
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"NATS 连接服务器异常 第 {++retryCount} 次尝试");
-                    await Task.Delay(TimeSpan.FromSeconds(3));
-                }
-            }
         }
 
         private async Task ExecuteConnectAsync()
@@ -174,13 +128,23 @@ namespace Hunter.NATS.Client
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
 
-            if (!CheckConnect()) throw new NATSConnectionFailureException();
+            return await _policy.ExecuteAsync(async () =>
+            {
+                await CheckConnectAsync();
+                return await InternalSubscribeAsync(subject, queueGroup, messageHandlerSetup, maxMsg, subscribeId);
+            });
+        }
 
+        
+
+        public async Task<string> InternalSubscribeAsync(string subject, string queueGroup,
+            Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
+        {
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
             _logger.LogDebug($"设置订阅消息队列订阅编号 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
-            var SubscriptionConfig = new NATSSubscriptionConfig(subject, SubscribeId, queueGroup,  maxMsg);
+            var SubscriptionConfig = new NATSSubscriptionConfig(subject, SubscribeId, queueGroup, maxMsg);
 
             //处理订阅响应的管道
             var messageHandler = messageHandlerSetup(SubscriptionConfig);
@@ -263,11 +227,14 @@ namespace Hunter.NATS.Client
 
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
-            if (!CheckConnect()) throw new NATSConnectionFailureException();
+            await _policy.ExecuteAsync(async () =>
+            {
+                await CheckConnectAsync();
 
-            var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
+                var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
-            await _channel.WriteAndFlushAsync(UnSubscribePacket);
+                await _channel.WriteAndFlushAsync(UnSubscribePacket);
+            });
         }
 
         //TODO:待完善逻辑，增加消息队列服务器连接断开失败后的发送消息锁，和重连消息队列发送机制
@@ -280,11 +247,14 @@ namespace Hunter.NATS.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            if (!CheckConnect()) throw new NATSConnectionFailureException();
+            await _policy.ExecuteAsync(async () =>
+            {
+                await CheckConnectAsync();
 
-            var Packet = new PublishPacket(subject, data);
+                var Packet = new PublishPacket(subject, data);
 
-            await _channel.WriteAndFlushAsync(Packet);
+                await _channel.WriteAndFlushAsync(Packet);
+            });
         }
 
         protected void InfoAsync(InfoPacket info)
@@ -294,24 +264,31 @@ namespace Hunter.NATS.Client
 
         public async Task PingAsync()
         {
-            if (!CheckConnect()) throw new NATSConnectionFailureException();
+            await _policy.ExecuteAsync(async () =>
+            {
+                await CheckConnectAsync();
 
-            var Packet = new PingPacket();
+                var Packet = new PingPacket();
 
-            await _channel.WriteAndFlushAsync(Packet);
+                await _channel.WriteAndFlushAsync(Packet);
+            });
         }
 
         public async Task PongAsync()
         {
-            if (!CheckConnect()) throw new NATSConnectionFailureException();
+            await _policy.ExecuteAsync(async () =>
+            {
+                await CheckConnectAsync();
 
-            var Packet = new PongPacket();
+                var Packet = new PongPacket();
 
-            await _channel.WriteAndFlushAsync(Packet);
+                await _channel.WriteAndFlushAsync(Packet);
+            });
         }
 
         public async ValueTask DisposeAsync()
         {
+            //TODO:待完善逻辑
             _manualResetEvent.WaitOne(TimeSpan.FromSeconds(20));
 
             _logger.LogWarning($"开始释放Nats客户端 客户端编号 {_clientId}");

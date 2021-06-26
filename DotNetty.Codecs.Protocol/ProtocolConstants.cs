@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DotNetty.Codecs.Protocol
 {
-    public class ProtocolConstants
+    public static class ProtocolConstants
     {
         internal const byte FIELDDELIMITER_SPACES = 0x20;
 

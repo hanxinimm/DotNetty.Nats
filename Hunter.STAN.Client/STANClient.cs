@@ -116,7 +116,7 @@ namespace Hunter.STAN.Client
             _bootstrap = InitBootstrap();
             _logger = logger;
 
-            #region connect;
+            #region Connect;
 
             //重试
             var connectPolicyRetry = Policy
