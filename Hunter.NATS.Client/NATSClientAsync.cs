@@ -12,7 +12,7 @@ namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             _manualResetEvent.WaitOne();
             _manualResetEvent.Reset();
@@ -34,12 +34,20 @@ namespace Hunter.NATS.Client
 
                 try
                 {
+                    if (cancellationToken != null)
+                        cancellationToken.ThrowIfCancellationRequested();
+
                     await ExecuteConnectAsync();
-                    
+
                     _logger.LogInformation($"结束连接Nats客户端 客户端编号 {_clientId}");
 
                     _manualResetEvent.Set();
 
+                    break;
+                }
+                catch (OperationCanceledException oex)
+                {
+                    _logger.LogError(oex, $"连接Nats客户端被取消 客户端编号 {_clientId} 第 {++retryCount} 次尝试");
                     break;
                 }
                 catch (Exception ex)

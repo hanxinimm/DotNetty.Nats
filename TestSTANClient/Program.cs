@@ -65,8 +65,8 @@ namespace TestSTANClient
                 options.ClusterID = "main-cluster";
                 options.ClientId = $"Security-StatefulManagerService";
                 //options.Host = "mq.stan.yidujob.com";
-                options.Host = "127.0.0.1";
-                //options.Host = "192.168.4.131";
+                //options.Host = "127.0.0.1";
+                options.Host = "192.168.4.131";
                 //options.Host = "mq.stan.yd.com";
                 options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
@@ -78,8 +78,21 @@ namespace TestSTANClient
 
             await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
-            client.ConnectAsync();
+            Console.WriteLine("开始连接");
 
+            for (int ji = 0; ji < 10; ji++)
+            {
+
+                try
+                {
+
+                    await client.ConnectAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
             //await client.DisposeAsync();
 
             //await client.DisposeAsync();
@@ -93,71 +106,21 @@ namespace TestSTANClient
             //client.ConnectAsync();
 
             #region 无用代码
-            Console.ReadLine();
 
-
-            for (int x = 0; x < 2; x++)//x是压测多少秒
-            {
-                for (int j = 0; j < 4; j++)//j是并发数
-                {
-                    Task.Run(async () =>
-                    {
-                        //for (int i = 0; ; i++)
-                        for (int i = 0; i < 10; i++)//i是每个并发下执行多少次如果压测行为是起task的每秒钟的并发就是i*j
-                        {
-                            {
-                                DateTime tt1 = DateTime.Now;
-                                Task.Run(() =>
-                                {
-                                    
-                                    //压测行为
-                                    client.CheckConnect();
-
-                                    //client.DisposeAsync();
-
-                                });
-                                double time = (DateTime.Now - tt1).TotalMilliseconds;
-                                if (time < 1000)
-                                {
-                                    await Task.Delay((int)(1000 - time));
-                                }
-                            }
-                        }
-                    });
-                }
-                System.Threading.Thread.Sleep(1000);
-                break;
-            }
 
             #endregion;
 
 
-
-
             //client.TryConnectAsync();
 
-            //client.TryConnectAsync();
+            //Console.WriteLine("成功执行");
 
-            //await client.DisposeAsync();
+            //Console.ReadLine();
 
-            //await client.DisposeAsync();
-
-            //await client.DisposeAsync();
-
-            Console.WriteLine("成功执行");
-
-            Console.ReadLine();
-
-            client.CheckConnect();
-
-            //await client.DisposeAsync();
-
-            //await client.DisposeAsync();
-
-            //await client.ConnectAsync();
 
             Console.WriteLine("连接成功");
 
+            Console.ReadLine();
 
 
             //for (int i = 0; i < 100; i++)
@@ -184,7 +147,7 @@ namespace TestSTANClient
                 //    Console.WriteLine("ERROR ==========================================================");
                 //}
                 //lastValue = nowValue;
-                Console.WriteLine(sss);
+                Console.WriteLine("序号: {0} , 值 {1}", bytes.Sequence, sss);
             });
 
             //// 防止此主机进程终止，以使服务保持运行。
@@ -233,13 +196,21 @@ namespace TestSTANClient
 
             int i = 0;
 
-            var s0 = await client.ReadAsync("OrderPlaced", 1,10);
+            //try
+            //{
 
-            var s1 = await client.ReadAsync("OrderPlaced", 1, 10);
+            //    var s0 = await client.ReadAsync("OrderPlaced", 1, 10);
 
-            var s2 = await client.ReadAsync("OrderPlaced", 1, 10);
+            //    var s1 = await client.ReadAsync("OrderPlaced", 1, 10);
 
-            Console.ReadLine();
+            //    var s2 = await client.ReadAsync("OrderPlaced", 1, 10);
+            //}
+            //catch (Exception ex)
+            //{ 
+                
+            //}
+
+            //Console.ReadLine();
 
 
             while (true)
@@ -253,15 +224,15 @@ namespace TestSTANClient
                 var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 //client.Publish("test3", Testbytes);
 
-                for (int j = 0; j < 30; j++)
+                try
                 {
 
-                     Task.Factory.StartNew(async () =>
+                    for (int j = 0; j < 3; j++)
                     {
-                        client.PublishAsync("OrderPlaced", Testbytes);
-                    });
-
+                        await client.PublishAsync("OrderPlaced", Testbytes);
+                    }
                 }
+                catch { }
                 //if (Rlt == null) Console.WriteLine("发送失败");
                 
 

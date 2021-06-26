@@ -8,11 +8,15 @@ using DotNetty.Transport.Channels.Sockets;
 using Hunter.STAN.Client.Handlers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -88,6 +92,16 @@ namespace Hunter.STAN.Client
         /// </summary>
         private readonly ManualResetEvent _manualResetEvent;
 
+        /// <summary>
+        /// 连接故障策略
+        /// </summary>
+        private readonly AsyncPolicy _connectPolicy;
+
+        /// <summary>
+        /// 执行故障策略
+        /// </summary>
+        private readonly AsyncPolicy _policy;
+
         public STANClient(
             ILogger<STANClient> logger,
             STANOptions options)
@@ -101,6 +115,65 @@ namespace Hunter.STAN.Client
             _manualResetEvent = new ManualResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
+
+            #region connect;
+
+            //重试
+            var connectPolicyRetry = Policy
+                .Handle<ConnectException>()
+                .Or<SocketException>()
+                .Or<TimeoutException>()
+                .WaitAndRetryAsync(3,
+                (retryAttempt) =>
+                {
+                    logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    return TimeSpan.FromSeconds(retryAttempt);
+                },
+                (ex, retrySecond, context) =>
+                {
+                    logger.LogError(ex, $"连接Stan客户端异常 客户端标识{_clientId}  将在 {retrySecond} 秒后重试");
+                });
+
+            //短路保护
+            var connectPolicyBreaker = Policy
+                .Handle<ConnectException>()
+                .Or<TimeoutException>()
+                .Or<SocketException>()
+                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
+
+            _connectPolicy = Policy.WrapAsync(connectPolicyRetry, connectPolicyBreaker);
+
+            #endregion;
+
+            #region Execute;
+
+            //重试
+            var policyRetry = Policy
+                .Handle<TimeoutRejectedException>()
+                .Or<TimeoutException>()
+                .WaitAndRetryAsync(3,
+                (retryAttempt) =>
+                {
+                    logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    return TimeSpan.FromSeconds(retryAttempt);
+                },
+                (ex, retrySecond, context) =>
+                {
+                    logger.LogError(ex, $"重新执行当前命令 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
+                });
+
+            //超时
+            var policyTimeout = Policy.TimeoutAsync(10, TimeoutStrategy.Pessimistic);
+
+            //短路保护
+            var policyBreaker = Policy.Handle<TimeoutRejectedException>()
+                    .CircuitBreakerAsync(50, TimeSpan.FromSeconds(15))
+                    .WrapAsync(policyTimeout);
+
+            _policy = Policy.WrapAsync(policyRetry, policyBreaker);
+
+            #endregion;
+
         }
 
         public STANClient(
@@ -132,6 +205,8 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new PingPacketHandler(_logger));
                 channel.Pipeline.AddLast(new PongPacketHandler(_logger));
             }));
+
+            
         }
 
         private bool IsChannelInactive
@@ -145,6 +220,8 @@ namespace Hunter.STAN.Client
 
         private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
         {
+            _logger.LogInformation("STAN 尝试重新激活连接");
+
             _manualResetEvent.WaitOne();
             _manualResetEvent.Reset();
 
@@ -154,21 +231,7 @@ namespace Hunter.STAN.Client
 
                 _logger.LogWarning("STAN 开始重新连接");
 
-                try
-                {
-                    _logger.LogDebug("STAN 开始尝试重新连接");
-
-                    _connectionState = STANConnectionState.Reconnecting;
-
-                    await ReconnectAsync();
-
-                    _logger.LogDebug("STAN 结束尝试重新连接");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "STAN 尝试重新连接异常");
-                    await Task.Delay(TimeSpan.FromSeconds(3));
-                }
+                await _connectPolicy.ExecuteAsync(ExecuteConnectAsync);
 
                 _logger.LogWarning("STAN 完成重新连接");
             }
