@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public CreatePacket(string inboxId, string subject, JetStreamConfig jetStreamConfig)
         {
-            Subject = $"{Protocol.ProtocolSignatures.JSAPI_STREAM_CREATE}.{jetStreamConfig.Name}";
+            Subject = $"{ProtocolSignatures.JSAPI_STREAM_CREATE}.{jetStreamConfig.Name}";
             ReplyTo = $"{NATSJetStreamInboxs.CreateResponse}{inboxId}.{Guid.NewGuid():N}";
             Message = jetStreamConfig;
         }

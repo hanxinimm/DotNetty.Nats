@@ -10,7 +10,7 @@ namespace DotNetty.Codecs.NATS
     using Microsoft.Extensions.Logging;
     using System;
 
-    public sealed class NATSDecoder : ZeroAllocationByteDecoder
+    public class NATSDecoder : ZeroAllocationByteDecoder
     {
         public NATSDecoder(ILogger logger) : base(logger)
         { }
@@ -21,6 +21,15 @@ namespace DotNetty.Codecs.NATS
             IChannelHandlerContext context)
         {
             return DecodePacketInternal(buffer, packetSignature, context);
+        }
+
+        protected static string GetInbox(string subject)
+        {
+            if (subject.Length > 12)
+            {
+                return subject.Substring(0, 12);
+            }
+            return string.Empty;
         }
 
         NATSPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
@@ -60,7 +69,6 @@ namespace DotNetty.Codecs.NATS
 
         NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-
             if (TryGetStringFromFieldDelimiter(buffer, ProtocolSignatures.MSG, out var subject))
             {
                 if (TryGetStringFromFieldDelimiter(buffer, ProtocolSignatures.MSG, out var subscribeId))
@@ -69,20 +77,12 @@ namespace DotNetty.Codecs.NATS
 
                     if (TryGetStringFromNewlineDelimiter(buffer, ProtocolSignatures.MSG, out var payloadSizeString))
                     {
-
                         if (int.TryParse(payloadSizeString, out int payloadSize))
                         {
                             if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, ProtocolSignatures.MSG, out var payload))
                             {
+                                return DecodeMessagePacket(subject, subscribeId, ReplyTo, payloadSize, payload);
 
-                                return new MessagePacket
-                                {
-                                    Subject = subject,
-                                    SubscribeId = subscribeId,
-                                    ReplyTo = ReplyTo,
-                                    PayloadSize = payloadSize,
-                                    Payload = payload
-                                };
                             }
                         }
                     }
@@ -90,6 +90,18 @@ namespace DotNetty.Codecs.NATS
             }
 
             return null;
+        }
+
+        protected virtual NATSPacket DecodeMessagePacket(string subject, string subscribeId, string replyTo, int payloadSize, byte[] payload)
+        {
+            return new MessagePacket
+            {
+                Subject = subject,
+                SubscribeId = subscribeId,
+                ReplyTo = replyTo,
+                PayloadSize = payloadSize,
+                Payload = payload
+            };
         }
 
         NATSPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)

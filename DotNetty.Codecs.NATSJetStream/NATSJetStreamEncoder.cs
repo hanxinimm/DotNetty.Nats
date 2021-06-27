@@ -21,23 +21,18 @@ namespace DotNetty.Codecs.NATSJetStream
     {
         public static new NATSJetStreamEncoder Instance => new NATSJetStreamEncoder();
 
-        public static readonly byte[] STREAM_CREATE_BYTES;
-
-
-        static NATSJetStreamEncoder()
-        {
-            STREAM_CREATE_BYTES = Encoding.UTF8.GetBytes(Protocol.ProtocolSignatures.JSAPI_STREAM_CREATE);
-        }
-
         protected override bool DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
         {
-            switch (packet.PacketType)
+            if (!base.DoEncode(bufferAllocator, packet, output))
             {
-                case NATSPacketType.CREATE:
-                    EncodeJsonMessage(bufferAllocator, (CreatePacket)packet, output);
-                    break;
-                default:
-                    return false;
+                switch (packet.PacketType)
+                {
+                    case NATSPacketType.CREATE:
+                        EncodeJsonMessage(bufferAllocator, (CreatePacket)packet, output);
+                        break;
+                    default:
+                        return false;
+                }
             }
             return true;
         }
