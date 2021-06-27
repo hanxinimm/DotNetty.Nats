@@ -1,10 +1,10 @@
-﻿using Hunter.NATS.Client.JetStream;
+﻿using DotNetty.Codecs.NATSJetStream.JetStream;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Hunter.NATS.Client
+namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
     public class NATSJetStreamConfig
     {

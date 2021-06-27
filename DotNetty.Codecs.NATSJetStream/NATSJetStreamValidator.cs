@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Hunter.NATS.Client
+namespace DotNetty.Codecs.NATSJetStream
 {
     public class NATSJetStreamValidator
     {

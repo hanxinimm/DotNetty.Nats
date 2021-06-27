@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Hunter.NATS.Client.JetStream
+namespace DotNetty.Codecs.NATSJetStream.JetStream
 {
     public class ExternalStream
     {
@@ -14,7 +14,10 @@ namespace Hunter.NATS.Client.JetStream
 
         public override string ToString()
         {
-            return $"External {{ api='{ ApiPrefix }',deliver='{DeliverPrefix}'}}";
+            return $@"External {{ 
+                        api='{ ApiPrefix }'
+                        ,deliver='{DeliverPrefix}'
+                    }}";
         }
     }
 }

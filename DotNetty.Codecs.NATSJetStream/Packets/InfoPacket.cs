@@ -5,12 +5,12 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
 
-namespace DotNetty.Codecs.NATS.Packets
+namespace DotNetty.Codecs.NATSJetStream.Packets
 {
     [DataContract]
-    public class InfoPacket : NATSPacket
+    public class InfoPacket : NATSJetStreamPacket
     {
-        public override NATSPacketType PacketType => NATSPacketType.INFO;
+        public override NATSJetStreamPacketType PacketType => NATSJetStreamPacketType.INFO;
 
         #region BASE
 

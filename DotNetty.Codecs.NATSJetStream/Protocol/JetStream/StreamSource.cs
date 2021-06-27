@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Hunter.NATS.Client.JetStream
+namespace DotNetty.Codecs.NATSJetStream.JetStream
 {
     public class StreamSource
     {
@@ -17,19 +17,16 @@ namespace Hunter.NATS.Client.JetStream
         public string FilterSubject { get; set; }
         [JsonProperty("external")]
         public ExternalStream External { get; set; }
-        [JsonProperty("opt_start_seq")]
-        public string ObjectName { get; set; }
-
 
         public override string ToString()
         {
-            return ObjectName + "{" +
-                    "sourceName='" + Name + '\'' +
-                    ", startSeq=" + StartSequence +
-                    ", startTime=" + StartTime +
-                    ", filterSubject='" + FilterSubject + '\'' +
-                    ", " + External +
-                    '}';
+            return $@"StreamSource {{
+                        sourceName= '{Name}' 
+                        , startSeq={StartSequence}
+                        , startTime={StartTime}
+                        , filterSubject='{FilterSubject}'
+                        , external={External}
+                    }}";
         }
     }
 }
