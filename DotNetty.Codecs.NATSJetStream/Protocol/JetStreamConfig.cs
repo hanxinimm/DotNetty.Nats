@@ -6,7 +6,7 @@ using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
-    public class NATSJetStreamConfig
+    public class JetStreamConfig
     {
         // see builder for defaults
         [JsonProperty("name")]
@@ -46,7 +46,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("sources")]
         public List<StreamSource> Sources { get; private set; }
 
-        private NATSJetStreamConfig(
+        private JetStreamConfig(
             string name, 
             List<string> subjects, 
             RetentionPolicy retentionPolicy,
@@ -122,7 +122,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
          * @param jetStreamConfig an existing NATSJetStreamConfig
          * @return a stream configuration builder
          */
-        public static NATSJetStreamConfigBuilder Builder(NATSJetStreamConfig jetStreamConfig)
+        public static NATSJetStreamConfigBuilder Builder(JetStreamConfig jetStreamConfig)
         {
             return new NATSJetStreamConfigBuilder(jetStreamConfig);
         }
@@ -164,7 +164,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * Update Builder, useful if you need to update a configuration
              * @param sc the configuration to copy
              */
-            internal NATSJetStreamConfigBuilder(NATSJetStreamConfig jetStreamConfig)
+            internal NATSJetStreamConfigBuilder(JetStreamConfig jetStreamConfig)
             {
                 if (jetStreamConfig != null)
                 {
@@ -468,9 +468,9 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * Builds the ConsumerConfiguration
              * @return a consumer configuration.
              */
-            public NATSJetStreamConfig Build()
+            public JetStreamConfig Build()
             {
-                return new NATSJetStreamConfig(
+                return new JetStreamConfig(
                         Name,
                         Subjects,
                         RetentionPolicy,

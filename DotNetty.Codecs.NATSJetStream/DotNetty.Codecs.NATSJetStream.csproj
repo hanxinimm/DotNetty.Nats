@@ -9,6 +9,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
-  <Import Project="..\DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems" Label="Shared" />
+  <ItemGroup>
+    <ProjectReference Include="..\DotNetty.Codecs.NATS\DotNetty.Codecs.NATS.csproj" />
+  </ItemGroup>
 
 </Project>

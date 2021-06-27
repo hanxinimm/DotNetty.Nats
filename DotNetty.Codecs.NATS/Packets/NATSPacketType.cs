@@ -45,6 +45,14 @@ namespace DotNetty.Codecs.NATS.Packets
         /// <summary>
         /// Server	Indicates a protocol error. May cause client disconnect.
         /// </summary>
-        MINUS_ERR = 9
+        MINUS_ERR = 9,
+
+        #region JetStream
+
+        CREATE,
+
+        CREATE_RESPONSE,
+
+        #endregion;
     }
 }

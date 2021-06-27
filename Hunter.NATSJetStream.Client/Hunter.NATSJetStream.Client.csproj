@@ -1,7 +1,20 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATSJetStream\*.cs">
+      <Link>Codecs\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATSJetStream\Packets\*.cs">
+      <Link>Codecs\Packets\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
 
 </Project>

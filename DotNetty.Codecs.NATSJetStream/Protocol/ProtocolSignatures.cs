@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DotNetty.Codecs.Protocol
+namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
-    public class JetStreamProtocolSignatures
+    public class ProtocolSignatures
     {
         internal const string JS_PREFIX = "$JS.";
 

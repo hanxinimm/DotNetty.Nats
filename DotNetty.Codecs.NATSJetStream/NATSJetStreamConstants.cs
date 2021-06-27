@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DotNetty.Codecs.Protocol
+namespace DotNetty.Codecs.NATSJetStream
 {
-    public static class JetStreamConstants
+    public static class NATSJetStreamConstants
     {
         internal const string MSG_ID_HDR = "Nats-Msg-Id";
         internal const string EXPECTED_STREAM_HDR = "Nats-Expected-Stream";

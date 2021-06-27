@@ -12,7 +12,7 @@ namespace DotNetty.Codecs.NATS
     using DotNetty.Common.Utilities;
     using DotNetty.Transport.Channels;
 
-    public sealed class NATSEncoder : MessageToMessageEncoder<NATSPacket>
+    public class NATSEncoder : MessageToMessageEncoder<NATSPacket>
     {
         public static NATSEncoder Instance => new NATSEncoder();
 
@@ -44,10 +44,13 @@ namespace DotNetty.Codecs.NATS
         public override bool IsSharable => true;
 
 
-        protected override void Encode(IChannelHandlerContext context, NATSPacket message, List<object> output) => DoEncode(context.Allocator, message, output);
+        protected override void Encode(IChannelHandlerContext context, NATSPacket packet, List<object> output)
+        {
+            if (!DoEncode(context.Allocator, packet, output))
+                throw new ArgumentException("Unknown packet type: " + packet.PacketType, nameof(packet));
+        }
 
-
-        internal static void DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
+        protected virtual bool DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
         {
             switch (packet.PacketType)
             {
@@ -70,8 +73,9 @@ namespace DotNetty.Codecs.NATS
                     EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
                     break;
                 default:
-                    throw new ArgumentException("Unknown packet type: " + packet.PacketType, nameof(packet));
+                    return false;
             }
+            return true;
         }
 
         static void EncodeConnectMessage(IByteBufferAllocator bufferAllocator, ConnectPacket packet, List<object> output)
@@ -254,7 +258,7 @@ namespace DotNetty.Codecs.NATS
             }
         }
 
-        static byte[] EncodeStringInUtf8(string s)
+        protected static byte[] EncodeStringInUtf8(string s)
         {
             if (string.IsNullOrEmpty(s)) return EMPTY_BYTES;
             return Encoding.UTF8.GetBytes(s);

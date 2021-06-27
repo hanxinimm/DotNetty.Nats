@@ -101,9 +101,9 @@ namespace DotNetty.Codecs.NATSJetStream
 
         public static int ValidatePullBatchSize(int pullBatchSize)
         {
-            if (pullBatchSize < 1 || pullBatchSize > JetStreamConstants.MAX_PULL_SIZE)
+            if (pullBatchSize < 1 || pullBatchSize > NATSJetStreamConstants.MAX_PULL_SIZE)
             {
-                throw new ArgumentOutOfRangeException($"Pull Batch Size must be between 1 and {JetStreamConstants.MAX_PULL_SIZE} inclusive [{pullBatchSize}]");
+                throw new ArgumentOutOfRangeException($"Pull Batch Size must be between 1 and {NATSJetStreamConstants.MAX_PULL_SIZE} inclusive [{pullBatchSize}]");
             }
             return pullBatchSize;
         }

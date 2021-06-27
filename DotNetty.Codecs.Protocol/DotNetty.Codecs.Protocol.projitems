@@ -10,8 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ByteBufferExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)JetStreamConstants.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)JetStreamProtocolSignatures.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProtocolSignatures.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ParseState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProtocolPacket.cs" />
