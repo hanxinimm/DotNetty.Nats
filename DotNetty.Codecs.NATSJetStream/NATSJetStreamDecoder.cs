@@ -26,6 +26,8 @@ namespace DotNetty.Codecs.NATSJetStream
             {
                 case NATSJetStreamInboxs.CreateResponse:
                     return GetMessagePacket<CreateResponsePacket, CreateResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                case NATSJetStreamInboxs.InfoResponse:
+                    return GetMessagePacket<InfoResponsePacket, InfoResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 default:
                     return base.DecodeMessagePacket(subject, subscribeId, replyTo, payloadSize, payload);
             }

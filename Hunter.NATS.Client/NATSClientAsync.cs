@@ -1,9 +1,7 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.NATSJetStream.Packets;
-using DotNetty.Handlers.NATS;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -98,13 +96,13 @@ namespace Hunter.NATS.Client
             _connectionState = NATSConnectionState.Connected;
         }
 
-        private async Task<InfoPacket> ConnectRequestAsync()
+        private async Task<DotNetty.Codecs.NATS.Packets.InfoPacket> ConnectRequestAsync()
         {
             var Packet = _options.IsAuthentication ?
                 new ConnectPacket(_options.IsVerbose, false, false, _options.UserName, _options.Password, _clientId, null)
                 : new ConnectPacket(_options.IsVerbose, false, false, _clientId);
 
-            _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
+            _infoTaskCompletionSource = new TaskCompletionSource<DotNetty.Codecs.NATS.Packets.InfoPacket>();
 
             await _channel.WriteAndFlushAsync(Packet);
 
@@ -270,7 +268,7 @@ namespace Hunter.NATS.Client
             });
         }
 
-        protected void InfoAsync(InfoPacket info)
+        protected void InfoAsync(DotNetty.Codecs.NATS.Packets.InfoPacket info)
         {
             _infoTaskCompletionSource.TrySetResult(info);
         }

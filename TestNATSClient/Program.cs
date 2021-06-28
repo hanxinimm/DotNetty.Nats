@@ -103,7 +103,7 @@ namespace TestNATSClient
 
             await client.ConnectAsync();
 
-            await client.StreamCreateAsync(JetStreamConfig.Builder().SetName("TestAll").AddSubjects("ApiGateway.>", "Test2").Build());
+            await client.StreamInfoAsync("TestAll");
 
             var httpClient = new HttpClient();
             

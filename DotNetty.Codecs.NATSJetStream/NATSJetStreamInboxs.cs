@@ -10,5 +10,6 @@ namespace DotNetty.Codecs.NATSJetStream
         public const string Heartbeat = InboxPrefix + "NATS_HTBT.";
 
         public const string CreateResponse = InboxPrefix + "JTSM_CERE.";
+        public const string InfoResponse = InboxPrefix + "JTSM_IORE.";
     }
 }

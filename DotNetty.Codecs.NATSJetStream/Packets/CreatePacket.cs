@@ -19,6 +19,6 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
             Payload = payload;
         }
 
-        public override NATSPacketType PacketType => NATSPacketType.CREATE;
+        public override NATSPacketType PacketType => NATSPacketType.STREAM_CREATE;
     }
 }

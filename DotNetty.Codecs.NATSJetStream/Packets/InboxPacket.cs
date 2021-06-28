@@ -10,7 +10,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     public class InboxPacket : SubscribePacket
     {
         [IgnoreDataMember]
-        public override NATSPacketType PacketType => NATSPacketType.INBOX;
+        public override NATSPacketType PacketType => NATSPacketType.STREAM_INBOX;
 
         public InboxPacket(string id, string subject) : base(id, subject)
         {

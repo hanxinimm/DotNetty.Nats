@@ -16,7 +16,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         internal const string JSAPI_STREAM_CREATE = JSAPI_PREFIX + "STREAM.CREATE";
 
         // JSAPI_STREAM_UPDATE is the endpoint to update existing streams.
-        internal const string JSAPI_STREAM_UPDATE = JSAPI_PREFIX + "STREAM.UPDATE.%s";
+        internal const string JSAPI_STREAM_UPDATE = JSAPI_PREFIX + "STREAM.UPDATE";
 
         // JSAPI_STREAM_NAMES is the endpoint that will return a list of stream names
         internal const string JSAPI_STREAM_NAMES = JSAPI_PREFIX + "STREAM.NAMES";
@@ -25,7 +25,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         internal const string JSAPI_STREAM_LIST = JSAPI_PREFIX + "STREAM.LIST";
 
         // JSAPI_STREAM_INFO is the endpoint to get information on a stream.
-        internal const string JSAPI_STREAM_INFO = JSAPI_PREFIX + "STREAM.INFO.%s";
+        internal const string JSAPI_STREAM_INFO = JSAPI_PREFIX + "STREAM.INFO";
 
         // JSAPI_STREAM_DELETE is the endpoint to delete streams.
         internal const string JSAPI_STREAM_DELETE = JSAPI_PREFIX + "STREAM.DELETE.%s";

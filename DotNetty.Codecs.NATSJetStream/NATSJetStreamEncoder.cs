@@ -27,11 +27,14 @@ namespace DotNetty.Codecs.NATSJetStream
             {
                 switch (packet.PacketType)
                 {
-                    case NATSPacketType.INBOX:
+                    case NATSPacketType.STREAM_INBOX:
                         EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
                         break;
-                    case NATSPacketType.CREATE:
+                    case NATSPacketType.STREAM_CREATE:
                         EncodePublishMessage(bufferAllocator, (CreatePacket)packet, output);
+                        break;
+                    case NATSPacketType.STREAM_INFO:
+                        EncodePublishMessage(bufferAllocator, (Packets.InfoPacket)packet, output);
                         break;
                     default:
                         return false;

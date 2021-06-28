@@ -49,11 +49,15 @@ namespace DotNetty.Codecs.NATS.Packets
 
         #region JetStream
 
-        INBOX,
+        STREAM_INBOX,
 
-        CREATE,
+        STREAM_CREATE,
 
-        CREATE_RESPONSE,
+        STREAM_CREATE_RESPONSE,
+
+        STREAM_INFO,
+
+        STREAM_INFO_RESPONSE,
 
         #endregion;
     }
