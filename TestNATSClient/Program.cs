@@ -104,9 +104,11 @@ namespace TestNATSClient
 
             await client.ConnectAsync();
 
-            var streamList = await client.StreamListAsync();
+            //var streamList = await client.StreamListAsync();
 
-            var consumerCreate = await client.ConsumerCreateAsync(streamList.Streams.FirstOrDefault()?.Config.Name,
+            var streamNames = await client.StreamNamesAsync();
+
+            var consumerCreate = await client.ConsumerCreateAsync(streamNames.Streams.FirstOrDefault(),
                 ConsumerConfig.Builder().Build());
 
             var httpClient = new HttpClient();

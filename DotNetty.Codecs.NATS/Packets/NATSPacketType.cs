@@ -67,6 +67,14 @@ namespace DotNetty.Codecs.NATS.Packets
 
         STREAM_LIST_RESPONSE,
 
+        STREAM_NAMES,
+
+        STREAM_NAMES_RESPONSE,
+
+        STREAM_DELETE,
+
+        STREAM_DELETE_RESPONSE,
+
         CONSUMER_CREATE,
 
         CONSUMER_CREATE_RESPONSE,

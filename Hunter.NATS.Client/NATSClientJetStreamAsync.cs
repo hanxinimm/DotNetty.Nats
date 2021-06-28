@@ -47,7 +47,6 @@ namespace Hunter.NATS.Client
             return InfoResponse.Message;
         }
 
-
         public async Task<CreateResponse> StreamCreateAsync(JetStreamConfig jetStreamConfig)
         {
             var Packet = new CreatePacket(
@@ -80,6 +79,36 @@ namespace Hunter.NATS.Client
             return CreateResponse.Message;
         }
 
+        public async Task<NamesResponse> StreamNamesAsync()
+        {
+            var Packet = new NamesPacket(
+                _replyInboxId,
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new IterableRequest(), _jetStreamSetting)));
+
+            var NamesResponseReady = new TaskCompletionSource<NamesResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<NamesResponsePacket>(Packet.ReplyTo, NamesResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var NamesResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                NamesResponseReady.TrySetResult(null);
+            });
+
+            var NamesResponse = await NamesResponseReady.Task;
+
+            await NamesResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (NamesResponse == null) throw new ArgumentNullException();
+
+            return NamesResponse.Message;
+        }
 
         public async Task<ListResponse> StreamListAsync()
         {
