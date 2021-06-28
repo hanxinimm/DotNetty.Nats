@@ -55,9 +55,21 @@ namespace DotNetty.Codecs.NATS.Packets
 
         STREAM_CREATE_RESPONSE,
 
+        STREAM_UPDATE,
+
+        STREAM_UPDATE_RESPONSE,
+
         STREAM_INFO,
 
         STREAM_INFO_RESPONSE,
+
+        STREAM_LIST,
+
+        STREAM_LIST_RESPONSE,
+
+        CONSUMER_CREATE,
+
+        CONSUMER_CREATE_RESPONSE,
 
         #endregion;
     }

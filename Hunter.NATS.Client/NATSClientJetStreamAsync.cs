@@ -13,13 +13,44 @@ namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
-        public async Task<CreateResponse> StreamInfoAsync(string name)
+        public async Task<InfoResponse> StreamInfoAsync(string name)
         {
-            var ConnectId = Guid.NewGuid().ToString("N");
-
             var jetStreamConfig = JetStreamConfig.Builder().SetName(name).Build();
 
             var Packet = new InfoPacket(
+                _replyInboxId,
+                jetStreamConfig.Name,
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
+
+            var InfoResponseReady = new TaskCompletionSource<InfoResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<InfoResponsePacket>(Packet.ReplyTo, InfoResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var InfoResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                InfoResponseReady.TrySetResult(null);
+            });
+
+            var InfoResponse = await InfoResponseReady.Task;
+
+            await InfoResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (InfoResponse == null) throw new ArgumentNullException();
+
+            return InfoResponse.Message;
+        }
+
+
+        public async Task<CreateResponse> StreamCreateAsync(JetStreamConfig jetStreamConfig)
+        {
+            var Packet = new CreatePacket(
                 _replyInboxId,
                 jetStreamConfig.Name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
@@ -49,38 +80,74 @@ namespace Hunter.NATS.Client
             return CreateResponse.Message;
         }
 
-        public async Task<CreateResponse> StreamCreateAsync(JetStreamConfig jetStreamConfig)
+
+        public async Task<ListResponse> StreamListAsync()
         {
-            var ConnectId = Guid.NewGuid().ToString("N");
-
-            var Packet = new CreatePacket(
+            var Packet = new ListPacket(
                 _replyInboxId,
-                jetStreamConfig.Name,
-                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new IterableRequest(), _jetStreamSetting)));
 
-            var CreateResponseReady = new TaskCompletionSource<CreateResponsePacket>();
+            var ListResponseReady = new TaskCompletionSource<ListResponsePacket>();
 
-            var Handler = new ReplyPacketHandler<CreateResponsePacket>(Packet.ReplyTo, CreateResponseReady);
+            var Handler = new ReplyPacketHandler<ListResponsePacket>(Packet.ReplyTo, ListResponseReady);
 
             _channel.Pipeline.AddLast(Handler);
 
             await _channel.WriteAndFlushAsync(Packet);
 
-            var CreateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            var ListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
-                CreateResponseReady.TrySetResult(null);
+                ListResponseReady.TrySetResult(null);
             });
 
-            var CreateResponse = await CreateResponseReady.Task;
+            var ListResponse = await ListResponseReady.Task;
 
-            await CreateResponseCancellationToken.DisposeAsync();
+            await ListResponseCancellationToken.DisposeAsync();
 
             _channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
-            if (CreateResponse == null) throw new ArgumentNullException();
+            if (ListResponse == null) throw new ArgumentNullException();
 
-            return CreateResponse.Message;
+            return ListResponse.Message;
+        }
+
+
+        public Task<ConsumerCreateResponse> ConsumerCreateAsync(string streamName, ConsumerConfig consumerConfig)
+        {
+            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+        }
+
+        public async Task<ConsumerCreateResponse> ConsumerCreateAsync(ConsumerCreateRequest createRequest)
+        {
+            var Packet = new ConsumerCreatePacket(
+                _replyInboxId,
+                createRequest.Stream,
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(createRequest, _jetStreamSetting)));
+
+            var ConsumerCreateResponseReady = new TaskCompletionSource<ConsumerCreateResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<ConsumerCreateResponsePacket>(Packet.ReplyTo, ConsumerCreateResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var ConsumerCreateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                ConsumerCreateResponseReady.TrySetResult(null);
+            });
+
+            var ConsumerCreateResponse = await ConsumerCreateResponseReady.Task;
+
+            await ConsumerCreateResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (ConsumerCreateResponse == null) throw new ArgumentNullException();
+
+            return ConsumerCreateResponse.Message;
         }
     }
 }

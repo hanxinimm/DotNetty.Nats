@@ -23,15 +23,12 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DotNetty.Codecs.Protocol", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSTANSubscription", "TestSTANSubscription\TestSTANSubscription.csproj", "{BE6F479B-318D-46F3-B041-296811CA42B0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hunter.NATSJetStream.Client", "Hunter.NATSJetStream.Client\Hunter.NATSJetStream.Client.csproj", "{30AFF7FD-16EC-44AC-A62E-20090464283F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Codecs.NATSJetStream", "DotNetty.Codecs.NATSJetStream\DotNetty.Codecs.NATSJetStream.csproj", "{514F345D-1EE9-454C-9C6B-D119371B57AE}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{2775fc7f-ec86-4d6b-8727-086d007aed27}*SharedItemsImports = 13
 		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{31559577-d23b-4fb9-b366-06f1135d31a7}*SharedItemsImports = 5
-		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{44c677fd-25c7-45bd-8671-c53ac1155628}*SharedItemsImports = 5
 		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{af964607-e817-4a5e-a907-24f90fbfc030}*SharedItemsImports = 5
 		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{fbf1d840-08a3-4e81-bba1-5005f7cf65e3}*SharedItemsImports = 5
 	EndGlobalSection
@@ -76,10 +73,6 @@ Global
 		{BE6F479B-318D-46F3-B041-296811CA42B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE6F479B-318D-46F3-B041-296811CA42B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE6F479B-318D-46F3-B041-296811CA42B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{30AFF7FD-16EC-44AC-A62E-20090464283F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{30AFF7FD-16EC-44AC-A62E-20090464283F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{30AFF7FD-16EC-44AC-A62E-20090464283F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{30AFF7FD-16EC-44AC-A62E-20090464283F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{514F345D-1EE9-454C-9C6B-D119371B57AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{514F345D-1EE9-454C-9C6B-D119371B57AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{514F345D-1EE9-454C-9C6B-D119371B57AE}.Release|Any CPU.ActiveCfg = Release|Any CPU

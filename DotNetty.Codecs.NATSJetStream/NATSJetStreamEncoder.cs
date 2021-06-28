@@ -33,6 +33,15 @@ namespace DotNetty.Codecs.NATSJetStream
                     case NATSPacketType.STREAM_CREATE:
                         EncodePublishMessage(bufferAllocator, (CreatePacket)packet, output);
                         break;
+                    case NATSPacketType.STREAM_UPDATE:
+                        EncodePublishMessage(bufferAllocator, (UpdatePacket)packet, output);
+                        break;
+                    case NATSPacketType.STREAM_LIST:
+                        EncodePublishMessage(bufferAllocator, (ListPacket)packet, output);
+                        break;
+                    case NATSPacketType.CONSUMER_CREATE:
+                        EncodePublishMessage(bufferAllocator, (ConsumerCreatePacket)packet, output);
+                        break;
                     case NATSPacketType.STREAM_INFO:
                         EncodePublishMessage(bufferAllocator, (Packets.InfoPacket)packet, output);
                         break;

@@ -110,9 +110,9 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
          * Creates a builder for the stream configuration.
          * @return a stream configuration builder
          */
-        public static NATSJetStreamConfigBuilder Builder()
+        public static JetStreamConfigBuilder Builder()
         {
-            return new NATSJetStreamConfigBuilder();
+            return new JetStreamConfigBuilder();
         }
 
         /**
@@ -120,9 +120,9 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
          * @param jetStreamConfig an existing NATSJetStreamConfig
          * @return a stream configuration builder
          */
-        public static NATSJetStreamConfigBuilder Builder(JetStreamConfig jetStreamConfig)
+        public static JetStreamConfigBuilder Builder(JetStreamConfig jetStreamConfig)
         {
-            return new NATSJetStreamConfigBuilder(jetStreamConfig);
+            return new JetStreamConfigBuilder(jetStreamConfig);
         }
 
         /**
@@ -132,7 +132,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
          * <p>{@code new NATSJetStreamConfig.Builder().build()} will create a new ConsumerConfiguration.
          * 
          */
-        public class NATSJetStreamConfigBuilder
+        public class JetStreamConfigBuilder
         {
 
             private string Name;
@@ -156,13 +156,13 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             /**
              * Default Builder
              */
-            internal NATSJetStreamConfigBuilder() { }
+            internal JetStreamConfigBuilder() { }
 
             /**
              * Update Builder, useful if you need to update a configuration
              * @param sc the configuration to copy
              */
-            internal NATSJetStreamConfigBuilder(JetStreamConfig jetStreamConfig)
+            internal JetStreamConfigBuilder(JetStreamConfig jetStreamConfig)
             {
                 if (jetStreamConfig != null)
                 {
@@ -192,7 +192,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param name name of the stream.
              * @return the builder
              */
-            public NATSJetStreamConfigBuilder SetName(string name)
+            public JetStreamConfigBuilder SetName(string name)
             {
                 this.Name = name;
                 return this;
@@ -203,7 +203,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param subjects the stream's subjects
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetSubjects(params string[] subjects)
+            public JetStreamConfigBuilder SetSubjects(params string[] subjects)
             {
                 this.Subjects.Clear();
                 return AddSubjects(subjects);
@@ -214,7 +214,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param subjects the stream's subjects
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetSubjects(IEnumerable<string> subjects)
+            public JetStreamConfigBuilder SetSubjects(IEnumerable<string> subjects)
             {
                 this.Subjects.Clear();
                 return AddSubjects(subjects);
@@ -225,7 +225,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param subjects the stream's subjects
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder AddSubjects(params string[] subjects)
+            public JetStreamConfigBuilder AddSubjects(params string[] subjects)
             {
                 if (subjects != null)
                 {
@@ -245,7 +245,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param subjects the stream's subjects
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder AddSubjects(IEnumerable<string> subjects)
+            public JetStreamConfigBuilder AddSubjects(IEnumerable<string> subjects)
             {
                 if (subjects != null)
                 {
@@ -265,7 +265,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param policy the retention policy of the NATSJetStreamConfig
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetRetentionPolicy(RetentionPolicy policy)
+            public JetStreamConfigBuilder SetRetentionPolicy(RetentionPolicy policy)
             {
                 this.RetentionPolicy = policy;
                 return this;
@@ -276,7 +276,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param MaxConsumers the Maximum number of consumers
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetMaxConsumers(long maxConsumers)
+            public JetStreamConfigBuilder SetMaxConsumers(long maxConsumers)
             {
                 this.MaxConsumers = NATSJetStreamValidator.ValidateMaxConsumers(maxConsumers);
                 return this;
@@ -287,7 +287,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param MaxMsgs the Maximum number of messages
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetMaxMessages(long maxMsgs)
+            public JetStreamConfigBuilder SetMaxMessages(long maxMsgs)
             {
                 this.MaxMsgs = NATSJetStreamValidator.ValidateMaxMessages(maxMsgs);
                 return this;
@@ -298,7 +298,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param MaxBytes the Maximum number of bytes
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetMaxBytes(long maxBytes)
+            public JetStreamConfigBuilder SetMaxBytes(long maxBytes)
             {
                 this.MaxBytes = NATSJetStreamValidator.ValidateMaxBytes(maxBytes);
                 return this;
@@ -309,7 +309,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param MaxAge the Maximum message age
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetMaxAge(TimeSpan maxAge)
+            public JetStreamConfigBuilder SetMaxAge(TimeSpan maxAge)
             {
                 this.MaxAge = NATSJetStreamValidator.ValidateTimeSpanNotRequiredGtOrEqZero(maxAge);
                 return this;
@@ -320,7 +320,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param MaxMsgSize the Maximum message size
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetMaxMsgSize(long maxMsgSize)
+            public JetStreamConfigBuilder SetMaxMsgSize(long maxMsgSize)
             {
                 this.MaxMsgSize = NATSJetStreamValidator.ValidateMaxMessageSize(maxMsgSize);
                 return this;
@@ -331,7 +331,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param storageType the storage type
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetStorageType(StorageType storageType)
+            public JetStreamConfigBuilder SetStorageType(StorageType storageType)
             {
                 this.StorageType = storageType;
                 return this;
@@ -342,7 +342,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param replicas the number of replicas to store this message on
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetReplicas(int replicas)
+            public JetStreamConfigBuilder SetReplicas(int replicas)
             {
                 this.Replicas = NATSJetStreamValidator.ValidateNumberOfReplicas(replicas);
                 return this;
@@ -354,7 +354,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param noAck true to disable acknowledgements.
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetNoAck(bool noAck)
+            public JetStreamConfigBuilder SetNoAck(bool noAck)
             {
                 this.NoAck = noAck;
                 return this;
@@ -365,7 +365,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param templateOwner the stream template of the stream.
              * @return the builder
              */
-            public NATSJetStreamConfigBuilder SetTemplateOwner(string templateOwner)
+            public JetStreamConfigBuilder SetTemplateOwner(string templateOwner)
             {
                 if (string.IsNullOrEmpty(templateOwner)) throw new ArgumentNullException(nameof(templateOwner));
                 this.TemplateOwner = templateOwner;
@@ -377,7 +377,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param policy the discard policy of the NATSJetStreamConfig
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetDiscardPolicy(DiscardPolicy policy)
+            public JetStreamConfigBuilder SetDiscardPolicy(DiscardPolicy policy)
             {
                 this.DiscardPolicy = policy;
                 return this;
@@ -389,7 +389,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param window duration to hold message ids for duplicate checking.
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetDuplicateWindow(TimeSpan window)
+            public JetStreamConfigBuilder SetDuplicateWindow(TimeSpan window)
             {
                 this.DuplicateWindow = NATSJetStreamValidator.ValidateTimeSpanNotRequiredGtOrEqZero(window);
                 return this;
@@ -400,7 +400,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param placement the placement directive object
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetPlacement(Placement placement)
+            public JetStreamConfigBuilder SetPlacement(Placement placement)
             {
                 this.Placement = placement;
                 return this;
@@ -411,7 +411,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param mirror the mirror object
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetMirror(StreamSource mirror)
+            public JetStreamConfigBuilder SetMirror(StreamSource mirror)
             {
                 this.Mirror = mirror;
                 return this;
@@ -422,7 +422,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param sources the stream's sources
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetSources(params StreamSource[] sources)
+            public JetStreamConfigBuilder SetSources(params StreamSource[] sources)
             {
                 this.Sources.Clear();
                 return AddSources(sources);
@@ -433,7 +433,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param sources the stream's sources
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder SetSources(IEnumerable<StreamSource> sources)
+            public JetStreamConfigBuilder SetSources(IEnumerable<StreamSource> sources)
             {
                 this.Sources.Clear();
                 return AddSources(sources);
@@ -444,7 +444,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param sources the stream's sources
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder AddSources(params StreamSource[] sources)
+            public JetStreamConfigBuilder AddSources(params StreamSource[] sources)
             {
                 return AddSources(sources);
             }
@@ -454,7 +454,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param sources the stream's sources
              * @return Builder
              */
-            public NATSJetStreamConfigBuilder AddSources(IEnumerable<StreamSource> sources)
+            public JetStreamConfigBuilder AddSources(IEnumerable<StreamSource> sources)
             {
                 if (sources != null)
                 {

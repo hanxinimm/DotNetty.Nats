@@ -5,8 +5,9 @@ using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
-    public class CreateResponse : StreamResponse
+    public class ListResponse : JetStreamIterableResponse
     {
-       
+        [JsonProperty("streams")]
+        public List<StreamInfo> Streams { get; set; }
     }
 }

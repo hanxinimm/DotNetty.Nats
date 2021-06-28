@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace TestNATSClient
 {
@@ -103,7 +104,10 @@ namespace TestNATSClient
 
             await client.ConnectAsync();
 
-            await client.StreamInfoAsync("TestAll");
+            var streamList = await client.StreamListAsync();
+
+            var consumerCreate = await client.ConsumerCreateAsync(streamList.Streams.FirstOrDefault()?.Config.Name,
+                ConsumerConfig.Builder().Build());
 
             var httpClient = new HttpClient();
             
