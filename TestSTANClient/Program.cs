@@ -65,8 +65,8 @@ namespace TestSTANClient
                 options.ClusterID = "main-cluster";
                 options.ClientId = $"Security-StatefulManagerService";
                 //options.Host = "mq.stan.yidujob.com";
-                //options.Host = "127.0.0.1";
-                options.Host = "192.168.4.131";
+                options.Host = "127.0.0.1";
+                //options.Host = "192.168.4.131";
                 //options.Host = "mq.stan.yd.com";
                 options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
@@ -80,19 +80,9 @@ namespace TestSTANClient
 
             Console.WriteLine("开始连接");
 
-            for (int ji = 0; ji < 10; ji++)
-            {
+            await client.ConnectAsync();
 
-                try
-                {
 
-                    await client.ConnectAsync();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
-            }
             //await client.DisposeAsync();
 
             //await client.DisposeAsync();
@@ -116,7 +106,6 @@ namespace TestSTANClient
             //Console.WriteLine("成功执行");
 
             //Console.ReadLine();
-
 
             Console.WriteLine("连接成功");
 

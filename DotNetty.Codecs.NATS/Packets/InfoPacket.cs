@@ -230,6 +230,5 @@ namespace DotNetty.Codecs.NATS.Packets
                 return (InfoPacket)serializer.ReadObject(stream);
             }
         }
-
     }
 }

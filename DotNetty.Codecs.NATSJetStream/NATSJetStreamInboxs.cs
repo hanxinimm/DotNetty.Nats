@@ -7,8 +7,8 @@ namespace DotNetty.Codecs.NATSJetStream
     public class NATSJetStreamInboxs
     {
         public const string InboxPrefix = "_INBOX.";
-        public const string Heartbeat = "_INBOX.HTBT.";
+        public const string Heartbeat = InboxPrefix + "NATS_HTBT.";
 
-        public const string CreateResponse = "_INBOX.JM.CERE.";
+        public const string CreateResponse = InboxPrefix + "JTSM_CERE.";
     }
 }

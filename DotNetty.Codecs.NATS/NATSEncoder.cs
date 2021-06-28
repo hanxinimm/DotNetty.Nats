@@ -29,7 +29,7 @@ namespace DotNetty.Codecs.NATS
 
         static NATSEncoder()
         {
-            EMPTY_BYTES = new byte[0];
+            EMPTY_BYTES = Array.Empty<byte>();
             SPACES_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.SPACES);
             CRLF_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.CRLF);
 
@@ -99,7 +99,7 @@ namespace DotNetty.Codecs.NATS
             }
         }
 
-        static void EncodePublishMessage(IByteBufferAllocator bufferAllocator, PublishPacket packet, List<object> output)
+        protected static void EncodePublishMessage(IByteBufferAllocator bufferAllocator, PublishPacket packet, List<object> output)
         {
             byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
             byte[] ReplyToBytes = EncodeStringInUtf8(packet.ReplyTo);
@@ -144,7 +144,7 @@ namespace DotNetty.Codecs.NATS
             }
         }
 
-        static void EncodeSubscribeMessage(IByteBufferAllocator bufferAllocator, SubscribePacket packet, List<object> output)
+        protected static void EncodeSubscribeMessage(IByteBufferAllocator bufferAllocator, SubscribePacket packet, List<object> output)
         {
             byte[] IdBytes = EncodeStringInUtf8(packet.Id);
             byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
@@ -185,7 +185,7 @@ namespace DotNetty.Codecs.NATS
             }
         }
 
-        static void EncodeUnsubscribeMessage(IByteBufferAllocator bufferAllocator, UnSubscribePacket packet, List<object> output)
+        protected static void EncodeUnsubscribeMessage(IByteBufferAllocator bufferAllocator, UnSubscribePacket packet, List<object> output)
         {
             byte[] IdBytes = EncodeStringInUtf8(packet.Id);
             byte[] WaitMessagesBytes = EncodeStringInUtf8(packet.WaitMessages?.ToString() ?? string.Empty);

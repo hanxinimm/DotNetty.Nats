@@ -1,5 +1,6 @@
 ﻿using DotNetty.Codecs.NATS;
 using DotNetty.Codecs.NATS.Packets;
+using DotNetty.Codecs.NATSJetStream;
 using DotNetty.Handlers.NATS;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
@@ -7,6 +8,7 @@ using DotNetty.Transport.Channels.Sockets;
 using Hunter.NATS.Client.Handlers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Timeout;
 using System;
@@ -34,6 +36,21 @@ namespace Hunter.NATS.Client
         private readonly string _clientId;
 
         /// <summary>
+        /// 客户端标识
+        /// </summary>
+        public readonly string _identity;
+
+        /// <summary>
+        /// 消息应答收件箱
+        /// </summary>
+        private readonly string _replyInboxId;
+
+        /// <summary>
+        /// JetStream 流设置
+        /// </summary>
+        private readonly JsonSerializerSettings _jetStreamSetting;
+
+        /// <summary>
         /// 通道引导
         /// </summary>
         private readonly Bootstrap _bootstrap;
@@ -42,6 +59,7 @@ namespace Hunter.NATS.Client
         /// 订阅编号
         /// </summary>
         private int _subscribeId;
+
 
         /// <summary>
         /// 连接通道
@@ -91,11 +109,19 @@ namespace Hunter.NATS.Client
             NATSOptions options)
         {
             _options = options;
-            _clientId = _options.ClientId;
+            _identity = Guid.NewGuid().ToString("n");
+            _clientId = $"{_options.ClientId}-{_identity}";
+            _replyInboxId = _identity;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _manualResetEvent = new ManualResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
+
+            _jetStreamSetting = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                ContractResolver = new IgnoreEmptyEnumerablesResolver()
+            };
 
             #region Connect;
 
@@ -175,8 +201,8 @@ namespace Hunter.NATS.Client
                 .Option(ChannelOption.TcpNodelay, false)
                 .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
                 {
-                    channel.Pipeline.AddLast("NATSEncoder", NATSEncoder.Instance);
-                    channel.Pipeline.AddLast("NATSDecoder", new NATSDecoder(_logger));
+                    channel.Pipeline.AddLast("NATSJetStreamEncoder", NATSJetStreamEncoder.Instance);
+                    channel.Pipeline.AddLast("NATSJetStreamDecoder", new NATSJetStreamDecoder(_logger));
                     channel.Pipeline.AddLast("Reconnect", new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
                     channel.Pipeline.AddLast("Ping", new PingPacketHandler(_logger));
                     channel.Pipeline.AddLast("Pong", new PongPacketHandler(_logger));

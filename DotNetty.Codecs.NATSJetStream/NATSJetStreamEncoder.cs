@@ -27,62 +27,17 @@ namespace DotNetty.Codecs.NATSJetStream
             {
                 switch (packet.PacketType)
                 {
+                    case NATSPacketType.INBOX:
+                        EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
+                        break;
                     case NATSPacketType.CREATE:
-                        EncodeJsonMessage(bufferAllocator, (CreatePacket)packet, output);
+                        EncodePublishMessage(bufferAllocator, (CreatePacket)packet, output);
                         break;
                     default:
                         return false;
                 }
             }
             return true;
-        }
-
-        static void EncodeJsonMessage<TMessage>(IByteBufferAllocator bufferAllocator, MessagePacket<TMessage> packet, List<object> output)
-        {
-            byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
-            byte[] ReplyToBytes = EncodeStringInUtf8(packet.ReplyTo);
-
-            int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
-            variablePartSize += (ReplyToBytes.Length > 0 ? ReplyToBytes.Length + SPACES_BYTES.Length : 0);
-
-            var MessageJson = JsonConvert.SerializeObject(packet.Message);
-
-            IByteBuffer Payload = Unpooled.WrappedBuffer(Encoding.UTF8.GetBytes(MessageJson));
-
-            byte[] PayloadSize = EncodeStringInUtf8(Payload.ReadableBytes.ToString());
-
-            variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
-            variablePartSize += Payload.ReadableBytes + CRLF_BYTES.Length;
-
-            int fixedHeaderBufferSize = PUB_BYTES.Length + SPACES_BYTES.Length;
-
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
-                buf.WriteBytes(PUB_BYTES);
-                buf.WriteBytes(SPACES_BYTES);
-                buf.WriteBytes(SubjectNameBytes);
-                buf.WriteBytes(SPACES_BYTES);
-                if (!string.IsNullOrEmpty(packet.ReplyTo))
-                {
-                    buf.WriteBytes(ReplyToBytes);
-                    buf.WriteBytes(SPACES_BYTES);
-                }
-                buf.WriteBytes(PayloadSize);
-                buf.WriteBytes(CRLF_BYTES);
-
-                buf.WriteBytes(Payload);
-
-                buf.WriteBytes(CRLF_BYTES);
-
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
         }
     }
 }

@@ -13,6 +13,8 @@ namespace DotNetty.Codecs.NATS.Packets
         [IgnoreDataMember]
         public override NATSPacketType PacketType => NATSPacketType.PUB;
 
+        public PublishPacket() { }
+
         public PublishPacket(string subject)
         {
             Subject = subject;

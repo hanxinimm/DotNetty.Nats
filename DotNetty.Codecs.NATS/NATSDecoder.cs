@@ -23,15 +23,6 @@ namespace DotNetty.Codecs.NATS
             return DecodePacketInternal(buffer, packetSignature, context);
         }
 
-        protected static string GetInbox(string subject)
-        {
-            if (subject.Length > 12)
-            {
-                return subject.Substring(0, 12);
-            }
-            return string.Empty;
-        }
-
         NATSPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             switch (packetSignature)

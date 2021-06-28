@@ -27,7 +27,7 @@ namespace DotNetty.Codecs.NATSJetStream
                 case NATSJetStreamInboxs.CreateResponse:
                     return GetMessagePacket<CreateResponsePacket, CreateResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 default:
-                    return null;
+                    return base.DecodeMessagePacket(subject, subscribeId, replyTo, payloadSize, payload);
             }
         }
 
@@ -46,6 +46,15 @@ namespace DotNetty.Codecs.NATSJetStream
             Packet.Message = JsonConvert.DeserializeObject<TMessage>(Encoding.UTF8.GetString(payload));
 
             return Packet;
+        }
+
+        static string GetInbox(string subject)
+        {
+            if (subject.Length > 17)
+            {
+                return subject.Substring(0, 17);
+            }
+            return string.Empty;
         }
     }
 }

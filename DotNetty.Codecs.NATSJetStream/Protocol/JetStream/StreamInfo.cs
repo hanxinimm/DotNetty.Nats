@@ -5,7 +5,7 @@ using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
-    public class CreateResponse : JetStreamResponse
+    public class StreamInfo
     {
         /// <summary>
         /// 流配置
@@ -41,6 +41,6 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         /// 节点信息
         /// </summary>
         [JsonProperty("sources")]
-        public List<StreamSourceInfo> Sources { get; set; } = new List<StreamSourceInfo>();
+        public List<StreamSourceInfo> Sources { get; set; }
     }
 }

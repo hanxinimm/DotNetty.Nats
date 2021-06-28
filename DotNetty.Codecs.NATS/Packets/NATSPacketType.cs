@@ -49,6 +49,8 @@ namespace DotNetty.Codecs.NATS.Packets
 
         #region JetStream
 
+        INBOX,
+
         CREATE,
 
         CREATE_RESPONSE,

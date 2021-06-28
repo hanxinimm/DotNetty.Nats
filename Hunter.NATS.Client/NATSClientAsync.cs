@@ -1,4 +1,5 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
+using DotNetty.Codecs.NATSJetStream.Packets;
 using DotNetty.Handlers.NATS;
 using Microsoft.Extensions.Logging;
 using System;
@@ -80,6 +81,8 @@ namespace Hunter.NATS.Client
                 _channel = await _bootstrap.ConnectAsync(ClusterNode);
 
                 _info = await ConnectRequestAsync();
+
+                await SubscribeReplyInboxAsync();
             }
             else
             {
@@ -87,7 +90,7 @@ namespace Hunter.NATS.Client
 
                 _info = await ConnectRequestAsync();
 
-                _info = await ConnectRequestAsync();
+                await SubscribeReplyInboxAsync();
 
                 await SubscriptionMessageAsync();
             }
@@ -109,6 +112,16 @@ namespace Hunter.NATS.Client
 
             return _info;
         }
+
+        private async Task SubscribeReplyInboxAsync()
+        {
+            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+
+            await _channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
+
+            _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+        }
+
 
         private async Task SubscriptionMessageAsync()
         {

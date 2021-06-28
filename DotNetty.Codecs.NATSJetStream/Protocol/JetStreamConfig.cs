@@ -1,14 +1,11 @@
-﻿using DotNetty.Codecs.NATSJetStream.JetStream;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
     public class JetStreamConfig
     {
-        // see builder for defaults
         [JsonProperty("name")]
         public string Name { get; private set; }
         [JsonProperty("subjects")]
@@ -22,7 +19,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("max_bytes")]
         public long MaxBytes { get; private set; }
         [JsonProperty("max_age")]
-        public TimeSpan MaxAge { get; private set; }
+        public long MaxAge { get; private set; }
         [JsonProperty("max_msgs_per_subject")]
         public long MaxMsgPer { get; private set; }
         [JsonProperty("max_msg_size")]
@@ -38,7 +35,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("template_owner")]
         public string TemplateOwner { get; private set; }
         [JsonProperty("duplicate_window")]
-        public TimeSpan DuplicateWindow { get; private set; }
+        public long? DuplicateWindow { get; private set; }
         [JsonProperty("placement")]
         public Placement Placement { get; private set; }
         [JsonProperty("mirror")]
@@ -46,21 +43,23 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("sources")]
         public List<StreamSource> Sources { get; private set; }
 
+        private JetStreamConfig() { }
+
         private JetStreamConfig(
             string name, 
             List<string> subjects, 
             RetentionPolicy retentionPolicy,
-            long MaxConsumers,
-            long MaxMsgs, 
-            long MaxBytes,
-            TimeSpan MaxAge,
-            long MaxMsgSize,
+            long maxConsumers,
+            long maxMsgs, 
+            long maxBytes,
+            TimeSpan maxAge,
+            long maxMsgSize,
             StorageType storageType,
             int replicas, 
             bool noAck, 
             string templateOwner,
             DiscardPolicy discardPolicy, 
-            TimeSpan duplicateWindow,
+            TimeSpan? duplicateWindow,
             Placement placement,
             StreamSource mirror,
             List<StreamSource> sources)
@@ -68,22 +67,21 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             this.Name = name;
             this.Subjects = subjects;
             this.RetentionPolicy = retentionPolicy;
-            this.MaxConsumers = MaxConsumers;
-            this.MaxMsgs = MaxMsgs;
-            this.MaxBytes = MaxBytes;
-            this.MaxAge = MaxAge;
-            this.MaxMsgSize = MaxMsgSize;
+            this.MaxConsumers = maxConsumers;
+            this.MaxMsgs = maxMsgs;
+            this.MaxBytes = maxBytes;
+            this.MaxAge = maxAge.Milliseconds * 1000000;
+            this.MaxMsgSize = maxMsgSize;
             this.StorageType = storageType;
             this.Replicas = replicas;
             this.NoAck = noAck;
             this.TemplateOwner = templateOwner;
             this.DiscardPolicy = discardPolicy;
-            this.DuplicateWindow = duplicateWindow;
+            this.DuplicateWindow = duplicateWindow?.Milliseconds * 1000000;
             this.Placement = placement;
             this.Mirror = mirror;
             this.Sources = sources;
         }
-
 
         public override string ToString()
         {
@@ -150,7 +148,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             private bool NoAck = false;
             private string TemplateOwner;
             private DiscardPolicy DiscardPolicy;
-            private TimeSpan DuplicateWindow = TimeSpan.Zero;
+            private TimeSpan? DuplicateWindow;
             private Placement Placement;
             private StreamSource Mirror;
             private readonly List<StreamSource> Sources = new List<StreamSource>();
@@ -174,14 +172,15 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
                     this.MaxConsumers = jetStreamConfig.MaxConsumers;
                     this.MaxMsgs = jetStreamConfig.MaxMsgs;
                     this.MaxBytes = jetStreamConfig.MaxBytes;
-                    this.MaxAge = jetStreamConfig.MaxAge;
+                    this.MaxAge = TimeSpan.FromMilliseconds(jetStreamConfig.MaxAge / 1000000);
                     this.MaxMsgSize = jetStreamConfig.MaxMsgSize;
                     this.StorageType = jetStreamConfig.StorageType;
                     this.Replicas = jetStreamConfig.Replicas;
                     this.NoAck = jetStreamConfig.NoAck;
                     this.TemplateOwner = jetStreamConfig.TemplateOwner;
                     this.DiscardPolicy = jetStreamConfig.DiscardPolicy;
-                    this.DuplicateWindow = jetStreamConfig.DuplicateWindow;
+                    if (jetStreamConfig.DuplicateWindow.HasValue)
+                        this.DuplicateWindow = TimeSpan.FromMilliseconds(jetStreamConfig.DuplicateWindow.Value / 1000000);
                     this.Placement = jetStreamConfig.Placement;
                     this.Mirror = jetStreamConfig.Mirror;
                     SetSources(jetStreamConfig.Sources);
@@ -230,7 +229,13 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             {
                 if (subjects != null)
                 {
-                    return AddSubjects(subjects);
+                    foreach (var subject in subjects)
+                    {
+                        if (subject != null && !this.Subjects.Contains(subject))
+                        {
+                            this.Subjects.Add(subject);
+                        }
+                    }
                 }
                 return this;
             }

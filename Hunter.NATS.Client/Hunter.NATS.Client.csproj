@@ -7,13 +7,43 @@
 
   <ItemGroup>
     <Compile Include="..\DotNetty.Codecs.NATS\*.cs">
-      <Link>Codecs\%(RecursiveDir)%(FileName)</Link>
+      <Link>Codecs\NATS\%(RecursiveDir)%(FileName)</Link>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\DotNetty.Codecs.NATS\Packets\*.cs">
-      <Link>Codecs\Packets\%(RecursiveDir)%(FileName)</Link>
+      <Link>Codecs\NATS\Packets\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATSJetStream\*.cs">
+      <Link>Codecs\JetStream\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATSJetStream\JsonConverter\*.cs">
+      <Link>Codecs\JetStream\JsonConverter\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATSJetStream\Protocol\*.cs">
+      <Link>Codecs\JetStream\Protocol\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATSJetStream\Protocol\JetStream\*.cs">
+      <Link>Codecs\JetStream\Protocol\JetStream\%(RecursiveDir)%(FileName)</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DotNetty.Codecs.NATSJetStream\Packets\*.cs">
+      <Link>Codecs\JetStream\Packets\%(RecursiveDir)%(FileName)</Link>
     </Compile>
   </ItemGroup>
 

@@ -137,15 +137,6 @@ namespace DotNetty.Codecs.NATSJetStream
             return replicas;
         }
 
-        public static TimeSpan ValidateTimeSpanRequired(TimeSpan value)
-        {
-            if (value == null || value <= TimeSpan.Zero)
-            {
-                throw new ArgumentOutOfRangeException("TimeSpan required and must be greater than 0.");
-            }
-            return value;
-        }
-
         public static TimeSpan ValidateTimeSpanNotRequiredGtOrEqZero(TimeSpan value)
         {
             if (value == null)

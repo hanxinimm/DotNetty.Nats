@@ -10,13 +10,13 @@ using System.Text;
 namespace DotNetty.Codecs.NATSJetStream.Packets
 {
     [DataContract]
-    public class CreatePacket : MessagePacket<JetStreamConfig>
+    public class CreatePacket : PublishPacket
     {
-        public CreatePacket(string inboxId, string subject, JetStreamConfig jetStreamConfig)
+        public CreatePacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_STREAM_CREATE}.{jetStreamConfig.Name}";
+            Subject = $"{ProtocolSignatures.JSAPI_STREAM_CREATE}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.CreateResponse}{inboxId}.{Guid.NewGuid():N}";
-            Message = jetStreamConfig;
+            Payload = payload;
         }
 
         public override NATSPacketType PacketType => NATSPacketType.CREATE;

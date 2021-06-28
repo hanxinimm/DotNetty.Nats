@@ -2,19 +2,19 @@
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 
-namespace DotNetty.Codecs.NATSJetStream.JetStream
+namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
     [JsonConverter(typeof(StringEnumConverter))]
-
     public enum RetentionPolicy
     {
-        [JsonProperty("limits")]
+        [EnumMember(Value = "limits")]
         Limits,
-        [JsonProperty("interest")]
+        [EnumMember(Value = "interest")]
         Interest,
-        [JsonProperty("workqueue")]
+        [EnumMember(Value = "workqueue")]
         WorkQueue
     }
 }

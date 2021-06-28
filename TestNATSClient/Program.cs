@@ -1,4 +1,5 @@
-﻿using Hunter.NATS.Client;
+﻿using DotNetty.Codecs.NATSJetStream.Protocol;
+using Hunter.NATS.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
@@ -100,7 +101,9 @@ namespace TestNATSClient
             await using var client = _serviceProvider.GetRequiredService<NATSClient>();
 
 
-            //await client.ConnectAsync();
+            await client.ConnectAsync();
+
+            await client.StreamCreateAsync(JetStreamConfig.Builder().SetName("TestAll").AddSubjects("ApiGateway.>", "Test2").Build());
 
             var httpClient = new HttpClient();
             
