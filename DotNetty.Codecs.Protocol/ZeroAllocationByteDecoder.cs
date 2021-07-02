@@ -127,7 +127,7 @@ namespace DotNetty.Codecs.Protocol
                     case ProtocolConstants.NEWLINES_CR:
                     case ProtocolConstants.NEWLINES_LF:
 #if DEBUG
-                        _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
+                        _logger.LogWarning($"[130]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
                         return false;
                     default:
@@ -154,7 +154,7 @@ namespace DotNetty.Codecs.Protocol
                             return string.Empty;
                         }
 #if DEBUG
-                        _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
+                        _logger.LogWarning($"[157]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
                         break;
                     default:
@@ -178,7 +178,7 @@ namespace DotNetty.Codecs.Protocol
                         return true;
                     }
 #if DEBUG
-                    _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
+                    _logger.LogWarning($"[181]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
                     break;
                 }
@@ -203,14 +203,14 @@ namespace DotNetty.Codecs.Protocol
                     return true;
                 }
 #if DEBUG
-                _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
+                _logger.LogWarning($"[206]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
                 return false;
             }
 
             if (ProtocolConstants.NEWLINES_CR != input.GetByte(input.ReaderIndex + payloadSize) || ProtocolConstants.NEWLINES_LF != input.GetByte(input.ReaderIndex + payloadSize + 1))
 #if DEBUG
-                _logger.LogWarning($"NATS protocol name of `{packetSignature}` is invalid.");
+                _logger.LogWarning($"[213]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #else
                 return false;
 #endif

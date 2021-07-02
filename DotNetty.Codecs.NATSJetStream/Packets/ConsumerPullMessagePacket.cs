@@ -10,9 +10,9 @@ using System.Text;
 namespace DotNetty.Codecs.NATSJetStream.Packets
 {
     [DataContract]
-    public class ConsumerCreatePacket : PublishPacket
+    public class ConsumerPullMessagePacket : PublishPacket
     {
-        public ConsumerCreatePacket(string inboxId, string subject, string durableName, byte[] payload)
+        public ConsumerPullMessagePacket(string inboxId, string subject, string durableName, byte[] payload)
         {
             Subject = string.IsNullOrEmpty(durableName) ? $"{ProtocolSignatures.JSAPI_CONSUMER_CREATE}.{subject}" : $"{ProtocolSignatures.JSAPI_DURABLE_CREATE}.{subject}.{durableName}";
             ReplyTo = $"{NATSJetStreamInboxs.ConsumerCreateResponse}{inboxId}.{Guid.NewGuid():N}";

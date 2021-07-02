@@ -120,6 +120,7 @@ namespace TestSTANSubscription
         public static ValueTask HandleEventQueueMessageAsync(STANMsgContent msgContent)
         {
             var data = Encoding.UTF8.GetString(msgContent.Data);
+            //Task.Factory.StartNew(()=>).ConfigureAwait
             Console.WriteLine($"订阅 sequence={msgContent.Sequence} data={data}");
             return new ValueTask();
         }

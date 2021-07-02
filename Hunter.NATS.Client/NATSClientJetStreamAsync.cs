@@ -152,6 +152,7 @@ namespace Hunter.NATS.Client
             var Packet = new ConsumerCreatePacket(
                 _replyInboxId,
                 createRequest.Stream,
+                createRequest.Config.DurableName,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(createRequest, _jetStreamSetting)));
 
             var ConsumerCreateResponseReady = new TaskCompletionSource<ConsumerCreateResponsePacket>();
