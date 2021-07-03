@@ -14,11 +14,11 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public ConsumerPullMessagePacket(string inboxId, string subject, string durableName, byte[] payload)
         {
-            Subject = string.IsNullOrEmpty(durableName) ? $"{ProtocolSignatures.JSAPI_CONSUMER_CREATE}.{subject}" : $"{ProtocolSignatures.JSAPI_DURABLE_CREATE}.{subject}.{durableName}";
-            ReplyTo = $"{NATSJetStreamInboxs.ConsumerCreateResponse}{inboxId}.{Guid.NewGuid():N}";
+            Subject = $"{ProtocolSignatures.JSAPI_CONSUMER_MSG_NEXT}.{subject}.{durableName}";
+            ReplyTo = $"{NATSJetStreamInboxs.ConsumerPullMessageResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }
 
-        public override NATSPacketType PacketType => NATSPacketType.CONSUMER_CREATE;
+        public override NATSPacketType PacketType => NATSPacketType.CONSUMER_PULL_MSG;
     }
 }

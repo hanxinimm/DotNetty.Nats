@@ -45,6 +45,12 @@ namespace DotNetty.Codecs.NATSJetStream
                     case NATSPacketType.STREAM_DELETE:
                         EncodePublishMessage(bufferAllocator, (DeletePacket)packet, output);
                         break;
+                    case NATSPacketType.STREAM_PURGE:
+                        EncodePublishMessage(bufferAllocator, (PurgePacket)packet, output);
+                        break;
+                    case NATSPacketType.STREAM_MSG_DELETE:
+                        EncodePublishMessage(bufferAllocator, (DeleteMessagePacket)packet, output);
+                        break;
                     case NATSPacketType.CONSUMER_CREATE:
                         EncodePublishMessage(bufferAllocator, (ConsumerCreatePacket)packet, output);
                         break;

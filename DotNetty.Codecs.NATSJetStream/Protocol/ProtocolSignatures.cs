@@ -77,12 +77,5 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         internal const string JSAPI_CONSUMER_LIST = JSAPI_PREFIX + "CONSUMER.LIST";
 
         #endregion;
-
-        internal const string MSG_ID_HDR = "Nats-Msg-Id";
-        internal const string EXPECTED_STREAM_HDR = "Nats-Expected-Stream";
-        internal const string EXPECTED_LAST_SEQ_HDR = "Nats-Expected-Last-Sequence";
-        internal const string EXPECTED_LAST_MSG_ID_HDR = "Nats-Expected-Last-Msg-Id";
-
-        internal const int MAX_PULL_SIZE = 256;
     }
 }

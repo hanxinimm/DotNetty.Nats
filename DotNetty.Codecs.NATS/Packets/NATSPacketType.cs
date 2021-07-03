@@ -75,9 +75,21 @@ namespace DotNetty.Codecs.NATS.Packets
 
         STREAM_DELETE_RESPONSE,
 
+        STREAM_PURGE,
+
+        STREAM_PURGE_RESPONSE,
+
+        STREAM_MSG_DELETE,
+
+        STREAM_MSG_DELETE_RESPONSE,
+
         CONSUMER_CREATE,
 
         CONSUMER_CREATE_RESPONSE,
+
+        CONSUMER_PULL_MSG,
+
+        CONSUMER_PULL_MSG_RESPONSE,
 
         #endregion;
     }
