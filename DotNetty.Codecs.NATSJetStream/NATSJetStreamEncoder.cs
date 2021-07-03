@@ -67,10 +67,10 @@ namespace DotNetty.Codecs.NATSJetStream
                         EncodePublishMessage(bufferAllocator, (ConsumerCreatePacket)packet, output);
                         break;
                     case NATSPacketType.CONSUMER_NAMES:
-                        EncodePublishMessage(bufferAllocator, (ConsumerCreatePacket)packet, output);
+                        EncodePublishMessage(bufferAllocator, (ConsumerNamesPacket)packet, output);
                         break;
                     case NATSPacketType.CONSUMER_LIST:
-                        EncodePublishMessage(bufferAllocator, (ConsumerCreatePacket)packet, output);
+                        EncodePublishMessage(bufferAllocator, (ConsumerListPacket)packet, output);
                         break;
                     case NATSPacketType.STREAM_INFO:
                         EncodePublishMessage(bufferAllocator, (Packets.InfoPacket)packet, output);

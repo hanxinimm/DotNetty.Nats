@@ -8,11 +8,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using DotNetty.Codecs.NATSJetStream;
+using static DotNetty.Codecs.NATSJetStream.Protocol.ConsumerConfig;
 
 namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
+        #region Stream;
+
         public async Task<InfoResponse> StreamInfoAsync(string name)
         {
             var jetStreamConfig = JetStreamConfig.Builder().SetName(name).Build();
@@ -141,10 +144,19 @@ namespace Hunter.NATS.Client
             return ListResponse.Message;
         }
 
+        #endregion;
 
-        public Task<ConsumerCreateResponse> ConsumerCreateAsync(string streamName, ConsumerConfig consumerConfig)
+        #region Consumer;
+
+        public Task<ConsumerCreateResponse> ConsumerCreateAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Func<NATSMsgContent, ValueTask> handler)
         {
-            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            SubscribeAsync(streamName, handler);
+            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfigBuilder.Build()));
         }
 
         public async Task<ConsumerCreateResponse> ConsumerCreateAsync(ConsumerCreateRequest createRequest)
@@ -179,5 +191,69 @@ namespace Hunter.NATS.Client
 
             return ConsumerCreateResponse.Message;
         }
+
+        public async Task<ConsumerNamesResponse> ConsumerNamesAsync(string consumerName)
+        {
+            var Packet = new ConsumerNamesPacket(
+                _replyInboxId,
+                consumerName);
+
+            var ConsumerNamesResponseReady = new TaskCompletionSource<ConsumerNamesResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<ConsumerNamesResponsePacket>(Packet.ReplyTo, ConsumerNamesResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var ConsumerNamesResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                ConsumerNamesResponseReady.TrySetResult(null);
+            });
+
+            var ConsumerNamesResponse = await ConsumerNamesResponseReady.Task;
+
+            await ConsumerNamesResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (ConsumerNamesResponse == null) throw new ArgumentNullException();
+
+            return ConsumerNamesResponse.Message;
+        }
+
+        public async Task<ConsumerListResponse> ConsumerListAsync(string consumerName)
+        {
+            var Packet = new ConsumerListPacket(
+                _replyInboxId,
+                consumerName);
+
+            var ConsumerListResponseReady = new TaskCompletionSource<ConsumerListResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<ConsumerListResponsePacket>(Packet.ReplyTo, ConsumerListResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var ConsumerListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                ConsumerListResponseReady.TrySetResult(null);
+            });
+
+            var ConsumerListResponse = await ConsumerListResponseReady.Task;
+
+            await ConsumerListResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (ConsumerListResponse == null) throw new ArgumentNullException();
+
+            return ConsumerListResponse.Message;
+        }
+
+        #endregion;
     }
 }

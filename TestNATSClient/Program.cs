@@ -104,22 +104,38 @@ namespace TestNATSClient
 
             await client.ConnectAsync();
 
-            //var streamList = await client.StreamListAsync();
+            var streamList = await client.StreamListAsync();
 
             var streamNames = await client.StreamNamesAsync();
 
-            var consumerCreate = await client.ConsumerCreateAsync(streamNames.Streams.FirstOrDefault(),
-                ConsumerConfig.Builder().Build());
+            var streamName = streamNames.Streams.FirstOrDefault();
+
+            var streamInfo = await client.StreamInfoAsync(streamName);
+
+            var consumerNames = await client.ConsumerNamesAsync(streamName);
+
+            var consumerList = await client.ConsumerListAsync(streamName);
+
+
+            var consumerCreate = await client.ConsumerCreateAsync(streamName,
+                ConsumerConfig.Builder().SetDeliverPolicy(DeliverPolicy.DeliverNew),
+                 (bytes) =>
+                {
+                    Console.WriteLine("开始接受收消息");
+                    var sss = Encoding.UTF8.GetString(bytes.Data);
+                    Console.WriteLine("收到消息 {0}", sss);
+                    return new ValueTask();
+                });
 
             var httpClient = new HttpClient();
             
 
-            var s = await client.SubscribeAsync("ApiGateway.>", "ApiGateway.Test", async (bytes) =>
-            {
-                Console.WriteLine("开始接受收消息");
-                var sss = Encoding.UTF8.GetString(bytes.Data);
-                Console.WriteLine("收到消息 {0}", sss);
-            });
+            //var s = await client.SubscribeAsync(streamName, "ApiGateway.Test", async (bytes) =>
+            //{
+            //    Console.WriteLine("开始接受收消息");
+            //    var sss = Encoding.UTF8.GetString(bytes.Data);
+            //    Console.WriteLine("收到消息 {0}", sss);
+            //});
 
             //Console.ReadLine();
 
