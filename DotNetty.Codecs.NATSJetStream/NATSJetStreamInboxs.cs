@@ -17,6 +17,11 @@ namespace DotNetty.Codecs.NATSJetStream
         public const string ListResponse = InboxPrefix + "JTSM_LTRE.";
         public const string PurgeResponse = InboxPrefix + "JTSM_PERE.";
         public const string DeleteMessageResponse = InboxPrefix + "JTSM_DMRE.";
+        public const string GetMessageResponse = InboxPrefix + "JTSM_GMRE.";
+        public const string SnapshotResponse = InboxPrefix + "JTSM_STRE.";
+        public const string RestoreResponse = InboxPrefix + "JTSM_RERE.";
+        public const string RemovePeerResponse = InboxPrefix + "JTSM_RPRE.";
+        public const string LeaderStepDownResponse = InboxPrefix + "JTSM_LSDR.";
 
         public const string ConsumerCreateResponse = InboxPrefix + "CSER_CERE.";
         public const string ConsumerPullMessageResponse = InboxPrefix + "CSER_PMRE.";

@@ -24,6 +24,8 @@ namespace DotNetty.Codecs.NATSJetStream
         {
             switch (GetInbox(subject))
             {
+                case NATSJetStreamInboxs.GetMessageResponse:
+                    return GetMessagePacket<GetMessageResponsePacket, GetMessageResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.CreateResponse:
                     return GetMessagePacket<CreateResponsePacket, CreateResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.UpdateResponse:
@@ -38,8 +40,12 @@ namespace DotNetty.Codecs.NATSJetStream
                     return GetMessagePacket<ListResponsePacket, ListResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.PurgeResponse:
                     return GetMessagePacket<PurgeResponsePacket, PurgeResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                case NATSJetStreamInboxs.SnapshotResponse:
+                    return GetMessagePacket<SnapshotResponsePacket, SnapshotResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.DeleteMessageResponse:
                     return GetMessagePacket<DeleteMessageResponsePacket, DeleteMessageResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                case NATSJetStreamInboxs.RemovePeerResponse:
+                    return GetMessagePacket<RemovePeerResponsePacket, RemovePeerResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.InfoResponse:
                     return GetMessagePacket<InfoResponsePacket, InfoResponse>(subject, subscribeId, replyTo, payloadSize, payload);
 

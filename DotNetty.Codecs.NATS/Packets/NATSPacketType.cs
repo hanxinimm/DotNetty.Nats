@@ -71,6 +71,10 @@ namespace DotNetty.Codecs.NATS.Packets
 
         STREAM_NAMES_RESPONSE,
 
+        STREAM_LEADER_STEPDOWN,
+
+        STREAM_LEADER_STEPDOWN_RESPONSE,
+
         STREAM_DELETE,
 
         STREAM_DELETE_RESPONSE,
@@ -82,6 +86,22 @@ namespace DotNetty.Codecs.NATS.Packets
         STREAM_MSG_DELETE,
 
         STREAM_MSG_DELETE_RESPONSE,
+
+        STREAM_MSG_GET,
+
+        STREAM_MSG_GET_RESPONSE,
+
+        STREAM_SNAPSHOT,
+
+        STREAM_SNAPSHOT_RESPONSE,
+
+        STREAM_RESTORE,
+
+        STREAM_RESTORE_RESPONSE,
+
+        STREAM_REMOVE_PEERE,
+
+        STREAM_REMOVE_PEER_RESPONSE,
 
         CONSUMER_CREATE,
 

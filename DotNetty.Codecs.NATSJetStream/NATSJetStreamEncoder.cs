@@ -30,6 +30,9 @@ namespace DotNetty.Codecs.NATSJetStream
                     case NATSPacketType.STREAM_INBOX:
                         EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
                         break;
+                    case NATSPacketType.STREAM_MSG_GET:
+                        EncodePublishMessage(bufferAllocator, (GetMessagePacket)packet, output);
+                        break;
                     case NATSPacketType.STREAM_CREATE:
                         EncodePublishMessage(bufferAllocator, (CreatePacket)packet, output);
                         break;
@@ -48,8 +51,17 @@ namespace DotNetty.Codecs.NATSJetStream
                     case NATSPacketType.STREAM_PURGE:
                         EncodePublishMessage(bufferAllocator, (PurgePacket)packet, output);
                         break;
+                    case NATSPacketType.STREAM_SNAPSHOT:
+                        EncodePublishMessage(bufferAllocator, (SnapshotPacket)packet, output);
+                        break;
                     case NATSPacketType.STREAM_MSG_DELETE:
                         EncodePublishMessage(bufferAllocator, (DeleteMessagePacket)packet, output);
+                        break;
+                    case NATSPacketType.STREAM_REMOVE_PEERE:
+                        EncodePublishMessage(bufferAllocator, (RemovePeerPacket)packet, output);
+                        break;
+                    case NATSPacketType.STREAM_LEADER_STEPDOWN:
+                        EncodePublishMessage(bufferAllocator, (LeaderStepDownPacket)packet, output);
                         break;
                     case NATSPacketType.CONSUMER_CREATE:
                         EncodePublishMessage(bufferAllocator, (ConsumerCreatePacket)packet, output);
