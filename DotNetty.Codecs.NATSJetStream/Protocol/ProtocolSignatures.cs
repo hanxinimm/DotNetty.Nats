@@ -10,6 +10,14 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 
         internal const string JSAPI_PREFIX = JS_PREFIX + "API.";
 
+        internal const string JSAuditAdvisory = "$JS.EVENT.ADVISORY.API";
+
+        internal const string JSMetricPrefix = "$JS.EVENT.METRIC";
+
+        internal const string JSAdvisoryPrefix = "$JS.EVENT.ADVISORY";
+
+        internal const string JSApiAccountInfo = "$JS.API.INFO";
+
         #region Stream
 
         // JSAPI_STREAM_CREATE is the endpoint to create new streams.
@@ -75,6 +83,8 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 
         // JSAPI_CONSUMER_LIST is used to return all detailed consumer information
         internal const string JSAPI_CONSUMER_LIST = JSAPI_PREFIX + "CONSUMER.LIST";
+
+        internal const string JSAPI_CONSUMER_LEADER_STEPDOWN = JSAPI_PREFIX + "CONSUMER.LEADER.STEPDOWN";
 
         #endregion;
     }

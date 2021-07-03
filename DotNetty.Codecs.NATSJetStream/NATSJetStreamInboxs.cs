@@ -24,8 +24,12 @@ namespace DotNetty.Codecs.NATSJetStream
         public const string LeaderStepDownResponse = InboxPrefix + "JTSM_LSDR.";
 
         public const string ConsumerCreateResponse = InboxPrefix + "CSER_CERE.";
-        public const string ConsumerPullMessageResponse = InboxPrefix + "CSER_PMRE.";
+        public const string ConsumerNamesResponse = InboxPrefix + "CSER_CNRE.";
+        public const string ConsumerListResponse = InboxPrefix + "CSER_CLRE.";
+        public const string ConsumerInfoResponse = InboxPrefix + "CSER_CIRE.";
 
-
+        public const string ConsumerDeleteResponse = InboxPrefix + "CSER_CDRE.";
+        public const string ConsumerMessageNextResponse = InboxPrefix + "CSER_CMNR.";
+        public const string ConsumerLeaderStepDownResponse = InboxPrefix + "CSER_CLSR.";
     }
 }
