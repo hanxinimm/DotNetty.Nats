@@ -47,6 +47,25 @@ namespace DotNetty.Codecs.NATS.Packets
         /// </summary>
         MINUS_ERR = 9,
 
+        // Ack acknowledges a JetStream messages received from a Consumer, indicating the message
+        // should not be received again later
+        ACK_ACK,
+
+        // Nak acknowledges a JetStream message received from a Consumer, indicating that the message
+        // is not completely processed and should be sent again later
+        ACK_NAK,
+
+        // AckProgress acknowledges a Jetstream message received from a Consumer, indicating that work is
+        // ongoing and further processing time is required equal to the configured AckWait of the Consumer
+        ACK_PROGRESS,
+
+        // AckNext performs an Ack() and request that the next message be sent to subject ib
+        ACK_NEXT,
+
+        // AckTerm acknowledges a message received from JetStream indicating the message will not be processed
+        // and should not be sent to another consumer
+        ACK_TERM,
+
         #region JetStream
 
         STREAM_INBOX,

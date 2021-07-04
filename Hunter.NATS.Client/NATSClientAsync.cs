@@ -170,9 +170,9 @@ namespace Hunter.NATS.Client
 
             _logger.LogDebug($"开始发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
 
-            var SubscribePacket = new SubscribePacket(SubscribeId, subject, queueGroup);
+            var SubscribePacketMsg = new SubscribePacket(SubscribeId, subject, queueGroup);
 
-            await _channel.WriteAndFlushAsync(SubscribePacket);
+            await _channel.WriteAndFlushAsync(SubscribePacketMsg);
 
             _logger.LogDebug($"结束发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
 

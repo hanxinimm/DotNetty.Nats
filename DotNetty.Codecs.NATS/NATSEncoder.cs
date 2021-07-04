@@ -27,6 +27,12 @@ namespace DotNetty.Codecs.NATS
         public static readonly byte[] PING_BYTES;
         public static readonly byte[] PONG_BYTES;
 
+        public static readonly byte[] ACK_ACK_BYTES;
+	    public static readonly byte[] ACK_NAK_BYTES;
+        public static readonly byte[] ACK_PROGRESS_BYTES;
+        public static readonly byte[] ACK_NEXT_BYTES;
+        public static readonly byte[] ACK_TERM_BYTES;
+
         static NATSEncoder()
         {
             EMPTY_BYTES = Array.Empty<byte>();
@@ -39,6 +45,12 @@ namespace DotNetty.Codecs.NATS
             UNSUB_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.UNSUB);
             PING_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.PING);
             PONG_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.PONG);
+
+            ACK_ACK_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckAck);
+            ACK_NAK_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckNak);
+            ACK_PROGRESS_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckProgress);
+            ACK_NEXT_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckNext);
+            ACK_TERM_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckTerm);
         }
 
         public override bool IsSharable => true;
@@ -60,17 +72,26 @@ namespace DotNetty.Codecs.NATS
                 case NATSPacketType.PUB:
                     EncodePublishMessage(bufferAllocator, (PublishPacket)packet, output);
                     break;
-                case NATSPacketType.SUB:
-                    EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
+
+                case NATSPacketType.ACK_ACK:
+                case NATSPacketType.ACK_NAK:
+                case NATSPacketType.ACK_PROGRESS:
+                case NATSPacketType.ACK_NEXT:
+                case NATSPacketType.ACK_TERM:
+                    EncodeAckMessage(bufferAllocator, (AckPacket)packet, output);
                     break;
-                case NATSPacketType.UNSUB:
-                    EncodeUnsubscribeMessage(bufferAllocator, (UnSubscribePacket)packet, output);
-                    break;
+
                 case NATSPacketType.PING:
                     EncodePingMessage(bufferAllocator, (PingPacket)packet, output);
                     break;
                 case NATSPacketType.PONG:
                     EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
+                    break;
+                case NATSPacketType.SUB:
+                    EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
+                    break;
+                case NATSPacketType.UNSUB:
+                    EncodeUnsubscribeMessage(bufferAllocator, (UnSubscribePacket)packet, output);
                     break;
                 default:
                     return false;
@@ -257,6 +278,47 @@ namespace DotNetty.Codecs.NATS
                 buf?.SafeRelease();
             }
         }
+
+        static void EncodeAckMessage(IByteBufferAllocator bufferAllocator, AckPacket packet, List<object> output)
+        {
+            IByteBuffer buf = null;
+            try
+            {
+                buf = bufferAllocator.Buffer(PING_BYTES.Length + CRLF_BYTES.Length);
+                switch (packet.PacketType)
+                {
+                    case NATSPacketType.ACK_ACK:
+                        buf.WriteBytes(ACK_ACK_BYTES);
+                        break;
+                    case NATSPacketType.ACK_NAK:
+                        buf.WriteBytes(ACK_NAK_BYTES);
+                        break;
+                    case NATSPacketType.ACK_PROGRESS:
+                        buf.WriteBytes(ACK_PROGRESS_BYTES);
+                        break;
+                    case NATSPacketType.ACK_NEXT:
+                        buf.WriteBytes(ACK_NEXT_BYTES);
+                        break;
+                    case NATSPacketType.ACK_TERM:
+                        buf.WriteBytes(ACK_TERM_BYTES);
+                        break;
+                    default:
+                        buf.WriteBytes(ACK_ACK_BYTES);
+                        break;
+                }
+       
+                buf.WriteBytes(CRLF_BYTES);
+
+                output.Add(buf);
+                buf = null;
+            }
+            finally
+            {
+                buf?.SafeRelease();
+            }
+        }
+
+
 
         protected static byte[] EncodeStringInUtf8(string s)
         {

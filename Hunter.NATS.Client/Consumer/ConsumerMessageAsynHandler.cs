@@ -8,25 +8,15 @@ using System.Threading.Tasks;
 
 namespace Hunter.NATS.Client
 {
-    public class ConsumerMessageAsynHandler : SubscriptionMessageHandler
+    public class ConsumerMessageAsynHandler : ConsumerMessageHandler
     {
         private readonly Func<NATSMsgContent, ValueTask> _messageHandler;
 
         public ConsumerMessageAsynHandler(
             ILogger logger,
-            NATSSubscriptionConfig subscriptionConfig,
+            NATSConsumerSubscriptionConfig subscriptionConfig,
             Func<NATSMsgContent, ValueTask> messageHandler)
             : base(logger, subscriptionConfig)
-        {
-            _messageHandler = messageHandler;
-        }
-
-        public ConsumerMessageAsynHandler(
-            ILogger logger,
-            NATSSubscriptionConfig subscriptionConfig,
-            Func<NATSMsgContent, ValueTask> messageHandler,
-            Func<NATSSubscriptionConfig, Task> unSubscriptionCallback)
-            : base(logger, subscriptionConfig, unSubscriptionCallback)
         {
             _messageHandler = messageHandler;
         }

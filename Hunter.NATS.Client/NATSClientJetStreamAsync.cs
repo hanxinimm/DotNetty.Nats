@@ -9,18 +9,25 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using DotNetty.Codecs.NATSJetStream;
 using static DotNetty.Codecs.NATSJetStream.Protocol.ConsumerConfig;
+using Microsoft.Extensions.Logging;
+using DotNetty.Codecs.NATS.Packets;
 
 namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
+        /// <summary>
+        /// 订阅消息处理器集合
+        /// </summary>
+        private readonly List<ConsumerMessageHandler> _consumerMessageHandler;
+
         #region Stream;
 
         public async Task<InfoResponse> StreamInfoAsync(string name)
         {
             var jetStreamConfig = JetStreamConfig.Builder().SetName(name).Build();
 
-            var Packet = new InfoPacket(
+            var Packet = new DotNetty.Codecs.NATSJetStream.Packets.InfoPacket(
                 _replyInboxId,
                 jetStreamConfig.Name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
@@ -80,6 +87,38 @@ namespace Hunter.NATS.Client
             if (CreateResponse == null) throw new ArgumentNullException();
 
             return CreateResponse.Message;
+        }
+
+        public async Task<UpdateResponse> StreamUpdateAsync(JetStreamConfig jetStreamConfig)
+        {
+            var Packet = new UpdatePacket(
+                _replyInboxId,
+                jetStreamConfig.Name,
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
+
+            var UpdateResponseReady = new TaskCompletionSource<UpdateResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<UpdateResponsePacket>(Packet.ReplyTo, UpdateResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var UpdateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                UpdateResponseReady.TrySetResult(null);
+            });
+
+            var UpdateResponse = await UpdateResponseReady.Task;
+
+            await UpdateResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (UpdateResponse == null) throw new ArgumentNullException();
+
+            return UpdateResponse.Message;
         }
 
         public async Task<NamesResponse> StreamNamesAsync()
@@ -155,7 +194,7 @@ namespace Hunter.NATS.Client
         {
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
-            SubscribeAsync(streamName, handler);
+            SubscribeAsync(consumer_inbox, handler);
             return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfigBuilder.Build()));
         }
 
@@ -253,6 +292,100 @@ namespace Hunter.NATS.Client
 
             return ConsumerListResponse.Message;
         }
+
+        #endregion;
+
+        #region ConsumerSubscribe;
+
+        public async Task<string> HandleConsumerSubscribeAsync(string subject, string queueGroup,
+            Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
+        {
+
+            return await _policy.ExecuteAsync(async () =>
+            {
+                await CheckConnectAsync();
+                return await InternalConsumerSubscribeAsync(subject, queueGroup, messageHandlerSetup, maxMsg, subscribeId);
+            });
+        }
+
+
+
+        public async Task<string> InternalConsumerSubscribeAsync(string subject, string queueGroup,
+            Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
+        {
+            var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
+
+            _logger.LogDebug($"设置订阅消息队列订阅编号 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
+
+            var SubscriptionConfig = new NATSConsumerSubscriptionConfig(subject, SubscribeId, queueGroup);
+
+            //处理订阅响应的管道
+            var messageHandler = messageHandlerSetup(SubscriptionConfig);
+
+            _logger.LogDebug($"开始添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
+
+            //添加订阅响应管道
+            _channel.Pipeline.AddLast(messageHandler);
+
+            _logger.LogDebug($"结束添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
+
+
+            _logger.LogDebug($"开始发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
+
+            var SubscribePacketMsg = new SubscribePacket(SubscribeId, subject, queueGroup);
+
+            await _channel.WriteAndFlushAsync(SubscribePacketMsg);
+
+            _logger.LogDebug($"结束发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
+
+            //添加消息处理到消息处理集合
+            _consumerMessageHandler.Add(messageHandler);
+
+            return SubscribeId;
+        }
+
+
+        #region 异步处理消息
+
+        public Task<string> ConsumerSubscribeAsync(string subject, string queueGroup, Func<NATSMsgContent, ValueTask> handler, string subscribeId = null)
+        {
+            return HandleConsumerSubscribeAsync(subject, queueGroup, (config) =>
+                new ConsumerMessageAsynHandler(_logger, config, handler), subscribeId: subscribeId);
+        }
+
+        public Task<string> ConsumerSubscribeAsync(string subject, Func<NATSMsgContent, ValueTask> handler, string subscribeId = null)
+        {
+            return HandleConsumerSubscribeAsync(subject, null, (config) =>
+                new ConsumerMessageAsynHandler(_logger, config, handler), subscribeId: subscribeId);
+        }
+
+        #endregion;
+
+        #region 同步处理消息
+
+        public Task<string> ConsumerSubscribeAsync(string subject, string queueGroup, Action<NATSMsgContent> handler, string subscribeId = null)
+        {
+            return HandleConsumerSubscribeAsync(subject, queueGroup, (config) =>
+                new ConsumerMessageSyncHandler(_logger, config, handler), subscribeId: subscribeId);
+        }
+        public Task<string> ConsumerSubscribeAsync(string subject, string queueGroup, int maxMsg, Action<NATSMsgContent> handler)
+        {
+            return HandleConsumerSubscribeAsync(subject, queueGroup, (config) =>
+                new ConsumerMessageSyncHandler(_logger, config, handler), maxMsg);
+        }
+        public Task<string> ConsumerSubscribeAsync(string subject, Action<NATSMsgContent> handler, string subscribeId = null)
+        {
+            return HandleConsumerSubscribeAsync(subject, null, (config) =>
+                new ConsumerMessageSyncHandler(_logger, config, handler), subscribeId: subscribeId);
+        }
+        public Task<string> ConsumerSubscribeAsync(string subject, int maxMsg, Action<NATSMsgContent> handler)
+        {
+            return HandleConsumerSubscribeAsync(subject, null, (config) =>
+                new ConsumerMessageSyncHandler(_logger, config, handler), maxMsg: maxMsg);
+        }
+
+        #endregion;
+
 
         #endregion;
     }

@@ -112,13 +112,20 @@ namespace TestNATSClient
 
             var streamInfo = await client.StreamInfoAsync(streamName);
 
+            var streamUpdate = await client.StreamUpdateAsync(JetStreamConfig.Builder(streamInfo.Config)
+                .SetRetentionPolicy(RetentionPolicy.Interest).Build());
+
+
+
+
             var consumerNames = await client.ConsumerNamesAsync(streamName);
 
             var consumerList = await client.ConsumerListAsync(streamName);
 
 
             var consumerCreate = await client.ConsumerCreateAsync(streamName,
-                ConsumerConfig.Builder().SetDeliverPolicy(DeliverPolicy.DeliverNew),
+                ConsumerConfig.Builder()
+                .SetDurable("T"),
                  (bytes) =>
                 {
                     Console.WriteLine("开始接受收消息");
