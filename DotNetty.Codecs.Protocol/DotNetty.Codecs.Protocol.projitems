@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ByteBufferExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MessageAck.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProtocolSignatures.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ParseState.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProtocolPacket.cs" />

@@ -1,5 +1,6 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.NATSJetStream.Protocol;
+using DotNetty.Codecs.Protocol;
 using DotNetty.Handlers.NATS;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,12 @@ namespace Hunter.NATS.Client
     {
         protected readonly ILogger _logger;
         protected readonly NATSConsumerSubscriptionConfig _subscriptionConfig;
-        protected readonly Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> _messageAckCallback;
+        protected readonly Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> _messageAckCallback;
         private readonly Action<IChannelHandlerContext, MessagePacket> _channelRead;
         public ConsumerMessageHandler(
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
-            Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> messageAckCallback)
+            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> messageAckCallback)
         {
             _logger = logger;
             _subscriptionConfig = subscriptionConfig;
@@ -29,7 +30,7 @@ namespace Hunter.NATS.Client
 
         public override bool IsSharable => true;
 
-        protected abstract void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> ackCallback);
+        protected abstract void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> ackCallback);
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
         {

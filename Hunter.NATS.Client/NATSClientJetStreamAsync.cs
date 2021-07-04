@@ -11,6 +11,7 @@ using DotNetty.Codecs.NATSJetStream;
 using static DotNetty.Codecs.NATSJetStream.Protocol.ConsumerConfig;
 using Microsoft.Extensions.Logging;
 using DotNetty.Codecs.NATS.Packets;
+using DotNetty.Codecs.Protocol;
 
 namespace Hunter.NATS.Client
 {
@@ -298,20 +299,19 @@ namespace Hunter.NATS.Client
         #region ConsumerSubscribe;
 
         public async Task<string> HandleConsumerSubscribeAsync(string subject, string queueGroup,
-            Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
+            Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, string subscribeId = null)
         {
-
             return await _policy.ExecuteAsync(async () =>
             {
                 await CheckConnectAsync();
-                return await InternalConsumerSubscribeAsync(subject, queueGroup, messageHandlerSetup, maxMsg, subscribeId);
+                return await InternalConsumerSubscribeAsync(subject, queueGroup, messageHandlerSetup, subscribeId);
             });
         }
 
 
 
         public async Task<string> InternalConsumerSubscribeAsync(string subject, string queueGroup,
-            Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
+            Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, string subscribeId = null)
         {
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -350,13 +350,13 @@ namespace Hunter.NATS.Client
         public Task<string> ConsumerSubscribeAsync(string subject, string queueGroup, Func<NATSMsgContent, ValueTask> handler, string subscribeId = null)
         {
             return HandleConsumerSubscribeAsync(subject, queueGroup, (config) =>
-                new ConsumerMessageAsynHandler(_logger, config, handler), subscribeId: subscribeId);
+                new ConsumerMessageAsynHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
         }
 
         public Task<string> ConsumerSubscribeAsync(string subject, Func<NATSMsgContent, ValueTask> handler, string subscribeId = null)
         {
             return HandleConsumerSubscribeAsync(subject, null, (config) =>
-                new ConsumerMessageAsynHandler(_logger, config, handler), subscribeId: subscribeId);
+                new ConsumerMessageAsynHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
         }
 
         #endregion;
@@ -366,22 +366,53 @@ namespace Hunter.NATS.Client
         public Task<string> ConsumerSubscribeAsync(string subject, string queueGroup, Action<NATSMsgContent> handler, string subscribeId = null)
         {
             return HandleConsumerSubscribeAsync(subject, queueGroup, (config) =>
-                new ConsumerMessageSyncHandler(_logger, config, handler), subscribeId: subscribeId);
+                new ConsumerMessageSyncHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
         }
-        public Task<string> ConsumerSubscribeAsync(string subject, string queueGroup, int maxMsg, Action<NATSMsgContent> handler)
-        {
-            return HandleConsumerSubscribeAsync(subject, queueGroup, (config) =>
-                new ConsumerMessageSyncHandler(_logger, config, handler), maxMsg);
-        }
+
         public Task<string> ConsumerSubscribeAsync(string subject, Action<NATSMsgContent> handler, string subscribeId = null)
         {
             return HandleConsumerSubscribeAsync(subject, null, (config) =>
-                new ConsumerMessageSyncHandler(_logger, config, handler), subscribeId: subscribeId);
+                new ConsumerMessageSyncHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
         }
-        public Task<string> ConsumerSubscribeAsync(string subject, int maxMsg, Action<NATSMsgContent> handler)
+
+        #endregion;
+
+
+        #region 消息发送确认
+
+
+        /// <summary>
+        /// 发送消息成功处理确认
+        /// </summary>
+        /// <param name="subscriptionConfig">订阅配置</param>
+        /// <param name="msg">消息</param>
+        /// <param name="msgAck">是否确认</param>
+        private async Task AckAsync(NATSConsumerSubscriptionConfig subscriptionConfig, MessagePacket msg, MessageAck msgAck = MessageAck.Ack)
         {
-            return HandleConsumerSubscribeAsync(subject, null, (config) =>
-                new ConsumerMessageSyncHandler(_logger, config, handler), maxMsg: maxMsg);
+            AckPacket ackPacket;
+            switch (msgAck)
+            {
+                case MessageAck.Ack:
+                    ackPacket = new AckAckPacket();
+                    break;
+                case MessageAck.Nak:
+                    ackPacket = new AckAckPacket();
+                    break;
+                case MessageAck.Progress:
+                    ackPacket = new AckAckPacket();
+                    break;
+                case MessageAck.Next:
+                    ackPacket = new AckAckPacket();
+                    break;
+                case MessageAck.Term:
+                    ackPacket = new AckAckPacket();
+                    break;
+                default:
+                    ackPacket = new AckAckPacket();
+                    break;
+            }
+
+            await _channel.WriteAndFlushAsync(ackPacket);
         }
 
         #endregion;

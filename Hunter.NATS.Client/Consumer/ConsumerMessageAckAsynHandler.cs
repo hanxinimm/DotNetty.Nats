@@ -1,4 +1,5 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
+using DotNetty.Codecs.Protocol;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
@@ -7,19 +8,19 @@ namespace Hunter.NATS.Client
 {
     public class ConsumerMessageAckAsynHandler : ConsumerMessageHandler
     {
-        private readonly Func<NATSMsgContent, ValueTask<bool>> _messageHandler;
+        private readonly Func<NATSMsgContent, ValueTask<MessageAck>> _messageHandler;
 
         public ConsumerMessageAckAsynHandler(
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
-            Func<NATSMsgContent, ValueTask<bool>> messageHandler,
-            Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> messageAckCallback)
+            Func<NATSMsgContent, ValueTask<MessageAck>> messageHandler,
+            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> messageAckCallback)
             : base(logger, subscriptionConfig, messageAckCallback)
         {
             _messageHandler = messageHandler;
         }
 
-        protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> ackCallback)
+        protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> ackCallback)
         {
             Task.Factory.StartNew(async _msg =>
             {
