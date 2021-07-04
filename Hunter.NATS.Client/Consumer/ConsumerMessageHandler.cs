@@ -12,22 +12,24 @@ namespace Hunter.NATS.Client
 {
     public abstract class ConsumerMessageHandler : MessagePacketHandler
     {
-        private readonly ILogger _logger;
+        protected readonly ILogger _logger;
         protected readonly NATSConsumerSubscriptionConfig _subscriptionConfig;
+        protected readonly Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> _messageAckCallback;
         private readonly Action<IChannelHandlerContext, MessagePacket> _channelRead;
         public ConsumerMessageHandler(
             ILogger logger,
-            NATSConsumerSubscriptionConfig subscriptionConfig)
+            NATSConsumerSubscriptionConfig subscriptionConfig,
+            Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> messageAckCallback)
         {
             _logger = logger;
             _subscriptionConfig = subscriptionConfig;
+            _messageAckCallback = messageAckCallback;
             _channelRead = MessageHandler;
-
         }
 
         public override bool IsSharable => true;
 
-        protected abstract void MessageHandler(MessagePacket msg);
+        protected abstract void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, bool, Task> ackCallback);
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
         {
@@ -40,7 +42,7 @@ namespace Hunter.NATS.Client
             {
                 try
                 {
-                    MessageHandler(msg);
+                    MessageHandler(msg, _messageAckCallback);
                 }
                 catch (Exception ex)
                 {
