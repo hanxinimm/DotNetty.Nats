@@ -52,6 +52,5 @@ namespace DotNetty.Codecs.NATS.Packets
         /// </summary>
         [DataMember(Name = "payload")]
         public byte[] Payload { get; set; }
-
     }
 }

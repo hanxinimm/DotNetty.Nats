@@ -281,32 +281,58 @@ namespace DotNetty.Codecs.NATS
 
         static void EncodeAckMessage(IByteBufferAllocator bufferAllocator, AckPacket packet, List<object> output)
         {
+
+            byte[] packetPayload = null;
+
+            switch (packet.PacketType)
+            {
+                case NATSPacketType.ACK_ACK:
+                    packetPayload = ACK_ACK_BYTES;
+                    break;
+                case NATSPacketType.ACK_NAK:
+                    packetPayload = ACK_NAK_BYTES;
+                    break;
+                case NATSPacketType.ACK_PROGRESS:
+                    packetPayload = ACK_PROGRESS_BYTES;
+                    break;
+                case NATSPacketType.ACK_NEXT:
+                    packetPayload = ACK_NEXT_BYTES;
+                    break;
+                case NATSPacketType.ACK_TERM:
+                    packetPayload = ACK_TERM_BYTES;
+                    break;
+                default:
+                    packetPayload = ACK_ACK_BYTES;
+                    break;
+            }
+       
+
+            byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
+
+            int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
+
+            byte[] PayloadSize = EncodeStringInUtf8(packetPayload.Length.ToString());
+
+            variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
+            variablePartSize += packetPayload.Length + CRLF_BYTES.Length;
+
+            int fixedHeaderBufferSize = PUB_BYTES.Length + SPACES_BYTES.Length;
+
             IByteBuffer buf = null;
             try
             {
-                buf = bufferAllocator.Buffer(PING_BYTES.Length + CRLF_BYTES.Length);
-                switch (packet.PacketType)
+                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
+                buf.WriteBytes(PUB_BYTES);
+                buf.WriteBytes(SPACES_BYTES);
+                buf.WriteBytes(SubjectNameBytes);
+                buf.WriteBytes(SPACES_BYTES);
+
+                buf.WriteBytes(PayloadSize);
+                buf.WriteBytes(CRLF_BYTES);
+                if (packetPayload != null)
                 {
-                    case NATSPacketType.ACK_ACK:
-                        buf.WriteBytes(ACK_ACK_BYTES);
-                        break;
-                    case NATSPacketType.ACK_NAK:
-                        buf.WriteBytes(ACK_NAK_BYTES);
-                        break;
-                    case NATSPacketType.ACK_PROGRESS:
-                        buf.WriteBytes(ACK_PROGRESS_BYTES);
-                        break;
-                    case NATSPacketType.ACK_NEXT:
-                        buf.WriteBytes(ACK_NEXT_BYTES);
-                        break;
-                    case NATSPacketType.ACK_TERM:
-                        buf.WriteBytes(ACK_TERM_BYTES);
-                        break;
-                    default:
-                        buf.WriteBytes(ACK_ACK_BYTES);
-                        break;
+                    buf.WriteBytes(packetPayload);
                 }
-       
                 buf.WriteBytes(CRLF_BYTES);
 
                 output.Add(buf);

@@ -113,6 +113,7 @@ namespace Hunter.NATS.Client
             _clientId = $"{_options.ClientId}-{_identity}";
             _replyInboxId = _identity;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
+            _consumerMessageHandler = new List<ConsumerMessageHandler>();
             _manualResetEvent = new ManualResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;

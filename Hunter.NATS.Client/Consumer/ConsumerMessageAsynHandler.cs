@@ -11,12 +11,12 @@ namespace Hunter.NATS.Client
 {
     public class ConsumerMessageAsynHandler : ConsumerMessageHandler
     {
-        private readonly Func<NATSMsgContent, ValueTask> _messageHandler;
+        private readonly Func<NATSJetStreamMsgContent, Task> _messageHandler;
 
         public ConsumerMessageAsynHandler(
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
-            Func<NATSMsgContent, ValueTask> messageHandler,
+            Func<NATSJetStreamMsgContent, Task> messageHandler,
             Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> messageAckCallback)
             : base(logger, subscriptionConfig, messageAckCallback)
         {

@@ -1,4 +1,5 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
+using DotNetty.Codecs.NATSJetStream;
 using DotNetty.Codecs.NATSJetStream.Protocol;
 using DotNetty.Codecs.Protocol;
 using DotNetty.Handlers.NATS;
@@ -56,14 +57,17 @@ namespace Hunter.NATS.Client
             }
         }
 
-        protected NATSMsgContent PackMsgContent(MessagePacket msg)
+        protected NATSJetStreamMsgContent PackMsgContent(MessagePacket msg)
         {
-            return new NATSMsgContent()
+            var metadata = msg.GetMetadata();
+
+            return new NATSJetStreamMsgContent()
             {
                 SubscribeId = msg.SubscribeId,
                 Subject = msg.Subject,
                 ReplyTo = msg.ReplyTo,
-                Data = msg.Payload
+                Data = msg.Payload,
+                Metadata = metadata
             };
         }
 

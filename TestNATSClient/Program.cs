@@ -112,6 +112,8 @@ namespace TestNATSClient
 
             var streamInfo = await client.StreamInfoAsync(streamName);
 
+            Console.WriteLine("streamInfo = {0}", streamInfo);
+
             var streamUpdate = await client.StreamUpdateAsync(JetStreamConfig.Builder(streamInfo.Config)
                 .SetRetentionPolicy(RetentionPolicy.Interest).Build());
 
@@ -125,17 +127,18 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateAsync(streamName,
                 ConsumerConfig.Builder()
-                .SetDurable("T"),
+                .SetDeliverPolicy(DeliverPolicy.DeliverNew)
+                .SetFilterSubject("ApiGateway.EventTrigger.>"),
+                //.SetDurable("T"),
                  (bytes) =>
                 {
                     Console.WriteLine("开始接受收消息");
                     var sss = Encoding.UTF8.GetString(bytes.Data);
-                    Console.WriteLine("收到消息 {0}", sss);
-                    return new ValueTask();
+                    Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
                 });
 
             var httpClient = new HttpClient();
-            
+
 
             //var s = await client.SubscribeAsync(streamName, "ApiGateway.Test", async (bytes) =>
             //{
@@ -151,6 +154,8 @@ namespace TestNATSClient
 
             #region  发布测试
 
+            int msg_sq = 0;
+
             while (true)
             {
                 Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -163,9 +168,17 @@ namespace TestNATSClient
                 for (int i = 0; i < 1; i++)
                 {
 
-                    var Testbytes = Encoding.UTF8.GetBytes($"序号 {i} 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    await client.PublishAsync("ApiGateway.EventTrigger.4343", Testbytes);
+                    await client.PublishAsync("Test2", Testbytes);
+
+                    var ApiGatewaybytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                    await client.PublishAsync("ApiGateway.EventTrigger.4343", ApiGatewaybytes);
+
+                    var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                    //await client.PublishAsync("ApiGateway.EventTrigger.4242", ApiGatewaybytes2);
                 }
 
                 stopwatch.Stop(); //  停止监视  

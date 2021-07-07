@@ -8,12 +8,12 @@ namespace Hunter.NATS.Client
 {
     public class ConsumerMessageAckSyncHandler : ConsumerMessageHandler
     {
-        private readonly Func<NATSMsgContent, MessageAck> _messageHandler;
+        private readonly Func<NATSJetStreamMsgContent, MessageAck> _messageHandler;
 
         public ConsumerMessageAckSyncHandler(
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
-            Func<NATSMsgContent, MessageAck> messageHandler,
+            Func<NATSJetStreamMsgContent, MessageAck> messageHandler,
             Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> messageAckCallback)
             : base(logger, subscriptionConfig, messageAckCallback)
         {
@@ -27,8 +27,8 @@ namespace Hunter.NATS.Client
                 try
                 {
                     var current_msg = _msg as MessagePacket;
-                    var isAck = _messageHandler(PackMsgContent(current_msg));
-                    await ackCallback(_subscriptionConfig, current_msg, isAck);
+                    var ack_msg = _messageHandler(PackMsgContent(current_msg));
+                    await ackCallback(_subscriptionConfig, current_msg, ack_msg);
                 }
                 catch (Exception ex)
                 {
