@@ -7,8 +7,6 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
     public class MessageMetadata
     {
-        private static long NANO_FACTOR = 10_00_000_000;
-
         public MessageMetadata() { }
 
         public MessageMetadata(MessagePacket packet)
