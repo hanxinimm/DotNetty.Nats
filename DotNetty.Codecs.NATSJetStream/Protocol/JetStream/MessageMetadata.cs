@@ -25,15 +25,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 
             // not so clever way to separate nanos from seconds
             long tsi = long.Parse(parts[7]);
-
-            try
-            {
-                Timestamp = NATSJetStreamConvertTimeUnits.ConvertToDateTime(tsi);
-            }
-            catch (Exception ex)
-            { 
-                
-            }
+            Timestamp = NATSJetStreamConvertTimeUnits.ConvertToDateTime(tsi);
 
             if (parts.Length == 9)
             {
