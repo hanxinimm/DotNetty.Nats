@@ -7,7 +7,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
     public class GetMessageResponse : JetStreamResponse
     {
-        [JsonProperty("success")]
+        [JsonProperty("message")]
         public StoredMessage Message { get; set; }
     }
 }

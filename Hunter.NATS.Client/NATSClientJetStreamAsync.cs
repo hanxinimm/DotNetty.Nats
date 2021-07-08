@@ -184,6 +184,75 @@ namespace Hunter.NATS.Client
             return ListResponse.Message;
         }
 
+        public async Task<GetMessageResponse> StreamReadMessageAsync(string name, long sequence)
+        {
+            var MessageRequest = new GetMessageRequest(sequence);
+
+            var Packet = new GetMessagePacket(
+                _replyInboxId,
+                name,
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(MessageRequest, _jetStreamSetting)));
+
+            var GetMessageResponseReady = new TaskCompletionSource<GetMessageResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                GetMessageResponseReady.TrySetResult(null);
+            });
+
+            var GetMessageResponse = await GetMessageResponseReady.Task;
+
+            await GetMessageResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (GetMessageResponse == null) throw new ArgumentNullException();
+
+            return GetMessageResponse.Message;
+        }
+
+        public async Task<GetMessageResponse> StreamReadMessageAsync(string name, string subject)
+        {
+            var MessageRequest = new GetMessageRequest(subject);
+
+            var Packet = new GetMessagePacket(
+                _replyInboxId,
+                name,
+                Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(MessageRequest, _jetStreamSetting)));
+
+            var GetMessageResponseReady = new TaskCompletionSource<GetMessageResponsePacket>();
+
+            var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
+
+            _channel.Pipeline.AddLast(Handler);
+
+            await _channel.WriteAndFlushAsync(Packet);
+
+            var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            {
+                GetMessageResponseReady.TrySetResult(null);
+            });
+
+            var GetMessageResponse = await GetMessageResponseReady.Task;
+
+            await GetMessageResponseCancellationToken.DisposeAsync();
+
+            _channel.Pipeline.Remove(Handler);
+
+            //TODO:待优化
+            if (GetMessageResponse == null) throw new ArgumentNullException();
+
+            return GetMessageResponse.Message;
+        }
+
+
         #endregion;
 
         #region Consumer;
@@ -482,6 +551,20 @@ namespace Hunter.NATS.Client
 
         #endregion;
 
+
+        #endregion;
+
+        #region Consumer Pull;
+
+        public Task<ConsumerCreateResponse> ConsumerCreateAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder)
+        {
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            //ConsumerSubscribeAsync(consumer_inbox, handler);
+            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfigBuilder.Build()));
+        }
 
         #endregion;
     }

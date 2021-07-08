@@ -159,15 +159,15 @@ namespace Hunter.NATS.Client
             var policyRetry = Policy
                 .Handle<TimeoutRejectedException>()
                 .Or<TimeoutException>()
-                .WaitAndRetryAsync(3,
-                (retryAttempt) =>
+                .WaitAndRetryForeverAsync(
+                (retryAttempt, context) =>
                 {
                     logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
                 },
-                (ex, retrySecond, context) =>
+                (ex, retryAttempt, retrySecond, context) =>
                 {
-                    logger.LogError(ex, $"重新执行当前命令 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
+                    logger.LogError(ex, $"第 {retryAttempt}次 重新执行当前命令 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
                 });
 
             //超时

@@ -124,6 +124,7 @@ namespace TestNATSClient
 
             var consumerList = await client.ConsumerListAsync(streamName);
 
+            var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
 
             var consumerCreate = await client.ConsumerCreateAsync(streamName,
                 ConsumerConfig.Builder()
