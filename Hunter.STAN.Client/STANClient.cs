@@ -90,7 +90,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 限制并发线程
         /// </summary>
-        private readonly ManualResetEvent _manualResetEvent;
+        private readonly AutoResetEvent _autoResetEvent;
 
         /// <summary>
         /// 连接故障策略
@@ -112,7 +112,7 @@ namespace Hunter.STAN.Client
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
-            _manualResetEvent = new ManualResetEvent(true);
+            _autoResetEvent = new AutoResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
 
@@ -222,9 +222,7 @@ namespace Hunter.STAN.Client
         {
             _logger.LogInformation("STAN 尝试重新激活连接");
 
-            _manualResetEvent.WaitOne();
-            _manualResetEvent.Reset();
-
+            _autoResetEvent.WaitOne();
 
             if (IsChannelInactive)
             {
@@ -236,7 +234,7 @@ namespace Hunter.STAN.Client
                 _logger.LogWarning("STAN 完成重新连接");
             }
 
-            _manualResetEvent.Set();
+            _autoResetEvent.Set();
         }
 
         #region 消息发送确认

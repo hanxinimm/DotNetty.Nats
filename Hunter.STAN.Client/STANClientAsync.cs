@@ -16,15 +16,14 @@ namespace Hunter.STAN.Client
     {
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            _manualResetEvent.WaitOne();
-            _manualResetEvent.Reset();
+            _autoResetEvent.WaitOne();
 
             _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
 
             if (_connectionState == STANConnectionState.Connected)
             {
-                _manualResetEvent.Set();
-                _logger.LogError($"Stan客户端已经连接 客户端编号 {_clientId}");
+                _autoResetEvent.Set();
+                _logger.LogWarning($"Stan客户端已经连接 客户端编号 {_clientId}");
                 return;
             }
 
@@ -32,7 +31,7 @@ namespace Hunter.STAN.Client
 
             await _connectPolicy.ExecuteAsync((_) => ExecuteConnectAsync(), cancellationToken);
 
-            _manualResetEvent.Set();
+            _autoResetEvent.Set();
         }
 
         public async Task<bool> CheckConnectAsync()
@@ -264,6 +263,7 @@ namespace Hunter.STAN.Client
              STANSubscribeOptions subscribeOptions,
              Func<STANSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup)
         {
+
             return await _policy.ExecuteAsync(async () =>
             {
                 await CheckConnectAsync();
@@ -387,6 +387,7 @@ namespace Hunter.STAN.Client
         {
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
+
             return await _policy.ExecuteAsync(async () =>
             {
                 await CheckConnectAsync();
@@ -730,19 +731,21 @@ namespace Hunter.STAN.Client
 
         public async Task UnSubscribeAsync(STANSubscriptionConfig subscriptionConfig)
         {
-            if (subscriptionConfig.IsUnSubscribe) return;
-
-            subscriptionConfig.IsUnSubscribe = true;
-
-            var Packet = new UnsubscribeRequestPacket(_replyInboxId,
-                _config.UnsubRequests,
-                _clientId,
-                subscriptionConfig.Subject,
-                subscriptionConfig.AckInbox,
-                subscriptionConfig.DurableName);
-
             await _policy.ExecuteAsync(async () =>
             {
+                await CheckConnectAsync();
+
+                if (subscriptionConfig.IsUnSubscribe) return;
+
+                subscriptionConfig.IsUnSubscribe = true;
+
+                var Packet = new UnsubscribeRequestPacket(_replyInboxId,
+                    _config.UnsubRequests,
+                    _clientId,
+                    subscriptionConfig.Subject,
+                    subscriptionConfig.AckInbox,
+                    subscriptionConfig.DurableName);
+
                 //发送取消订阅请求
                 await _channel.WriteAndFlushAsync(Packet);
             });
@@ -756,16 +759,20 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public async Task<PubAckPacket> PublishWaitAckAsync(string subject, byte[] data)
         {
-            var Packet = new PubMsgPacket(
-                _replyInboxId,
-                _config.PubPrefix,
-                _clientId,
-                _config.ConnectionId,
-                subject,
-                data);
+
 
             return await _policy.ExecuteAsync(async () =>
             {
+                await CheckConnectAsync();
+
+                var Packet = new PubMsgPacket(
+                    _replyInboxId,
+                    _config.PubPrefix,
+                    _clientId,
+                    _config.ConnectionId,
+                    subject,
+                    data);
+
                 var PubAckReady = new TaskCompletionSource<PubAckPacket>();
 
                 _waitPubAckTaskSchedule[Packet.ReplyTo] = PubAckReady;
@@ -787,7 +794,11 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            var Packet = new PubMsgPacket(
+            await _policy.ExecuteAsync(async () =>
+            {
+                await CheckConnectAsync();
+
+                var Packet = new PubMsgPacket(
                 _replyInboxId,
                 _config.PubPrefix,
                 _clientId,
@@ -795,8 +806,6 @@ namespace Hunter.STAN.Client
                 subject,
                 data);
 
-            await _policy.ExecuteAsync(async () =>
-            {
                 await _channel.WriteAndFlushAsync(Packet);
             });
         }
@@ -844,7 +853,7 @@ namespace Hunter.STAN.Client
 
         public async ValueTask DisposeAsync()
         {
-            _manualResetEvent.WaitOne(TimeSpan.FromSeconds(20));
+            _autoResetEvent.WaitOne(TimeSpan.FromSeconds(20));
 
             _logger.LogWarning($"开始释放Stan客户端 客户端编号 {_clientId}");
 
@@ -863,7 +872,7 @@ namespace Hunter.STAN.Client
 
             _logger.LogWarning($"结束释放Stan客户端 客户端编号 {_clientId}");
 
-            _manualResetEvent.Set();
+            _autoResetEvent.Set();
         }
     }
 }

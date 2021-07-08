@@ -80,8 +80,23 @@ namespace TestSTANClient
 
             Console.WriteLine("开始连接");
 
-            await client.ConnectAsync();
+            //await client.ConnectAsync();
 
+            var Testbytes1 = Encoding.UTF8.GetBytes($"序号 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+
+            for (int ii = 0; ii < 30; ii++)
+            {
+                await Task.Factory.StartNew(async () =>
+                {
+                    for (int j = 0; j < 30; j++)
+                    {
+                        await Task.Factory.StartNew(async () =>
+                        {
+                            await client.PublishAsync("Test2", Testbytes1);
+                        });
+                    }
+                });
+            }
 
             //await client.DisposeAsync();
 
