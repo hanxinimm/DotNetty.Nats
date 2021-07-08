@@ -89,7 +89,7 @@ namespace Hunter.NATS.Client
         /// <summary>
         /// 限制并发线程
         /// </summary>
-        private readonly ManualResetEvent _manualResetEvent;
+        private readonly AutoResetEvent _autoResetEvent;
 
         /// <summary>
         /// 连接故障策略
@@ -112,9 +112,10 @@ namespace Hunter.NATS.Client
             _identity = Guid.NewGuid().ToString("n");
             _clientId = $"{_options.ClientId}-{_identity}";
             _replyInboxId = _identity;
+            _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _consumerMessageHandler = new List<ConsumerMessageHandler>();
-            _manualResetEvent = new ManualResetEvent(true);
+            _autoResetEvent = new AutoResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
 
@@ -208,7 +209,7 @@ namespace Hunter.NATS.Client
                     channel.Pipeline.AddLast("Ping", new PingPacketHandler(_logger));
                     channel.Pipeline.AddLast("Pong", new PongPacketHandler(_logger));
                     channel.Pipeline.AddLast("OK", new OKPacketHandler(_logger));
-                    channel.Pipeline.AddLast("INFO", new InfoPacketHandler(_logger, InfoAsync));
+                    channel.Pipeline.AddLast("INFO", new InfoPacketHandler(_logger, _infoTaskCompletionSource));
                     channel.Pipeline.AddLast("Error", new ErrorPacketHandler(_logger));
                 }));
         }
@@ -224,8 +225,7 @@ namespace Hunter.NATS.Client
 
         private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
         {
-            _manualResetEvent.WaitOne();
-            _manualResetEvent.Reset();
+            _autoResetEvent.WaitOne();
 
             if (IsChannelInactive)
             {
@@ -236,7 +236,7 @@ namespace Hunter.NATS.Client
                 _logger.LogWarning("NATS 完成重新连接");
             }
 
-            _manualResetEvent.Set();
+            _autoResetEvent.Set();
         }
 
     }

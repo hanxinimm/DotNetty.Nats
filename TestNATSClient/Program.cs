@@ -102,44 +102,41 @@ namespace TestNATSClient
             await using var client = _serviceProvider.GetRequiredService<NATSClient>();
 
 
-            await client.ConnectAsync();
+            //await client.ConnectAsync();
 
-            var streamList = await client.StreamListAsync();
+            //var streamList = await client.StreamListAsync();
 
-            var streamNames = await client.StreamNamesAsync();
+            //var streamNames = await client.StreamNamesAsync();
 
-            var streamName = streamNames.Streams.FirstOrDefault();
+            //var streamName = streamNames.Streams.FirstOrDefault();
 
-            var streamInfo = await client.StreamInfoAsync(streamName);
+            //var streamInfo = await client.StreamInfoAsync(streamName);
 
-            Console.WriteLine("streamInfo = {0}", streamInfo);
+            //Console.WriteLine("streamInfo = {0}", streamInfo);
 
-            var streamUpdate = await client.StreamUpdateAsync(JetStreamConfig.Builder(streamInfo.Config)
-                .SetRetentionPolicy(RetentionPolicy.Interest).Build());
-
-
+            //var streamUpdate = await client.StreamUpdateAsync(JetStreamConfig.Builder(streamInfo.Config)
+            //    .SetRetentionPolicy(RetentionPolicy.Interest).Build());
 
 
-            var consumerNames = await client.ConsumerNamesAsync(streamName);
 
-            var consumerList = await client.ConsumerListAsync(streamName);
 
-            var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
+            //var consumerNames = await client.ConsumerNamesAsync(streamName);
 
-            var consumerCreate = await client.ConsumerCreateAsync(streamName,
-                ConsumerConfig.Builder()
-                .SetDeliverPolicy(DeliverPolicy.DeliverNew)
-                .SetFilterSubject("ApiGateway.EventTrigger.>"),
-                //.SetDurable("T"),
-                 (bytes) =>
-                {
-                    Console.WriteLine("开始接受收消息");
-                    var sss = Encoding.UTF8.GetString(bytes.Data);
-                    Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
-                });
+            //var consumerList = await client.ConsumerListAsync(streamName);
 
-            var httpClient = new HttpClient();
+            //var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
 
+            //var consumerCreate = await client.ConsumerCreateAsync("TestAll",
+            //    ConsumerConfig.Builder()
+            //    .SetDeliverPolicy(DeliverPolicy.DeliverNew),
+            //    //.SetFilterSubject("ApiGateway.EventTrigger.>"),
+            //     //.SetDurable("T"),
+            //     (bytes) =>
+            //    {
+            //        Console.WriteLine("开始接受收消息");
+            //        var sss = Encoding.UTF8.GetString(bytes.Data);
+            //        Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
+            //    });
 
             //var s = await client.SubscribeAsync(streamName, "ApiGateway.Test", async (bytes) =>
             //{
@@ -165,19 +162,30 @@ namespace TestNATSClient
                 stopwatch.Start(); //  开始监视代码运行时间
 
 
+                var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                for (int i = 0; i < 1; i++)
+
+                for (int i = 0; i < 30; i++)
                 {
+                    await Task.Factory.StartNew(async () =>
+                    {
+                        for (int j = 0; j < 30; j++)
+                        {
+                            await Task.Factory.StartNew(async () =>
+                            {
+                                await client.PublishAsync("Test2", Testbytes);
+                            });
+                        }
+                    });
+                    //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    //await client.PublishAsync("Test2", Testbytes);
 
-                    await client.PublishAsync("Test2", Testbytes);
+                    //var ApiGatewaybytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    var ApiGatewaybytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    //await client.PublishAsync("ApiGateway.EventTrigger.4343", ApiGatewaybytes);
 
-                    await client.PublishAsync("ApiGateway.EventTrigger.4343", ApiGatewaybytes);
-
-                    var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    //var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                     //await client.PublishAsync("ApiGateway.EventTrigger.4242", ApiGatewaybytes2);
                 }

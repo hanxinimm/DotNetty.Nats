@@ -13,8 +13,7 @@ namespace Hunter.NATS.Client
     {
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            _manualResetEvent.WaitOne();
-            _manualResetEvent.Reset();
+            _autoResetEvent.WaitOne();
 
             _logger.LogInformation($"开始连接Nats客户端 客户端编号 {_clientId}");
 
@@ -28,7 +27,7 @@ namespace Hunter.NATS.Client
 
             await _connectPolicy.ExecuteAsync((_) => ExecuteConnectAsync(), cancellationToken);
 
-            _manualResetEvent.Set();
+            _autoResetEvent.Set();
         }
     
 
@@ -101,8 +100,6 @@ namespace Hunter.NATS.Client
             var Packet = _options.IsAuthentication ?
                 new ConnectPacket(_options.IsVerbose, false, false, _options.UserName, _options.Password, _clientId, null)
                 : new ConnectPacket(_options.IsVerbose, false, false, _clientId);
-
-            _infoTaskCompletionSource = new TaskCompletionSource<DotNetty.Codecs.NATS.Packets.InfoPacket>();
 
             await _channel.WriteAndFlushAsync(Packet);
 
@@ -298,7 +295,7 @@ namespace Hunter.NATS.Client
         public async ValueTask DisposeAsync()
         {
             //TODO:待完善逻辑
-            _manualResetEvent.WaitOne(TimeSpan.FromSeconds(20));
+            _autoResetEvent.WaitOne(TimeSpan.FromSeconds(20));
 
             _logger.LogWarning($"开始释放Nats客户端 客户端编号 {_clientId}");
 
@@ -315,7 +312,7 @@ namespace Hunter.NATS.Client
 
             _logger.LogWarning($"结束释放Nats客户端 客户端编号 {_clientId}");
 
-            _manualResetEvent.Set();
+            _autoResetEvent.Set();
         }
     }
 }
