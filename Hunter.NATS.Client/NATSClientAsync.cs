@@ -38,13 +38,13 @@ namespace Hunter.NATS.Client
                 return true;
             }
 
-            _logger.LogInformation($"开始等待Nats客户端连接 客户端编号 {_clientId}");
+            _logger.LogInformation($"开始等待Nats客户端连接 客户端编号 {_clientId} State {_connectionState}");
 
             await ConnectAsync();
 
             if (_connectionState == NATSConnectionState.Connected)
             {
-                _logger.LogInformation($"Nats客户端已连接 客户端编号 {_clientId}");
+                _logger.LogInformation($"Nats客户端已连接 客户端编号 {_clientId} State {_connectionState}");
                 return true;
             }
 

@@ -17,7 +17,7 @@ namespace Hunter.STAN.Client
     {
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
-            _autoResetEvent.WaitOne();
+            var receivesSignal = _autoResetEvent.WaitOne(TimeSpan.FromSeconds(5));
 
             _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
 
@@ -27,6 +27,9 @@ namespace Hunter.STAN.Client
                 _logger.LogWarning($"Stan客户端已经连接 客户端编号 {_clientId}");
                 return;
             }
+
+            if (!receivesSignal)
+                throw new TimeoutException("等待连接Stan客户端信号超时");
 
             _connectionState = STANConnectionState.Connecting;
 
@@ -46,13 +49,13 @@ namespace Hunter.STAN.Client
                 return true;
             }
 
-            _logger.LogInformation($"开始等待Stan客户端连接 客户端编号 {_clientId}");
+            _logger.LogInformation($"开始等待Stan客户端连接 客户端编号 {_clientId} State {_connectionState}");
 
             await ConnectAsync();
 
             if (_connectionState == STANConnectionState.Connected)
             {
-                _logger.LogInformation($"Stan客户端已连接 客户端编号 {_clientId}");
+                _logger.LogInformation($"Stan客户端已连接 客户端编号 {_clientId} State {_connectionState}");
                 return true;
             }
 

@@ -54,7 +54,7 @@ namespace TestEventBus
 
             var _eventBus = _serviceProvider.GetRequiredService<IMessageEventBus>();
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 100; i++)
             {
                 await Task.Factory.StartNew(async () =>
                 {
