@@ -32,7 +32,7 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation($"开始执行Stan客户端 客户端编号 {_clientId}");
 
-            await _connectPolicy.ExecuteAsync((_) => ExecuteConnectAsync(), cancellationToken);
+            await _connectPolicy.ExecuteAsync(async (_) => await ExecuteConnectAsync(), cancellationToken);
 
             _logger.LogInformation($"完成执行Stan客户端 客户端编号 {_clientId}");
 

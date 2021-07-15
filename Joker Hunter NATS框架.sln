@@ -25,6 +25,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestSTANSubscription", "Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Codecs.NATSJetStream", "DotNetty.Codecs.NATSJetStream\DotNetty.Codecs.NATSJetStream.csproj", "{514F345D-1EE9-454C-9C6B-D119371B57AE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hunter.DDD.EventBus.NATSStreaming", "..\Joker Hunter-DDD实现\EventBus.NATSStreaming\Hunter.DDD.EventBus.NATSStreaming.csproj", "{6ED12592-F8F7-4C7B-9545-3063F4A6E6C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestEventBus", "TestEventBus\TestEventBus.csproj", "{C14C0125-47E2-4375-BF35-9438E751DF2F}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		DotNetty.Codecs.Protocol\DotNetty.Codecs.Protocol.projitems*{2775fc7f-ec86-4d6b-8727-086d007aed27}*SharedItemsImports = 13
@@ -78,6 +82,14 @@ Global
 		{514F345D-1EE9-454C-9C6B-D119371B57AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{514F345D-1EE9-454C-9C6B-D119371B57AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{514F345D-1EE9-454C-9C6B-D119371B57AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6ED12592-F8F7-4C7B-9545-3063F4A6E6C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6ED12592-F8F7-4C7B-9545-3063F4A6E6C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6ED12592-F8F7-4C7B-9545-3063F4A6E6C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6ED12592-F8F7-4C7B-9545-3063F4A6E6C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C14C0125-47E2-4375-BF35-9438E751DF2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C14C0125-47E2-4375-BF35-9438E751DF2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C14C0125-47E2-4375-BF35-9438E751DF2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C14C0125-47E2-4375-BF35-9438E751DF2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -110,12 +110,6 @@ namespace TestSTANClient
 
             //client.ConnectAsync();
 
-            #region 无用代码
-
-
-            #endregion;
-
-
             //client.TryConnectAsync();
 
             //Console.WriteLine("成功执行");
@@ -142,19 +136,19 @@ namespace TestSTANClient
 
             //var lastValue = 0;
             ////"KeepLast"
-            var s = client.SubscribeAsync("ApiGateway.EventTrigger.After.>", (bytes) =>
-            {
-                var sss = Encoding.UTF8.GetString(bytes.Data);
-                //var nowValue = int.Parse(sss.Split(' ')[0]);
-                //if (lastValue != 0 && (nowValue - lastValue) != 1)
-                //{
-                //    Console.WriteLine("ERROR ==========================================================");
-                //}
-                //lastValue = nowValue;
-                Console.WriteLine("序号: {0} , 值 {1}", bytes.Sequence, sss);
-            });
+            //var s = client.SubscribeAsync("ApiGateway.EventTrigger.After.>", (bytes) =>
+            //{
+            //    var sss = Encoding.UTF8.GetString(bytes.Data);
+            //    //var nowValue = int.Parse(sss.Split(' ')[0]);
+            //    //if (lastValue != 0 && (nowValue - lastValue) != 1)
+            //    //{
+            //    //    Console.WriteLine("ERROR ==========================================================");
+            //    //}
+            //    //lastValue = nowValue;
+            //    Console.WriteLine("序号: {0} , 值 {1}", bytes.Sequence, sss);
+            //});
 
-            Console.WriteLine("完成订阅");
+            //Console.WriteLine("完成订阅");
 
             //// 防止此主机进程终止，以使服务保持运行。
 

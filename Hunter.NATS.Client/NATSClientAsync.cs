@@ -25,7 +25,7 @@ namespace Hunter.NATS.Client
 
             _connectionState = NATSConnectionState.Connecting;
 
-            await _connectPolicy.ExecuteAsync((_) => ExecuteConnectAsync(), cancellationToken);
+            await _connectPolicy.ExecuteAsync(async (_) => await ExecuteConnectAsync(), cancellationToken);
 
             _autoResetEvent.Set();
         }
