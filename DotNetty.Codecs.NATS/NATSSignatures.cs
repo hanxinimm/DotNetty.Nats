@@ -8,10 +8,12 @@ namespace DotNetty.Codecs.NATS
     {
         internal const string CRLF = "\r\n";
         internal const string SPACES = " ";
+        internal const string COLON = ":";
 
         internal const string INFO = "INFO";
         internal const string CONNECT = "CONNECT";
         internal const string PUB = "PUB";
+        internal const string HPUB = "HPUB";
         internal const string SUB = "SUB";
         internal const string UNSUB = "UNSUB";
         internal const string MSG = "MSG";
@@ -19,6 +21,8 @@ namespace DotNetty.Codecs.NATS
         internal const string PONG = "PONG";
         internal const string OK = "+OK";
         internal const string ERR = "-ERR";
+
+        internal const string HEADER_VERSION = "NATS/1.0";
 
         // Ack acknowledges a JetStream messages received from a Consumer, indicating the message
         // should not be received again later

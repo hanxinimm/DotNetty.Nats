@@ -9,6 +9,7 @@ namespace DotNetty.Codecs.Protocol
         internal const string CRLF = "\r\n";
         internal const string SPACES = " ";
 
+
         internal const string INFO = "INFO";
         internal const string CONNECT = "CONNECT";
         internal const string PUB = "PUB";
@@ -19,5 +20,6 @@ namespace DotNetty.Codecs.Protocol
         internal const string PONG = "PONG";
         internal const string OK = "+OK";
         internal const string ERR = "-ERR";
+
     }
 }

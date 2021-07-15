@@ -232,7 +232,6 @@ namespace Hunter.NATS.Client
 
         #endregion;
 
-
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
             await _policy.ExecuteAsync(async () =>

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.Extensions.Logging;
+using Polly;
 
 namespace Hunter.STAN.Client
 {
@@ -29,7 +30,11 @@ namespace Hunter.STAN.Client
 
             _connectionState = STANConnectionState.Connecting;
 
+            _logger.LogInformation($"开始执行Stan客户端 客户端编号 {_clientId}");
+
             await _connectPolicy.ExecuteAsync((_) => ExecuteConnectAsync(), cancellationToken);
+
+            _logger.LogInformation($"完成执行Stan客户端 客户端编号 {_clientId}");
 
             _autoResetEvent.Set();
         }
@@ -264,11 +269,11 @@ namespace Hunter.STAN.Client
              Func<STANSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup)
         {
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (cnt) =>
             {
                 await CheckConnectAsync();
                 return await InternalSubscribeAsync(subject, queueGroup, persistenceName, subscribeOptions, messageHandlerSetup);
-            });
+            }, new Dictionary<string, object>() { { "hld", "HandleSubscribeAsync" }, { "sub", subject } });
         }
 
         /// <summary>
@@ -388,11 +393,11 @@ namespace Hunter.STAN.Client
             CheckSubject(subject);
             CheckQueueGroup(queueGroup);
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (cnt) =>
             {
                 await CheckConnectAsync();
                 return await SubscribeAsync(subject, queueGroup, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
-            });
+            }, new Dictionary<string, object>() { { "hld", "SubscribeAsync" }, { "sub", subject } });
         }
         public Task<STANSubscriptionConfig> SubscribeAsync(string subject, string queueGroup, STANSubscribeOptions subscribeOptions, Func<STANMsgContent, ValueTask> handler)
         {
@@ -624,10 +629,10 @@ namespace Hunter.STAN.Client
         //TODO:待完善读取逻辑
         private async Task<Queue<STANMsgContent>> ReadAsync(string subject, int? count, STANSubscribeOptions subscribeOptions)
         {
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (cnt) =>
             {
                 return await ExecuteReadAsync(subject, count, subscribeOptions);
-            });
+            }, new Dictionary<string, object>() { { "hld", "ReadAsync" }, { "sub", subject } });
         }
 
         private async Task<Queue<STANMsgContent>> ExecuteReadAsync(string subject, int? count, STANSubscribeOptions subscribeOptions)
@@ -731,7 +736,7 @@ namespace Hunter.STAN.Client
 
         public async Task UnSubscribeAsync(STANSubscriptionConfig subscriptionConfig)
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync(async (cnt) =>
             {
                 await CheckConnectAsync();
 
@@ -748,7 +753,7 @@ namespace Hunter.STAN.Client
 
                 //发送取消订阅请求
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }, new Dictionary<string, object>() { { "hld", "UnSubscribeAsync" }, { "sub", subscriptionConfig.Subject } });
         }
 
         /// <summary>
@@ -761,7 +766,7 @@ namespace Hunter.STAN.Client
         {
 
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (cnt) =>
             {
                 await CheckConnectAsync();
 
@@ -783,7 +788,7 @@ namespace Hunter.STAN.Client
                 await PublishTask.ContinueWith(task => { if (task.Status != TaskStatus.RanToCompletion) PubAckReady.SetResult(null); });
 
                 return await PubAckReady.Task;
-            });
+            }, new Dictionary<string, object>() { { "hld", "PublishWaitAckAsync" }, { "sub", subject } });
         }
 
         /// <summary>
@@ -794,7 +799,7 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync(async (cnt) =>
             {
                 await CheckConnectAsync();
 
@@ -807,7 +812,7 @@ namespace Hunter.STAN.Client
                 data);
 
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }, new Dictionary<string, object>() { { "hld", "PublishAsync" }, { "sub", subject } });
         }
 
         #region 消息发送确认

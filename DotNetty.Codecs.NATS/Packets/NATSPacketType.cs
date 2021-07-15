@@ -13,39 +13,43 @@ namespace DotNetty.Codecs.NATS.Packets
         /// <summary>
         /// Client	Sent to server to specify connection information
         /// </summary>
-        CONNECT = 1,
+        CONNECT,
         /// <summary>
         /// Client	Publish a message to a subject, with optional reply subject
         /// </summary>
-        PUB = 2,
+        PUB,
+        /// <summary>
+        /// Client	Publish a message to a subject, with optional reply subject
+        /// </summary>
+        HPUB,
         /// <summary>
         /// Client	Subscribe to a subject (or subject wildcard)
         /// </summary>
-        SUB = 3,
+        SUB,
         /// <summary>
         /// Client	Unsubscribe (or auto-unsubscribe) from subject
         /// </summary>
-        UNSUB = 4,
+        UNSUB,
         /// <summary>
         /// Server	Delivers a message payload to a subscriber
         /// </summary>
-        MSG = 5,
+        MSG,
         /// <summary>
         /// Both	PING keep-alive message
         /// </summary>
-        PING = 6,
+        PING,
         /// <summary>
         /// Both	PONG keep-alive response
         /// </summary>
-        PONG = 7,
+        PONG,
         /// <summary>
         /// Server	Acknowledges well-formed protocol message in verbose mode
         /// </summary>
-        PLUS_OK = 8,
+        PLUS_OK,
         /// <summary>
         /// Server	Indicates a protocol error. May cause client disconnect.
         /// </summary>
-        MINUS_ERR = 9,
+        MINUS_ERR,
 
         // Ack acknowledges a JetStream messages received from a Consumer, indicating the message
         // should not be received again later

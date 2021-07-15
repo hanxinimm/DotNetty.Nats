@@ -33,6 +33,6 @@ namespace Hunter.NATS.Client.JetStream
         /// <remarks>
         /// Expected last sequence
         /// </remarks>
-        public long ExpectedSequence { get; set; }
+        public long? ExpectedSequence { get; set; }
     }
 }

@@ -65,9 +65,9 @@ namespace TestSTANClient
                 options.ClusterID = "main-cluster";
                 options.ClientId = $"Security-StatefulManagerService";
                 //options.Host = "mq.stan.yidujob.com";
-                options.Host = "127.0.0.1";
+                //options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
-                //options.Host = "mq.stan.yd.com";
+                options.Host = "mq.stan.yd.com";
                 options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
@@ -82,21 +82,21 @@ namespace TestSTANClient
 
             //await client.ConnectAsync();
 
-            var Testbytes1 = Encoding.UTF8.GetBytes($"序号 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            //var Testbytes1 = Encoding.UTF8.GetBytes($"序号 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-            for (int ii = 0; ii < 30; ii++)
-            {
-                await Task.Factory.StartNew(async () =>
-                {
-                    for (int j = 0; j < 30; j++)
-                    {
-                        await Task.Factory.StartNew(async () =>
-                        {
-                            await client.PublishAsync("Test2", Testbytes1);
-                        });
-                    }
-                });
-            }
+            //for (int ii = 0; ii < 30; ii++)
+            //{
+            //    await Task.Factory.StartNew(async () =>
+            //    {
+            //        for (int j = 0; j < 30; j++)
+            //        {
+            //            await Task.Factory.StartNew(async () =>
+            //            {
+            //                await client.PublishAsync("Test2", Testbytes1);
+            //            });
+            //        }
+            //    });
+            //}
 
             //await client.DisposeAsync();
 
@@ -142,7 +142,7 @@ namespace TestSTANClient
 
             //var lastValue = 0;
             ////"KeepLast"
-            var s = client.SubscribeAsync("OrderPlaced", (bytes) =>
+            var s = client.SubscribeAsync("ApiGateway.EventTrigger.After.>", (bytes) =>
             {
                 var sss = Encoding.UTF8.GetString(bytes.Data);
                 //var nowValue = int.Parse(sss.Split(' ')[0]);
@@ -153,6 +153,8 @@ namespace TestSTANClient
                 //lastValue = nowValue;
                 Console.WriteLine("序号: {0} , 值 {1}", bytes.Sequence, sss);
             });
+
+            Console.WriteLine("完成订阅");
 
             //// 防止此主机进程终止，以使服务保持运行。
 
@@ -184,7 +186,7 @@ namespace TestSTANClient
 
 
 
-            //client.Subscribe("Security-App-1", "Test-Vue", "Vue", new STANSubscribeOptions(), (data) =>
+            //await client.SubscribeAsync("Security-App-1",  new STANSubscribeOptions(), (data) =>
             //{
             //    var TestString = Encoding.UTF8.GetString(data);
             //    Console.WriteLine(TestString);
@@ -233,7 +235,7 @@ namespace TestSTANClient
 
                     for (int j = 0; j < 3; j++)
                     {
-                        await client.PublishAsync("OrderPlaced", Testbytes);
+                        await client.PublishAsync("ApiGateway.EventTrigger.After.Test", Testbytes);
                     }
                 }
                 catch { }

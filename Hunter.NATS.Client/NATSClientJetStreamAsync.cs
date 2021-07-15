@@ -12,6 +12,7 @@ using static DotNetty.Codecs.NATSJetStream.Protocol.ConsumerConfig;
 using Microsoft.Extensions.Logging;
 using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.Protocol;
+using Hunter.NATS.Client.JetStream;
 
 namespace Hunter.NATS.Client
 {
@@ -21,6 +22,62 @@ namespace Hunter.NATS.Client
         /// 订阅消息处理器集合
         /// </summary>
         private readonly List<ConsumerMessageHandler> _consumerMessageHandler;
+
+        /// <summary>
+        /// 异步发送
+        /// </summary>
+        /// <param name="subject">主体</param>
+        /// <param name="data">数据</param>
+        /// <param name="publishOptions">发布选项</param>
+        /// <returns></returns>
+        public async Task StreamPublishAsync(string subject, byte[] data, PublishOptions publishOptions = null)
+        {
+            if (publishOptions != null)
+            {
+                var messageHeaders = new Dictionary<string, string>();
+
+                if (publishOptions.ExpectedSequence.HasValue)
+                {
+                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedSequence.ToString());
+                }
+
+                if (!string.IsNullOrEmpty(publishOptions.ExpectedMessageId))
+                {
+                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedMessageId);
+                }
+
+                if (!string.IsNullOrEmpty(publishOptions.ExpectedStreamName))
+                {
+                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedStreamName);
+                }
+
+                if (!string.IsNullOrEmpty(publishOptions.MessageId))
+                {
+                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.MessageId);
+                }
+
+                await _policy.ExecuteAsync(async () =>
+                {
+                    await CheckConnectAsync();
+
+                    var Packet = new PublishHigherPacket(subject, data, messageHeaders);
+
+                    await _channel.WriteAndFlushAsync(Packet);
+                });
+            }
+            else
+            {
+                await _policy.ExecuteAsync(async () =>
+                {
+                    await CheckConnectAsync();
+
+                    var Packet = new PublishHigherPacket(subject, data);
+
+                    await _channel.WriteAndFlushAsync(Packet);
+                });
+            }
+        }
+
 
         #region Stream;
 

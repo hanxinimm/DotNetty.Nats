@@ -21,7 +21,7 @@ namespace DotNetty.Handlers.NATS
         }
         protected override void ChannelRead0(IChannelHandlerContext contex, InfoPacket msg)
         {
-            _infoTaskCompletionSource.SetResult(msg);
+            _infoTaskCompletionSource.TrySetResult(msg);
         }
 
         public override void ExceptionCaught(IChannelHandlerContext contex, Exception ex)

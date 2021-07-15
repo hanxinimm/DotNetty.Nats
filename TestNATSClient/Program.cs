@@ -101,8 +101,23 @@ namespace TestNATSClient
 
             await using var client = _serviceProvider.GetRequiredService<NATSClient>();
 
+            //var s = await client.SubscribeAsync("ApiGateway.>", string.Empty, (bytes) =>
+            //{
+            //    var sss = Encoding.UTF8.GetString(bytes.Data);
+            //    //var nowValue = int.Parse(sss.Split(' ')[0]);
+            //    //if (lastValue != 0 && (nowValue - lastValue) != 1)
+            //    //{
+            //    //    Console.WriteLine("ERROR ==========================================================");
+            //    //}
+            //    //lastValue = nowValue;
+            //    Console.WriteLine(sss);
+            //});
 
-            //await client.ConnectAsync();
+            //Console.ReadLine();
+
+            //return;
+
+            await client.ConnectAsync();
 
             //var streamList = await client.StreamListAsync();
 
@@ -138,12 +153,12 @@ namespace TestNATSClient
             //        Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
             //    });
 
-            //var s = await client.SubscribeAsync(streamName, "ApiGateway.Test", async (bytes) =>
-            //{
-            //    Console.WriteLine("开始接受收消息");
-            //    var sss = Encoding.UTF8.GetString(bytes.Data);
-            //    Console.WriteLine("收到消息 {0}", sss);
-            //});
+            var s = await client.SubscribeAsync("ApiGateway.EventTrigger.After.Test", async (bytes) =>
+            {
+                Console.WriteLine("开始接受收消息");
+                var sss = Encoding.UTF8.GetString(bytes.Data);
+                Console.WriteLine("收到消息 {0}", sss);
+            });
 
             //Console.ReadLine();
 
@@ -165,18 +180,18 @@ namespace TestNATSClient
                 var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
 
-                for (int i = 0; i < 30; i++)
-                {
-                    await Task.Factory.StartNew(async () =>
-                    {
-                        for (int j = 0; j < 30; j++)
-                        {
+                //for (int i = 0; i < 30; i++)
+                //{
+                //    await Task.Factory.StartNew(async () =>
+                //    {
+                //        for (int j = 0; j < 30; j++)
+                //        {
                             await Task.Factory.StartNew(async () =>
                             {
-                                await client.PublishAsync("Test2", Testbytes);
+                                await client.StreamPublishAsync("ApiGateway.EventTrigger.After.Test", Testbytes);
                             });
-                        }
-                    });
+                    //    }
+                    //});
                     //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                     //await client.PublishAsync("Test2", Testbytes);
@@ -188,7 +203,7 @@ namespace TestNATSClient
                     //var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                     //await client.PublishAsync("ApiGateway.EventTrigger.4242", ApiGatewaybytes2);
-                }
+                //}
 
                 stopwatch.Stop(); //  停止监视  
 
