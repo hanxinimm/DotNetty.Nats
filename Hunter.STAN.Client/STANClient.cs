@@ -61,10 +61,15 @@ namespace Hunter.STAN.Client
         ///// </summary>
         private Bootstrap _bootstrap;
 
-        /// <summary>
-        /// 连接通道
-        /// </summary>
+        ///// <summary>
+        ///// 连接通道实例
+        ///// </summary>
         private IChannel _channel;
+
+        /// <summary>
+        /// 限制并发线程
+        /// </summary>
+        private readonly ManualResetEventSlim _autoResetEvent;
 
         /// <summary>
         /// 连接状态
@@ -88,11 +93,6 @@ namespace Hunter.STAN.Client
         private readonly List<SubscriptionMessageHandler> _subscriptionMessageHandler;
 
         /// <summary>
-        /// 限制并发线程
-        /// </summary>
-        private readonly AutoResetEvent _autoResetEvent;
-
-        /// <summary>
         /// 连接故障策略
         /// </summary>
         private readonly AsyncPolicy _connectPolicy;
@@ -112,9 +112,9 @@ namespace Hunter.STAN.Client
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
-            _autoResetEvent = new AutoResetEvent(true);
             _bootstrap = InitBootstrap();
             _logger = logger;
+            _autoResetEvent = new ManualResetEventSlim(true, 1);
 
             #region Connect;
 
@@ -123,8 +123,8 @@ namespace Hunter.STAN.Client
                 .Handle<ConnectException>()
                 .Or<SocketException>()
                 .Or<TimeoutException>()
-                .WaitAndRetryAsync(3,
-                (retryAttempt) =>
+                .WaitAndRetryForeverAsync(
+                    (retryAttempt) =>
                 {
                     logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
@@ -151,10 +151,11 @@ namespace Hunter.STAN.Client
             var policyRetry = Policy
                 .Handle<TimeoutRejectedException>()
                 .Or<TimeoutException>()
-                .WaitAndRetryForeverAsync(
+                .Or<SocketException>()
+                .WaitAndRetryAsync(3,
                 (retryAttempt, context) =>
                 {
-                    logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    logger.LogWarning($"重试执行Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
                 },
                 (ex, retryAttempt, retrySecond, context) =>
@@ -176,6 +177,36 @@ namespace Hunter.STAN.Client
 
         }
 
+        async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
+        {
+            if (_channel != null && _channel.Active)
+                return _channel;
+
+            if (timeout.HasValue)
+            {
+                var receivesSignal = _autoResetEvent.Wait(timeout.Value);
+                if (!receivesSignal) return null;
+            }
+            else
+            {
+                _autoResetEvent.Wait();
+            }
+
+            _autoResetEvent.Reset();
+
+            if (_channel != null && _channel.Active)
+            {
+                _autoResetEvent.Set();
+                return _channel;
+            }
+
+            _channel = await ConnectAsync();
+
+            _autoResetEvent.Set();
+
+            return _channel;
+        }
+
         public STANClient(
             ILogger<STANClient> logger,
             IOptions<STANOptions> options) : this(logger, options.Value)
@@ -183,7 +214,7 @@ namespace Hunter.STAN.Client
 
         }
 
-        public bool IsOpen => _channel?.Open ?? false;
+        //public bool IsOpen => _channel?.Open ?? false;
 
         public STANConnectionState ConnectionState => _connectionState;
 
@@ -196,7 +227,7 @@ namespace Hunter.STAN.Client
             .Handler(new ActionChannelInitializer<ISocketChannel>(channel =>
             {
                 channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder(_logger));
-                channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeedAsync));
+                channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeed));
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
                 
@@ -209,32 +240,15 @@ namespace Hunter.STAN.Client
             
         }
 
-        private bool IsChannelInactive
+        private void ReconnectIfNeed(EndPoint socketAddress)
         {
-            get
-            {
-                if (_channel == null) return true;
-                return !_channel.Active;
-            }
-        }
+            _logger.LogInformation("STAN连接端口 开始实例化新的连接管道");
 
-        private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
-        {
-            _logger.LogInformation("STAN 尝试重新激活连接");
-
-            _autoResetEvent.WaitOne();
-
-            if (IsChannelInactive)
-            {
-
-                _logger.LogWarning("STAN 开始重新连接");
-
-                await _connectPolicy.ExecuteAsync(ExecuteConnectAsync);
-
-                _logger.LogWarning("STAN 完成重新连接");
-            }
+            _channel = null;
 
             _autoResetEvent.Set();
+
+            _logger.LogInformation("STAN连接端口 完成实例化新的连接管道");
         }
 
         #region 消息发送确认

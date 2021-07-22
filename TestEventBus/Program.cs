@@ -3,6 +3,7 @@ using Hunter.DDD.Message;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TestEventBus
@@ -53,25 +54,32 @@ namespace TestEventBus
 
 
             var _eventBus = _serviceProvider.GetRequiredService<IMessageEventBus>();
-
-            for (var i = 0; i < 100; i++)
+            while (true)
             {
-                await Task.Factory.StartNew(async () =>
-                {
-                    await _eventBus.SendAsync(new MSG());
-                });
-                await Task.Factory.StartNew(async () =>
-                {
-                    await _eventBus.SendAsync(new MSG());
-                });
-                await Task.Factory.StartNew(async () =>
-                {
-                    await _eventBus.SendAsync(new MSG());
-                });
-            }
+                //for (var i = 0; i < 3; i++)
+                //{
+                    //await Task.Factory.StartNew(async () =>
+                    //{
+                        for (var j = 0; j < 1; j++)
+                        {
+                            await Task.Factory.StartNew(async () =>
+                            {
+                                await _eventBus.SendAsync(new MSG());
+                            },
+                            CancellationToken.None,
+                            TaskCreationOptions.None,
+                            TaskScheduler.Default);
+                        }
+                //    },
+                //    CancellationToken.None,
+                //    TaskCreationOptions.None,
+                //    TaskScheduler.Default);
+                //}
 
-            Console.WriteLine("完成");
-            Console.ReadLine();
+                Console.WriteLine($"完成");
+                Console.ReadLine();
+                //Console.Clear();
+            }
 
         }
     }

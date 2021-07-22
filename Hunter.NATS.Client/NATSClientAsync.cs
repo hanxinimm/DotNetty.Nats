@@ -1,5 +1,6 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.NATSJetStream.Packets;
+using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -11,49 +12,23 @@ namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
-        public async Task ConnectAsync(CancellationToken cancellationToken = default)
+        public async Task<IChannel> ConnectAsync()
         {
-            _autoResetEvent.WaitOne();
 
             _logger.LogInformation($"开始连接Nats客户端 客户端编号 {_clientId}");
 
-            if (_connectionState == NATSConnectionState.Connected)
-            {
-                _logger.LogError($"Nats客户端已经连接 客户端编号 {_clientId}");
-                return;
-            }
-
             _connectionState = NATSConnectionState.Connecting;
 
-            await _connectPolicy.ExecuteAsync(async (_) => await ExecuteConnectAsync(), cancellationToken);
+            _logger.LogInformation($"开始执行Nats客户端 客户端编号 {_clientId}");
 
-            _autoResetEvent.Set();
-        }
-    
+            var channel =  await _connectPolicy.ExecuteAsync(async () => await ExecuteConnectAsync());
 
-        public async Task<bool> CheckConnectAsync()
-        {
-            if (_connectionState == NATSConnectionState.Connected)
-            {
-                return true;
-            }
+            _logger.LogInformation($"完成执行Nats客户端 客户端编号 {_clientId}");
 
-            _logger.LogInformation($"开始等待Nats客户端连接 客户端编号 {_clientId} State {_connectionState}");
-
-            await ConnectAsync();
-
-            if (_connectionState == NATSConnectionState.Connected)
-            {
-                _logger.LogInformation($"Nats客户端已连接 客户端编号 {_clientId} State {_connectionState}");
-                return true;
-            }
-
-            _logger.LogWarning($"Nats客户端未能正常连接 当前状态 {_connectionState} 客户端编号 {_clientId}");
-
-            return false;
+            return channel;
         }
 
-        private async Task ExecuteConnectAsync()
+        private async Task<IChannel> ExecuteConnectAsync()
         {
             //TODO:集群节点待优化
             if (!_options.ClusterNodes.Any())
@@ -64,69 +39,66 @@ namespace Hunter.NATS.Client
 
             var ClusterNode = _options.ClusterNodes.First();
 
-            if (_channel != null && _channel.Active)
-            {
-                _logger.LogDebug("NATS 开始释放断开的通讯连接频道");
-
-                await _channel.DisconnectAsync();
-
-                _logger.LogDebug("NATS 完成释放断开的通讯连接频道");
-            }
-
             if (_info == null)
             {
-                _channel = await _bootstrap.ConnectAsync(ClusterNode);
+                var channel = await _bootstrap.ConnectAsync(ClusterNode);
 
-                _info = await ConnectRequestAsync();
+                _info = await ConnectRequestAsync(channel);
 
-                await SubscribeReplyInboxAsync();
+                await SubscribeReplyInboxAsync(channel);
+
+                _connectionState = NATSConnectionState.Connected;
+
+                return channel;
             }
             else
             {
-                _channel = await _bootstrap.ConnectAsync(ClusterNode);
+                var channel = await _bootstrap.ConnectAsync(ClusterNode);
 
-                _info = await ConnectRequestAsync();
+                _info = await ConnectRequestAsync(channel);
 
-                await SubscribeReplyInboxAsync();
+                await SubscribeReplyInboxAsync(channel);
 
-                await SubscriptionMessageAsync();
+                await SubscriptionMessageAsync(channel);
+
+                _connectionState = NATSConnectionState.Connected;
+
+                return channel;
             }
-
-            _connectionState = NATSConnectionState.Connected;
         }
 
-        private async Task<DotNetty.Codecs.NATS.Packets.InfoPacket> ConnectRequestAsync()
+        private async Task<DotNetty.Codecs.NATS.Packets.InfoPacket> ConnectRequestAsync(IChannel channel)
         {
             var Packet = _options.IsAuthentication ?
                 new ConnectPacket(_options.IsVerbose, false, false, _options.UserName, _options.Password, _clientId, null)
                 : new ConnectPacket(_options.IsVerbose, false, false, _clientId);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await channel.WriteAndFlushAsync(Packet);
 
             _info = await _infoTaskCompletionSource.Task;
 
             return _info;
         }
 
-        private async Task SubscribeReplyInboxAsync()
+        private async Task SubscribeReplyInboxAsync(IChannel channel)
         {
             _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
-            await _channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
+            await channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
 
             _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
         }
 
 
-        private async Task SubscriptionMessageAsync()
+        private async Task SubscriptionMessageAsync(IChannel channel)
         {
             foreach (var subscriptionMessageHandler in _subscriptionMessageHandler)
             {
                 _logger.LogDebug($"开始设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
 
-                _channel.Pipeline.AddLast(subscriptionMessageHandler);
+                channel.Pipeline.AddLast(subscriptionMessageHandler);
 
-                await _channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.SubscribeId, subscriptionMessageHandler.SubscriptionConfig.Subject, subscriptionMessageHandler.SubscriptionConfig.SubscribeGroup));
+                await channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.SubscribeId, subscriptionMessageHandler.SubscriptionConfig.Subject, subscriptionMessageHandler.SubscriptionConfig.SubscribeGroup));
 
                 _logger.LogDebug($"完成设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
             }
@@ -138,7 +110,6 @@ namespace Hunter.NATS.Client
 
             return await _policy.ExecuteAsync(async () =>
             {
-                await CheckConnectAsync();
                 return await InternalSubscribeAsync(subject, queueGroup, messageHandlerSetup, maxMsg, subscribeId);
             });
         }
@@ -148,6 +119,8 @@ namespace Hunter.NATS.Client
         public async Task<string> InternalSubscribeAsync(string subject, string queueGroup,
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
+            var _channel = await _instance.Value;
+
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
             _logger.LogDebug($"设置订阅消息队列订阅编号 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
@@ -236,7 +209,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                await CheckConnectAsync();
+                var _channel = await _instance.Value;
 
                 var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
@@ -254,7 +227,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                await CheckConnectAsync();
+                var _channel = await _instance.Value;
 
                 var Packet = new PublishPacket(subject, data);
 
@@ -271,7 +244,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                await CheckConnectAsync();
+                var _channel = await _instance.Value;
 
                 var Packet = new PingPacket();
 
@@ -283,7 +256,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                await CheckConnectAsync();
+                var _channel = await _instance.Value;
 
                 var Packet = new PongPacket();
 
@@ -293,12 +266,11 @@ namespace Hunter.NATS.Client
 
         public async ValueTask DisposeAsync()
         {
-            //TODO:待完善逻辑
-            _autoResetEvent.WaitOne(TimeSpan.FromSeconds(20));
-
             _logger.LogWarning($"开始释放Nats客户端 客户端编号 {_clientId}");
 
             _connectionState = NATSConnectionState.Disconnecting;
+
+            var _channel = await _instance.Value;
 
             if (_channel != null && _channel.Active)
             {
@@ -310,8 +282,6 @@ namespace Hunter.NATS.Client
             _connectionState = NATSConnectionState.Disconnected;
 
             _logger.LogWarning($"结束释放Nats客户端 客户端编号 {_clientId}");
-
-            _autoResetEvent.Set();
         }
     }
 }

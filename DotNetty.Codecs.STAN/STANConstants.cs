@@ -64,6 +64,9 @@ namespace DotNetty.Codecs.STAN
         /// </summary>
         internal const int MaxInflight = 1024;
 
+
+        internal const string Already_Registered = "stan: clientID already registered";
+
         #endregion 迁移到客户端版本
     }
 }

@@ -9,6 +9,7 @@ namespace Hunter.STAN.Client
     {
         public STANConnectionConfig(
             string connectionId,
+            string error,
             string pubPrefix,
             string subRequests,
             string unsubRequests,
@@ -21,6 +22,7 @@ namespace Hunter.STAN.Client
             string publicKey)
         {
             ConnectionId = ByteString.CopyFrom(Encoding.UTF8.GetBytes(connectionId));
+            Error = error;
             PubPrefix = pubPrefix;
             SubRequests = subRequests;
             UnsubRequests = unsubRequests;
@@ -37,6 +39,9 @@ namespace Hunter.STAN.Client
         /// 连接编号
         /// </summary>
         public readonly ByteString ConnectionId;
+
+        public readonly string Error;
+
         /// <summary>
         /// 发布时使用的前缀
         /// </summary>

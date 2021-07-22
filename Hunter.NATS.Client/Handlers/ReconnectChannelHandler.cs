@@ -13,8 +13,8 @@ namespace Hunter.NATS.Client.Handlers
     {
 
         private readonly ILogger _logger;
-        public readonly Func<EndPoint,Task> _reconnectHandler;
-        public ReconnectChannelHandler(ILogger logger, Func<EndPoint,Task> reconnectHandler)
+        public readonly Action<EndPoint> _reconnectHandler;
+        public ReconnectChannelHandler(ILogger logger, Action<EndPoint> reconnectHandler)
         {
             _logger = logger;
             _reconnectHandler = reconnectHandler;

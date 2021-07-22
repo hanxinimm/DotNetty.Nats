@@ -180,15 +180,23 @@ namespace TestSTANClient
 
 
 
-            //await client.SubscribeAsync("Security-App-1",  new STANSubscribeOptions(), (data) =>
-            //{
-            //    var TestString = Encoding.UTF8.GetString(data);
-            //    Console.WriteLine(TestString);
-            //});
+            await client.SubscribeAsync("Test", new STANSubscribeOptions(), (data) =>
+           {
+               var TestString = Encoding.UTF8.GetString(data.Data);
+               Console.WriteLine(TestString);
+           });
 
-            //Console.WriteLine("订阅成功");
+            Console.WriteLine("订阅成功");
 
-            //Console.ReadLine();
+
+            while (true)
+            {
+                Console.WriteLine("MSG ==========================================================");
+
+                Console.ReadLine();
+
+                Console.Clear();
+            }
 
             //return;
 

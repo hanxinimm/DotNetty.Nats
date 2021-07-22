@@ -10,61 +10,29 @@ using System.Threading.Tasks;
 using System.Transactions;
 using Microsoft.Extensions.Logging;
 using Polly;
+using DotNetty.Transport.Channels;
+using DotNetty.Codecs.STAN;
 
 namespace Hunter.STAN.Client
 {
     public sealed partial class STANClient
     {
-        public async Task ConnectAsync(CancellationToken cancellationToken = default)
+        public async Task<IChannel> ConnectAsync()
         {
-            var receivesSignal = _autoResetEvent.WaitOne(TimeSpan.FromSeconds(5));
-
             _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
-
-            if (_connectionState == STANConnectionState.Connected)
-            {
-                _autoResetEvent.Set();
-                _logger.LogWarning($"Stan客户端已经连接 客户端编号 {_clientId}");
-                return;
-            }
-
-            if (!receivesSignal)
-                throw new TimeoutException("等待连接Stan客户端信号超时");
 
             _connectionState = STANConnectionState.Connecting;
 
             _logger.LogInformation($"开始执行Stan客户端 客户端编号 {_clientId}");
 
-            await _connectPolicy.ExecuteAsync(async (_) => await ExecuteConnectAsync(), cancellationToken);
+            var channel = await _connectPolicy.ExecuteAsync(async () => await ExecuteConnectAsync());
 
             _logger.LogInformation($"完成执行Stan客户端 客户端编号 {_clientId}");
 
-            _autoResetEvent.Set();
+            return channel;
         }
 
-        public async Task<bool> CheckConnectAsync()
-        {
-            if (_connectionState == STANConnectionState.Connected)
-            {
-                return true;
-            }
-
-            _logger.LogInformation($"开始等待Stan客户端连接 客户端编号 {_clientId} State {_connectionState}");
-
-            await ConnectAsync();
-
-            if (_connectionState == STANConnectionState.Connected)
-            {
-                _logger.LogInformation($"Stan客户端已连接 客户端编号 {_clientId} State {_connectionState}");
-                return true;
-            }
-
-            _logger.LogWarning($"Stan客户端未能正常连接 当前状态 {_connectionState} 客户端编号 {_clientId}");
-
-            return false;
-        }
-
-        public async Task ExecuteConnectAsync()
+        public async Task<IChannel> ExecuteConnectAsync()
         {
             _logger.LogInformation("STAN 执行客户端通讯连接频道");
 
@@ -75,71 +43,66 @@ namespace Hunter.STAN.Client
             }
 
             var ClusterNode = _options.ClusterNodes.First();
-
-            if (_channel != null && _channel.Active)
-            {
-                _logger.LogWarning("STAN 开始释放断开的通讯连接频道");
-
-                await _channel.DisconnectAsync();
-
-                _logger.LogWarning("STAN 完成释放断开的通讯连接频道");
-            }
-
-
+         
             _logger.LogInformation("STAN 开始连接频道");
 
-            _channel = await _bootstrap.ConnectAsync(ClusterNode);
+            var channel = await _bootstrap.ConnectAsync(ClusterNode);
 
             _logger.LogInformation("STAN 开始订阅心跳箱");
 
-            await SubscribeHeartBeatInboxAsync();
+            await SubscribeHeartBeatInboxAsync(channel);
 
             _logger.LogInformation("STAN 完成订阅心跳箱");
 
             _logger.LogInformation("STAN 开始订阅答复箱");
 
-            await SubscribeReplyInboxAsync();
+            await SubscribeReplyInboxAsync(channel);
 
             _logger.LogInformation("STAN 完成订阅答复箱");
 
+            _logger.LogInformation("STAN 开始客户端连接请求");
 
-            if (_connectionState == STANConnectionState.Reconnecting)
+            var config = await ConnectRequestAsync(channel);
+
+            _logger.LogInformation("STAN 完成客户端连接请求");
+
+            if (config.Error == ProtocolConstants.Already_Registered)
             {
-                var pingResponse = await ConnectPingAsync();
+                var pingResponse = await ConnectPingAsync(channel);
 
                 if (pingResponse == null || !string.IsNullOrEmpty(pingResponse.Error))
                 {
                     _logger.LogError($"STAN 连接不再有效 错误:{pingResponse?.Error}");
 
-                    _logger.LogInformation("STAN 开始客户端连接请求");
-
-                    _config = await ConnectRequestAsync();
-
-                    _logger.LogInformation("STAN 完成客户端连接请求");
+                    throw new StanConnectRequestException(pingResponse?.Error ?? "连接已存在但是无法使用");
                 }
 
                 _logger.LogInformation("STAN 开始订阅之前订阅的消息");
 
-                await SubscriptionMessageAsync();
+                await SubscriptionMessageAsync(channel);
 
                 _logger.LogInformation("STAN 完成订阅之前订阅的消息");
             }
             else
             {
-                _logger.LogInformation("STAN 开始客户端连接请求");
-
-                _config = await ConnectRequestAsync();
-
-                _logger.LogInformation("STAN 完成客户端连接请求");
-
+                if (string.IsNullOrEmpty(config.Error))
+                {
+                    _config = config;
+                }
+                else
+                {
+                    throw new StanConnectRequestException(config.Error);
+                }
             }
 
             _logger.LogInformation("STAN 完成连接频道");
 
             _connectionState = STANConnectionState.Connected;
+
+            return channel;
         }
 
-        private async Task<STANConnectionConfig> ConnectRequestAsync()
+        private async Task<STANConnectionConfig> ConnectRequestAsync(IChannel _channel)
         {
             var ConnectId = Guid.NewGuid().ToString("N");
 
@@ -178,6 +141,7 @@ namespace Hunter.STAN.Client
 
             return new STANConnectionConfig(
                 ConnectId,
+                ConnectResponse.Message.Error,
                 ConnectResponse.Message.PubPrefix,
                 ConnectResponse.Message.SubRequests,
                 ConnectResponse.Message.UnsubRequests,
@@ -190,7 +154,7 @@ namespace Hunter.STAN.Client
                 ConnectResponse.Message.PublicKey);
         }
 
-        private async Task SubscribeHeartBeatInboxAsync()
+        private async Task SubscribeHeartBeatInboxAsync(IChannel _channel)
         {
             _logger.LogDebug($"开始订阅消息服务器心跳消息 HeartbeatInbox = {_heartbeatInboxId}");
 
@@ -201,7 +165,7 @@ namespace Hunter.STAN.Client
             _logger.LogDebug("结束订阅消息服务器心跳消息");
         }
 
-        private async Task<PingResponse> ConnectPingAsync()
+        private async Task<PingResponse> ConnectPingAsync(IChannel _channel)
         {
             _logger.LogDebug($"开始Ping消息服务器 Ping = {_config.ConnectionId}");
 
@@ -210,6 +174,8 @@ namespace Hunter.STAN.Client
             var ConnectPingResponseReady = new TaskCompletionSource<ConnectPingResponsePacket>();
 
             var Handler = new ReplyPacketHandler<ConnectPingResponsePacket>(Packet.ReplyTo, ConnectPingResponseReady);
+
+            //var _channel = await _instance.Value;
 
             _channel.Pipeline.AddLast(Handler);
 
@@ -231,7 +197,7 @@ namespace Hunter.STAN.Client
             return ConnectPingResponse?.Message;
         }
 
-        private async Task SubscribeReplyInboxAsync()
+        private async Task SubscribeReplyInboxAsync(IChannel _channel)
         {
             _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
@@ -241,7 +207,7 @@ namespace Hunter.STAN.Client
         }
 
 
-        private async Task SubscriptionMessageAsync()
+        private async Task SubscriptionMessageAsync(IChannel _channel)
         {
             foreach (var subscriptionMessageHandler in _subscriptionMessageHandler)
             {
@@ -274,7 +240,6 @@ namespace Hunter.STAN.Client
 
             return await _policy.ExecuteAsync(async (cnt) =>
             {
-                await CheckConnectAsync();
                 return await InternalSubscribeAsync(subject, queueGroup, persistenceName, subscribeOptions, messageHandlerSetup);
             }, new Dictionary<string, object>() { { "hld", "HandleSubscribeAsync" }, { "sub", subject } });
         }
@@ -295,6 +260,8 @@ namespace Hunter.STAN.Client
              STANSubscribeOptions subscribeOptions,
              Func<STANSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup)
         {
+            var _channel = await ChannelConnectAsync();
+
             var SubscribePacket = new SubscribePacket();
 
             _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
@@ -398,7 +365,6 @@ namespace Hunter.STAN.Client
 
             return await _policy.ExecuteAsync(async (cnt) =>
             {
-                await CheckConnectAsync();
                 return await SubscribeAsync(subject, queueGroup, new STANSubscribeOptions() { Position = StartPosition.NewOnly }, handler);
             }, new Dictionary<string, object>() { { "hld", "SubscribeAsync" }, { "sub", subject } });
         }
@@ -640,6 +606,8 @@ namespace Hunter.STAN.Client
 
         private async Task<Queue<STANMsgContent>> ExecuteReadAsync(string subject, int? count, STANSubscribeOptions subscribeOptions)
         {
+            var _channel = await ChannelConnectAsync();
+
             var SubscribePacket = new SubscribePacket();
 
             _logger.LogDebug($"开始设置订阅消息队列收件箱 ReplyInboxId = {_replyInboxId}");
@@ -741,9 +709,9 @@ namespace Hunter.STAN.Client
         {
             await _policy.ExecuteAsync(async (cnt) =>
             {
-                await CheckConnectAsync();
-
                 if (subscriptionConfig.IsUnSubscribe) return;
+
+                var _channel = await ChannelConnectAsync();
 
                 subscriptionConfig.IsUnSubscribe = true;
 
@@ -771,7 +739,7 @@ namespace Hunter.STAN.Client
 
             return await _policy.ExecuteAsync(async (cnt) =>
             {
-                await CheckConnectAsync();
+                var _channel = await ChannelConnectAsync();
 
                 var Packet = new PubMsgPacket(
                     _replyInboxId,
@@ -804,7 +772,7 @@ namespace Hunter.STAN.Client
         {
             await _policy.ExecuteAsync(async (cnt) =>
             {
-                await CheckConnectAsync();
+                var _channel = await ChannelConnectAsync();
 
                 var Packet = new PubMsgPacket(
                 _replyInboxId,
@@ -831,6 +799,8 @@ namespace Hunter.STAN.Client
         {
             if (isAck)
             {
+                var _channel = await ChannelConnectAsync();
+
                 await _channel.WriteAndFlushAsync(new AckPacket(subscriptionConfig.AckInbox, msg.Message.Subject, msg.Message.Sequence));
             }
         }
@@ -838,6 +808,7 @@ namespace Hunter.STAN.Client
         #endregion;
         private async Task<CloseResponsePacket> CloseRequestAsync()
         {
+            var _channel = await ChannelConnectAsync();
 
             var Packet = new CloseRequestPacket(_replyInboxId, _config.CloseRequests, _clientId);
 
@@ -861,11 +832,11 @@ namespace Hunter.STAN.Client
 
         public async ValueTask DisposeAsync()
         {
-            _autoResetEvent.WaitOne(TimeSpan.FromSeconds(20));
-
             _logger.LogWarning($"开始释放Stan客户端 客户端编号 {_clientId}");
 
             _connectionState = STANConnectionState.Disconnecting;
+
+            var _channel = await ChannelConnectAsync(TimeSpan.FromSeconds(5));
 
             if (_channel != null && _channel.Active)
             {
@@ -879,8 +850,6 @@ namespace Hunter.STAN.Client
             _connectionState = STANConnectionState.Disconnected;
 
             _logger.LogWarning($"结束释放Stan客户端 客户端编号 {_clientId}");
-
-            _autoResetEvent.Set();
         }
     }
 }

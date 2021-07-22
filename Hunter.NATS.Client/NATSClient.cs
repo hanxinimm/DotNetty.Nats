@@ -60,11 +60,10 @@ namespace Hunter.NATS.Client
         /// </summary>
         private int _subscribeId;
 
-
         /// <summary>
-        /// 连接通道
+        /// 连接通道实例
         /// </summary>
-        private IChannel _channel;
+        private Lazy<Task<IChannel>> _instance;
 
         /// <summary>
         /// 连接状态
@@ -85,11 +84,6 @@ namespace Hunter.NATS.Client
         /// 订阅消息处理器集合
         /// </summary>
         private readonly List<SubscriptionMessageHandler> _subscriptionMessageHandler;
-
-        /// <summary>
-        /// 限制并发线程
-        /// </summary>
-        private readonly AutoResetEvent _autoResetEvent;
 
         /// <summary>
         /// 连接故障策略
@@ -115,7 +109,7 @@ namespace Hunter.NATS.Client
             _infoTaskCompletionSource = new TaskCompletionSource<InfoPacket>();
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _consumerMessageHandler = new List<ConsumerMessageHandler>();
-            _autoResetEvent = new AutoResetEvent(true);
+
             _bootstrap = InitBootstrap();
             _logger = logger;
 
@@ -132,8 +126,8 @@ namespace Hunter.NATS.Client
                 .Handle<ConnectException>()
                 .Or<SocketException>()
                 .Or<TimeoutException>()
-                .WaitAndRetryAsync(3,
-                (retryAttempt) =>
+                .WaitAndRetryForeverAsync(
+                    (retryAttempt) =>
                 {
                     logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
@@ -160,8 +154,8 @@ namespace Hunter.NATS.Client
             var policyRetry = Policy
                 .Handle<TimeoutRejectedException>()
                 .Or<TimeoutException>()
-                .WaitAndRetryForeverAsync(
-                (retryAttempt, context) =>
+                .WaitAndRetryAsync(3,
+                    (retryAttempt, context) =>
                 {
                     logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
@@ -191,8 +185,6 @@ namespace Hunter.NATS.Client
             
         }
 
-        public bool IsOpen => _channel?.Open ?? false;
-
         public NATSConnectionState ConnectionState => _connectionState;
 
         private Bootstrap InitBootstrap()
@@ -214,29 +206,13 @@ namespace Hunter.NATS.Client
                 }));
         }
 
-        private bool IsChannelInactive
+        private void ReconnectIfNeedAsync(EndPoint socketAddress)
         {
-            get
-            {
-                if (_channel == null) return true;
-                return !_channel.Active;
-            }
-        }
+            _logger.LogInformation("NATS连接端口 开始实例化新的连接管道");
 
-        private async Task ReconnectIfNeedAsync(EndPoint socketAddress)
-        {
-            _autoResetEvent.WaitOne();
+            _instance = new Lazy<Task<IChannel>>(() => ConnectAsync());
 
-            if (IsChannelInactive)
-            {
-                _logger.LogWarning("NATS 开始重新连接");
-
-                await _connectPolicy.ExecuteAsync(ExecuteConnectAsync);
-
-                _logger.LogWarning("NATS 完成重新连接");
-            }
-
-            _autoResetEvent.Set();
+            _logger.LogInformation("NATS连接端口 完成实例化新的连接管道");
         }
 
     }
