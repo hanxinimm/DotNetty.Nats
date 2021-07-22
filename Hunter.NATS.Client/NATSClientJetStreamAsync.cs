@@ -58,7 +58,7 @@ namespace Hunter.NATS.Client
 
                 await _policy.ExecuteAsync(async () =>
                 {
-                    await CheckConnectAsync();
+                    var _channel = await ChannelConnectAsync();
 
                     var Packet = new PublishHigherPacket(subject, data, messageHeaders);
 
@@ -69,7 +69,7 @@ namespace Hunter.NATS.Client
             {
                 await _policy.ExecuteAsync(async () =>
                 {
-                    await CheckConnectAsync();
+                    var _channel = await ChannelConnectAsync();
 
                     var Packet = new PublishHigherPacket(subject, data);
 
@@ -462,7 +462,6 @@ namespace Hunter.NATS.Client
         {
             return await _policy.ExecuteAsync(async () =>
             {
-                await CheckConnectAsync();
                 return await InternalConsumerSubscribeAsync(subject, queueGroup, messageHandlerSetup, subscribeId);
             });
         }
@@ -472,6 +471,8 @@ namespace Hunter.NATS.Client
         public async Task<string> InternalConsumerSubscribeAsync(string subject, string queueGroup,
             Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, string subscribeId = null)
         {
+            var _channel = await ChannelConnectAsync();
+
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
             _logger.LogDebug($"设置订阅消息队列订阅编号 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");

@@ -55,15 +55,20 @@ namespace Hunter.NATS.Client
         /// </summary>
         private readonly Bootstrap _bootstrap;
 
+        ///// <summary>
+        ///// 连接通道实例
+        ///// </summary>
+        private IChannel _channel;
+
         /// <summary>
         /// 订阅编号
         /// </summary>
         private int _subscribeId;
 
         /// <summary>
-        /// 连接通道实例
+        /// 限制并发线程
         /// </summary>
-        private Lazy<Task<IChannel>> _instance;
+        private readonly ManualResetEventSlim _autoResetEvent;
 
         /// <summary>
         /// 连接状态
@@ -157,7 +162,7 @@ namespace Hunter.NATS.Client
                 .WaitAndRetryAsync(3,
                     (retryAttempt, context) =>
                 {
-                    logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    logger.LogWarning($"重试执行Stan客户端命令 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
                 },
                 (ex, retryAttempt, retrySecond, context) =>
@@ -210,10 +215,41 @@ namespace Hunter.NATS.Client
         {
             _logger.LogInformation("NATS连接端口 开始实例化新的连接管道");
 
-            _instance = new Lazy<Task<IChannel>>(() => ConnectAsync());
+            _channel = null;
+
+            _autoResetEvent.Set();
 
             _logger.LogInformation("NATS连接端口 完成实例化新的连接管道");
         }
 
+        async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
+        {
+            if (_channel != null && _channel.Active)
+                return _channel;
+
+            if (timeout.HasValue)
+            {
+                var receivesSignal = _autoResetEvent.Wait(timeout.Value);
+                if (!receivesSignal) return null;
+            }
+            else
+            {
+                _autoResetEvent.Wait();
+            }
+
+            _autoResetEvent.Reset();
+
+            if (_channel != null && _channel.Active)
+            {
+                _autoResetEvent.Set();
+                return _channel;
+            }
+
+            _channel = await ConnectAsync();
+
+            _autoResetEvent.Set();
+
+            return _channel;
+        }
     }
 }

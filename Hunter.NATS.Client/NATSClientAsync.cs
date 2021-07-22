@@ -119,7 +119,7 @@ namespace Hunter.NATS.Client
         public async Task<string> InternalSubscribeAsync(string subject, string queueGroup,
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
-            var _channel = await _instance.Value;
+            var _channel = await ChannelConnectAsync();
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -209,7 +209,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                var _channel = await _instance.Value;
+                var _channel = await ChannelConnectAsync();
 
                 var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
@@ -227,7 +227,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                var _channel = await _instance.Value;
+                var _channel = await ChannelConnectAsync();
 
                 var Packet = new PublishPacket(subject, data);
 
@@ -244,7 +244,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                var _channel = await _instance.Value;
+                var _channel = await ChannelConnectAsync();
 
                 var Packet = new PingPacket();
 
@@ -256,7 +256,7 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async () =>
             {
-                var _channel = await _instance.Value;
+                var _channel = await ChannelConnectAsync();
 
                 var Packet = new PongPacket();
 
@@ -270,7 +270,7 @@ namespace Hunter.NATS.Client
 
             _connectionState = NATSConnectionState.Disconnecting;
 
-            var _channel = await _instance.Value;
+            var _channel = await ChannelConnectAsync(TimeSpan.FromSeconds(5));
 
             if (_channel != null && _channel.Active)
             {

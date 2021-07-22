@@ -177,36 +177,6 @@ namespace Hunter.STAN.Client
 
         }
 
-        async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
-        {
-            if (_channel != null && _channel.Active)
-                return _channel;
-
-            if (timeout.HasValue)
-            {
-                var receivesSignal = _autoResetEvent.Wait(timeout.Value);
-                if (!receivesSignal) return null;
-            }
-            else
-            {
-                _autoResetEvent.Wait();
-            }
-
-            _autoResetEvent.Reset();
-
-            if (_channel != null && _channel.Active)
-            {
-                _autoResetEvent.Set();
-                return _channel;
-            }
-
-            _channel = await ConnectAsync();
-
-            _autoResetEvent.Set();
-
-            return _channel;
-        }
-
         public STANClient(
             ILogger<STANClient> logger,
             IOptions<STANOptions> options) : this(logger, options.Value)
@@ -249,6 +219,36 @@ namespace Hunter.STAN.Client
             _autoResetEvent.Set();
 
             _logger.LogInformation("STAN连接端口 完成实例化新的连接管道");
+        }
+
+        async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
+        {
+            if (_channel != null && _channel.Active)
+                return _channel;
+
+            if (timeout.HasValue)
+            {
+                var receivesSignal = _autoResetEvent.Wait(timeout.Value);
+                if (!receivesSignal) return null;
+            }
+            else
+            {
+                _autoResetEvent.Wait();
+            }
+
+            _autoResetEvent.Reset();
+
+            if (_channel != null && _channel.Active)
+            {
+                _autoResetEvent.Set();
+                return _channel;
+            }
+
+            _channel = await ConnectAsync();
+
+            _autoResetEvent.Set();
+
+            return _channel;
         }
 
         #region 消息发送确认
