@@ -11,16 +11,18 @@ namespace DotNetty.Handlers.STAN
     public class PongPacketHandler : SimpleChannelInboundHandler<PongPacket>
     {
         private readonly ILogger _logger;
-        public PongPacketHandler(ILogger logger)
+        private readonly string _clientId;
+        public PongPacketHandler(ILogger logger, string clientId)
         {
             _logger = logger;
+            _clientId = clientId;
         }
 
         protected override void ChannelRead0(IChannelHandlerContext contex, PongPacket msg)
         {
-            _logger.LogDebug("PongPacket => PingPacket");
+            _logger.LogDebug($"STAN 服务器心跳 客户端编号 {_clientId} PongPacket => PingPacket");
 
-            contex.WriteAndFlushAsync(new PingPacket());
+            contex.WriteAndFlushAsync(new PingPacket()).GetAwaiter();
         }
     }
 }

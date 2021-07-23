@@ -121,14 +121,7 @@ namespace Hunter.STAN.Client
 
             await _channel.WriteAndFlushAsync(Packet);
 
-            var ConnectResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
-            {
-                ConnectResponseReady.TrySetResult(null);
-            });
-
             var ConnectResponse = await ConnectResponseReady.Task;
-
-            await ConnectResponseCancellationToken.DisposeAsync();
 
             _channel.Pipeline.Remove(Handler);
 

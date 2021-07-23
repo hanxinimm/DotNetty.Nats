@@ -64,7 +64,7 @@ namespace Hunter.STAN.Client
         ///// <summary>
         ///// 连接通道实例
         ///// </summary>
-        private IChannel _channel;
+        private IChannel _embed_channel;
 
         /// <summary>
         /// 限制并发线程
@@ -203,8 +203,8 @@ namespace Hunter.STAN.Client
                 
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_logger, _waitPubAckTaskSchedule));
                 channel.Pipeline.AddLast(new PubAckPacketAsynHandler(_logger));
-                channel.Pipeline.AddLast(new PingPacketHandler(_logger));
-                channel.Pipeline.AddLast(new PongPacketHandler(_logger));
+                channel.Pipeline.AddLast(new PingPacketHandler(_logger, _clientId));
+                channel.Pipeline.AddLast(new PongPacketHandler(_logger, _clientId));
             }));
 
             
@@ -214,7 +214,7 @@ namespace Hunter.STAN.Client
         {
             _logger.LogInformation("STAN连接端口 开始实例化新的连接管道");
 
-            _channel = null;
+            _embed_channel = null;
 
             _autoResetEvent.Set();
 
@@ -223,10 +223,10 @@ namespace Hunter.STAN.Client
 
         async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
         {
-            if (_channel != null && _channel.Active)
-                return _channel;
+            if (_embed_channel != null && _embed_channel.Active)
+                return _embed_channel;
 
-            _logger.LogInformation($"当前通道 1 _channel = {_channel!=null} _active = {_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 1 _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
             if (timeout.HasValue)
             {
@@ -240,20 +240,20 @@ namespace Hunter.STAN.Client
 
             _autoResetEvent.Reset();
 
-            _logger.LogInformation($"当前通道 2 _channel = {_channel != null} _active = {_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 2 _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
 
-            if (_channel != null && _channel.Active)
+            if (_embed_channel != null && _embed_channel.Active)
             {
                 _autoResetEvent.Set();
-                return _channel;
+                return _embed_channel;
             }
 
-            _channel = await ConnectAsync();
+            _embed_channel = await ConnectAsync();
 
             _autoResetEvent.Set();
 
-            return _channel;
+            return _embed_channel;
         }
 
         #region 消息发送确认

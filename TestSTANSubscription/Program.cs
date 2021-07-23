@@ -163,7 +163,7 @@ namespace TestSTANSubscription
                 options.ClusterID = "main-cluster";
                 options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
             });
-            services.AddTransient<STANClient>();
+            services.AddSingleton<STANClient>();
 
             var spr = services.BuildServiceProvider();
 
