@@ -226,7 +226,7 @@ namespace Hunter.STAN.Client
             if (_channel != null && _channel.Active)
                 return _channel;
 
-            _logger.LogInformation($"当前通道 1 _channel = {_channel!=null} _active = {_channel.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 1 _channel = {_channel!=null} _active = {_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
             if (timeout.HasValue)
             {
@@ -240,7 +240,7 @@ namespace Hunter.STAN.Client
 
             _autoResetEvent.Reset();
 
-            _logger.LogInformation($"当前通道 2 _channel = {_channel != null} _active = {_channel.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 2 _channel = {_channel != null} _active = {_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
 
             if (_channel != null && _channel.Active)

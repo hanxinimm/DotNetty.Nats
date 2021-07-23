@@ -756,7 +756,11 @@ namespace Hunter.STAN.Client
                 var PublishTask = _channel.WriteAndFlushAsync(Packet);
 
                 //发送订阅请求
-                await PublishTask.ContinueWith(task => { if (task.Status != TaskStatus.RanToCompletion) PubAckReady.SetResult(null); });
+                await PublishTask.ContinueWith(task =>
+                {
+                    if (task.Status != TaskStatus.RanToCompletion)
+                        PubAckReady.SetResult(null);
+                }, TaskScheduler.Current);
 
                 return await PubAckReady.Task;
             }, new Dictionary<string, object>() { { "hld", "PublishWaitAckAsync" }, { "sub", subject } });
