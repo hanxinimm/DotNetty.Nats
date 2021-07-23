@@ -40,7 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure<STANOptions>(options =>
             {
-                options.ClientId = $"STANClient_{Guid.NewGuid():N}";
+                options.ClientId = "STANClient";
                 configuration.GetSection("STANOptions").Bind(options);
             });
             services.PostConfigure<STANOptions>(options =>
@@ -63,7 +63,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure<STANOptions>(options =>
             {
-                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}_{Guid.NewGuid():N}";
+                options.ClientId = _clientIdReplacer.Replace(clientId, "_");
                 configuration.GetSection("STANOptions").Bind(options);
             });
             services.PostConfigure<STANOptions>(options =>

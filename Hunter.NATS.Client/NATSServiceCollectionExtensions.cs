@@ -37,7 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure<NATSOptions>(options =>
             {
-                options.ClientId = $"NATSClient_{Guid.NewGuid():N}";
+                options.ClientId = "NATSClient";
                 configuration.GetSection("NATSOptions").Bind(options);
             });
             services.PostConfigure<NATSOptions>(options =>
@@ -61,7 +61,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure<NATSOptions>(options =>
             {
-                options.ClientId = $"{_clientIdReplacer.Replace(clientId, "_")}_{Guid.NewGuid():N}";
+                options.ClientId = _clientIdReplacer.Replace(clientId, "_");
                 configuration.GetSection("NATSOptions").Bind(options);
             });
             services.PostConfigure<NATSOptions>(options =>
