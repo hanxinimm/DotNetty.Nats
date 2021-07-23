@@ -32,7 +32,7 @@ namespace DotNetty.Codecs.STAN.Packets
             string discoverPrefix = ProtocolConstants.DiscoverPrefix)
         {
             Subject = $"{discoverPrefix}.{clusterID}";
-            ReplyTo = $"{STANInboxs.ConnectResponse}{inboxId}.{Guid.NewGuid():N}";
+            ReplyTo = $"{STANInboxs.ConnectResponse}{inboxId}";
             Message = new ConnectRequest()
             {
                 ClientID = clientID,

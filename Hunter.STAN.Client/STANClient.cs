@@ -82,6 +82,11 @@ namespace Hunter.STAN.Client
         private STANConnectionConfig _config;
 
         /// <summary>
+        /// 请求响应任务
+        /// </summary>
+        private TaskCompletionSource<ConnectResponsePacket> _connectResponseTaskCompletionSource;
+
+        /// <summary>
         /// 等待发送消息确认安排表
         /// </summary>
         private readonly ConcurrentDictionary<string, TaskCompletionSource<PubAckPacket>> _waitPubAckTaskSchedule 
@@ -200,7 +205,9 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeed));
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
-                
+
+                channel.Pipeline.AddLast(new ReplyPacketHandler<ConnectResponsePacket>(_replyInboxId, _connectResponseTaskCompletionSource));
+
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_logger, _waitPubAckTaskSchedule));
                 channel.Pipeline.AddLast(new PubAckPacketAsynHandler(_logger));
                 channel.Pipeline.AddLast(new PingPacketHandler(_logger, _clientId));
@@ -212,13 +219,13 @@ namespace Hunter.STAN.Client
 
         private void ReconnectIfNeed(EndPoint socketAddress)
         {
-            _logger.LogInformation("STAN连接端口 开始实例化新的连接管道");
+            _logger.LogInformation($"STAN连接端口 ClientId = {_clientId} 开始实例化新的连接管道");
 
             _embed_channel = null;
 
             _autoResetEvent.Set();
 
-            _logger.LogInformation("STAN连接端口 完成实例化新的连接管道");
+            _logger.LogInformation($"STAN连接端口 ClientId = {_clientId} 完成实例化新的连接管道");
         }
 
         async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
@@ -226,7 +233,7 @@ namespace Hunter.STAN.Client
             if (_embed_channel != null && _embed_channel.Active)
                 return _embed_channel;
 
-            _logger.LogInformation($"当前通道 1 _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
             if (timeout.HasValue)
             {
@@ -240,7 +247,7 @@ namespace Hunter.STAN.Client
 
             _autoResetEvent.Reset();
 
-            _logger.LogInformation($"当前通道 2 _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
 
             if (_embed_channel != null && _embed_channel.Active)

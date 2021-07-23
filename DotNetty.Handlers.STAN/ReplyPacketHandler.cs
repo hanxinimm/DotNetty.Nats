@@ -3,6 +3,7 @@
 
 namespace DotNetty.Handlers.STAN
 {
+    using DotNetty.Codecs.STAN;
     using DotNetty.Codecs.STAN.Packets;
     using DotNetty.Transport.Channels;
     using System.Threading.Tasks;
@@ -12,9 +13,9 @@ namespace DotNetty.Handlers.STAN
     {
         private readonly string _replyTo;
         private readonly TaskCompletionSource<TPacket> _completionSource;
-        public ReplyPacketHandler(string replyTo, TaskCompletionSource<TPacket> completionSource)
+        public ReplyPacketHandler(string inboxId, TaskCompletionSource<TPacket> completionSource)
         {
-            _replyTo = replyTo;
+            _replyTo = $"{STANInboxs.ConnectResponse}{inboxId}";
             _completionSource = completionSource;
         }
 

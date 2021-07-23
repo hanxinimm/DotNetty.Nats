@@ -38,7 +38,7 @@ namespace Hunter.STAN.Client
 
             if (!_options.ClusterNodes.Any())
             {
-                IPHostEntry hostInfo = Dns.GetHostEntry(_options.Host);
+                IPHostEntry hostInfo = await Dns.GetHostEntryAsync(_options.Host);
                 _options.ClusterNodes.AddRange(hostInfo.AddressList.Select(v => new IPEndPoint(v, _options.Port)));
             }
 
@@ -113,17 +113,9 @@ namespace Hunter.STAN.Client
                 ConnectId,
                 _heartbeatInboxId);
 
-            var ConnectResponseReady = new TaskCompletionSource<ConnectResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<ConnectResponsePacket>(Packet.ReplyTo, ConnectResponseReady);
-
-            _channel.Pipeline.AddLast(Handler);
-
             await _channel.WriteAndFlushAsync(Packet);
 
-            var ConnectResponse = await ConnectResponseReady.Task;
-
-            _channel.Pipeline.Remove(Handler);
+            var ConnectResponse = await _connectResponseTaskCompletionSource.Task;
 
             if (ConnectResponse == null) throw new StanConnectRequestException();
 

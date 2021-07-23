@@ -81,7 +81,7 @@ namespace Hunter.NATS.Client
         private InfoPacket _info;
 
         /// <summary>
-        /// 等待发送消息确认安排表
+        /// 连接配置任务
         /// </summary>
         private TaskCompletionSource<InfoPacket> _infoTaskCompletionSource;
 
