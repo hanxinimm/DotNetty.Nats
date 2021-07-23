@@ -23,11 +23,11 @@ namespace Hunter.STAN.Client
 
             _connectionState = STANConnectionState.Connecting;
 
-            _logger.LogInformation($"开始执行Stan客户端 客户端编号 {_clientId}");
+            _logger.LogInformation($"开始执行Stan客户端连接 客户端编号 {_clientId}");
 
             var channel = await _connectPolicy.ExecuteAsync(async () => await ExecuteConnectAsync());
 
-            _logger.LogInformation($"完成执行Stan客户端 客户端编号 {_clientId}");
+            _logger.LogInformation($"完成执行Stan客户端连接 客户端编号 {_clientId}");
 
             return channel;
         }

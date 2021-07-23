@@ -124,14 +124,14 @@ namespace Hunter.STAN.Client
                 .Or<SocketException>()
                 .Or<TimeoutException>()
                 .WaitAndRetryForeverAsync(
-                    (retryAttempt) =>
+                    (retryAttempt, context) =>
                 {
                     logger.LogWarning($"重试连接Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
                 },
-                (ex, retrySecond, context) =>
+                (ex, retrySecond, retryAttempt, context) =>
                 {
-                    logger.LogError(ex, $"连接Stan客户端异常 客户端标识{_clientId}  将在 {retrySecond} 秒后重试");
+                    logger.LogError(ex, $"第 {retryAttempt}次 重新连接Stan客户端 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
                 });
 
             //短路保护
@@ -155,10 +155,10 @@ namespace Hunter.STAN.Client
                 .WaitAndRetryAsync(3,
                 (retryAttempt, context) =>
                 {
-                    logger.LogWarning($"重试执行Stan客户端 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    logger.LogWarning($"重试执行Stan客户端命令 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
                 },
-                (ex, retryAttempt, retrySecond, context) =>
+                (ex,  retrySecond, retryAttempt, context) =>
                 {
                     logger.LogError(ex, $"第 {retryAttempt}次 重新执行当前命令 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
                 });
@@ -226,6 +226,8 @@ namespace Hunter.STAN.Client
             if (_channel != null && _channel.Active)
                 return _channel;
 
+            _logger.LogInformation($"当前通道 1 _channel = {_channel!=null} _active = {_channel.Active} _isSet = {_autoResetEvent.IsSet}");
+
             if (timeout.HasValue)
             {
                 var receivesSignal = _autoResetEvent.Wait(timeout.Value);
@@ -237,6 +239,9 @@ namespace Hunter.STAN.Client
             }
 
             _autoResetEvent.Reset();
+
+            _logger.LogInformation($"当前通道 2 _channel = {_channel != null} _active = {_channel.Active} _isSet = {_autoResetEvent.IsSet}");
+
 
             if (_channel != null && _channel.Active)
             {
