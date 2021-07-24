@@ -60,11 +60,11 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation("STAN 开始客户端连接请求");
 
-            var config = await ConnectRequestAsync();
+            await ConnectRequestAsync();
 
             _logger.LogInformation("STAN 完成客户端连接请求");
 
-            if (config.Error == ProtocolConstants.Already_Registered)
+            if (_config.Error == ProtocolConstants.Already_Registered)
             {
                 var pingResponse = await ConnectPingAsync();
 
@@ -83,13 +83,9 @@ namespace Hunter.STAN.Client
             }
             else
             {
-                if (string.IsNullOrEmpty(config.Error))
+                if (!string.IsNullOrEmpty(_config.Error))
                 {
-                    _config = config;
-                }
-                else
-                {
-                    throw new StanConnectRequestException(config.Error);
+                    throw new StanConnectRequestException(_config.Error);
                 }
             }
 
@@ -98,7 +94,7 @@ namespace Hunter.STAN.Client
             _connectionState = STANConnectionState.Connected;
         }
 
-        private async Task<STANConnectionConfig> ConnectRequestAsync()
+        private async Task ConnectRequestAsync()
         {
             var ConnectId = Guid.NewGuid().ToString("N");
 
@@ -122,7 +118,7 @@ namespace Hunter.STAN.Client
                 _logger.LogError("STAN 连接请求发生异常 {0}", ConnectResponse.Message.Error);
             }
 
-            return new STANConnectionConfig(
+            _config = new STANConnectionConfig(
                 ConnectId,
                 ConnectResponse.Message.Error,
                 ConnectResponse.Message.PubPrefix,

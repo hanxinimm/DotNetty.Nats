@@ -87,5 +87,21 @@ namespace Hunter.STAN.Client
         /// 保留供将来使用
         /// </summary>
         public readonly string PublicKey;
+
+        public override string ToString()
+        {
+            return $@"STANConnectionConfig {{ 
+                        PubPrefix='{ PubPrefix }'
+                        ,SubRequests='{SubRequests}'
+                        ,UnsubRequests='{UnsubRequests}'
+                        ,CloseRequests='{CloseRequests}'
+                        ,SubCloseRequests='{SubCloseRequests}'
+                        ,PingRequests='{PingRequests}'
+                        ,PingInterval='{PingInterval}'
+                        ,PingMaxOut='{PingMaxOut}'
+                        ,Protocol='{Protocol}'
+                        ,PublicKey='{PublicKey}'
+                    }}";
+        }
     }
 }

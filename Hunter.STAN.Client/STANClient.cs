@@ -227,7 +227,7 @@ namespace Hunter.STAN.Client
             if (_embed_channel != null && _embed_channel.Active && _config != null)
                 return _embed_channel;
 
-            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet} _config = {_config}");
 
             if (timeout.HasValue)
             {
@@ -241,7 +241,7 @@ namespace Hunter.STAN.Client
 
             _autoResetEvent.Reset();
 
-            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet} _config = {_config}");
 
 
             if (_embed_channel != null && _embed_channel.Active && _config != null)
@@ -252,7 +252,7 @@ namespace Hunter.STAN.Client
 
             await ConnectAsync();
 
-            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
+            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet} _config = {_config}");
 
             _autoResetEvent.Set();
 
