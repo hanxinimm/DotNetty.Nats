@@ -136,17 +136,10 @@ namespace Hunter.STAN.Client
                 },
                 (ex, retrySecond, retryAttempt, context) =>
                 {
-                    logger.LogError(ex, $"第 {retryAttempt}次 重新连接Stan客户端 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
+                    logger.LogError(ex, $"第 {retryAttempt}次 重新连接Stan客户端 客户端标识{_clientId} 将在 {retrySecond} 秒后重试");
                 });
 
-            //短路保护
-            var connectPolicyBreaker = Policy
-                .Handle<ConnectException>()
-                .Or<TimeoutException>()
-                .Or<SocketException>()
-                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
-
-            _connectPolicy = Policy.WrapAsync(connectPolicyRetry, connectPolicyBreaker);
+            _connectPolicy = connectPolicyRetry;
 
             #endregion;
 
