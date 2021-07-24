@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TestSTANClient
@@ -86,19 +87,23 @@ namespace TestSTANClient
 
             while (true)
             {
-                for (int ii = 0; ii < 5; ii++)
+                List<Task> tks = new List<Task>();
+                //for (int ii = 0; ii < 5; ii++)
+                //{
+                //    await Task.Factory.StartNew(async () =>
+                //    {
+                for (int j = 0; j < 20; j++)
                 {
-                    await Task.Factory.StartNew(async () =>
+                    new Thread(async () =>
                     {
-                        for (int j = 0; j < 5; j++)
-                        {
-                            await Task.Factory.StartNew(async () =>
-                            {
-                                await client.PublishAsync("Test2", Testbytes1);
-                            });
-                        }
-                    });
+                        await client.PublishAsync("Test2", Testbytes1);
+                    }).Start();
+                    //tks.Add(Task.Factory.StartNew();
                 }
+
+                //Task.WaitAll(tks.ToArray());
+                //    });
+                //}
                 Console.WriteLine("按任意键开始下一次发送");
                 Console.ReadLine();
             }
