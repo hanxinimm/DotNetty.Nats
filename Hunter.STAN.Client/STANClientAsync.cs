@@ -109,9 +109,11 @@ namespace Hunter.STAN.Client
                 ConnectId,
                 _heartbeatInboxId);
 
+            _connectResponseReplyHandler.CompletionSource = new TaskCompletionSource<ConnectResponsePacket>();
+
             await _embed_channel.WriteAndFlushAsync(Packet);
 
-            var ConnectResponse = await _connectResponseTaskCompletionSource.Task;
+            var ConnectResponse = await _connectResponseReplyHandler.CompletionSource.Task;
 
             if (ConnectResponse == null) throw new StanConnectRequestException();
 

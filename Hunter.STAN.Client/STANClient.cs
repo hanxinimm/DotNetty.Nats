@@ -84,7 +84,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 请求响应任务
         /// </summary>
-        private TaskCompletionSource<ConnectResponsePacket> _connectResponseTaskCompletionSource;
+        private ConnectRequestPacketHandler _connectResponseReplyHandler;
 
         /// <summary>
         /// 等待发送消息确认安排表
@@ -116,6 +116,7 @@ namespace Hunter.STAN.Client
             _clientId = $"{_options.ClientId}-{_identity}";
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
+            _connectResponseReplyHandler = new ConnectRequestPacketHandler(_replyInboxId);
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _bootstrap = InitBootstrap();
             _logger = logger;
@@ -196,10 +197,10 @@ namespace Hunter.STAN.Client
             {
                 channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder(_logger));
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeed));
+                channel.Pipeline.AddLast(_connectResponseReplyHandler);
+
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
-
-                channel.Pipeline.AddLast(new ReplyPacketHandler<ConnectResponsePacket>(_replyInboxId, _connectResponseTaskCompletionSource));
 
                 channel.Pipeline.AddLast(new PubAckPacketSyncHandler(_logger, _waitPubAckTaskSchedule));
                 channel.Pipeline.AddLast(new PubAckPacketAsynHandler(_logger));
@@ -223,7 +224,7 @@ namespace Hunter.STAN.Client
 
         async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
         {
-            if (_embed_channel != null && _embed_channel.Active)
+            if (_embed_channel != null && _embed_channel.Active && _config != null)
                 return _embed_channel;
 
             _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
@@ -243,7 +244,7 @@ namespace Hunter.STAN.Client
             _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
 
-            if (_embed_channel != null && _embed_channel.Active)
+            if (_embed_channel != null && _embed_channel.Active && _config != null)
             {
                 _autoResetEvent.Set();
                 return _embed_channel;
