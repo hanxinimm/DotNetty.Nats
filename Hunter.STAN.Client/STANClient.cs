@@ -69,7 +69,7 @@ namespace Hunter.STAN.Client
         /// <summary>
         /// 限制并发线程
         /// </summary>
-        private readonly ManualResetEventSlim _autoResetEvent;
+        private readonly ManualResetEventSlim _manualResetEvent;
 
         /// <summary>
         /// 连接状态
@@ -120,7 +120,7 @@ namespace Hunter.STAN.Client
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _bootstrap = InitBootstrap();
             _logger = logger;
-            _autoResetEvent = new ManualResetEventSlim(true, 1);
+            _manualResetEvent = new ManualResetEventSlim(true, 1);
 
             #region Connect;
 
@@ -217,8 +217,6 @@ namespace Hunter.STAN.Client
 
             _embed_channel = null;
 
-            _autoResetEvent.Set();
-
             _logger.LogInformation($"STAN连接端口 ClientId = {_clientId} 完成实例化新的连接管道");
         }
 
@@ -227,34 +225,36 @@ namespace Hunter.STAN.Client
             if (_embed_channel != null && _embed_channel.Active && _config != null)
                 return _embed_channel;
 
-            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet} _config = {_config}");
+            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_manualResetEvent.IsSet} _config = {_config}");
 
             if (timeout.HasValue)
             {
-                var receivesSignal = _autoResetEvent.Wait(timeout.Value);
+                var receivesSignal = _manualResetEvent.Wait(timeout.Value);
                 if (!receivesSignal) return null;
             }
             else
             {
-                _autoResetEvent.Wait();
+                _manualResetEvent.Wait();
             }
 
-            _autoResetEvent.Reset();
-
-            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet} _config = {_config}");
+            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_manualResetEvent.IsSet} _config = {_config}");
 
 
             if (_embed_channel != null && _embed_channel.Active && _config != null)
             {
-                _autoResetEvent.Set();
+                _manualResetEvent.Set();
                 return _embed_channel;
+            }
+            else
+            {
+                _manualResetEvent.Reset();
             }
 
             await ConnectAsync();
 
-            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet} _config = {_config}");
+            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_manualResetEvent.IsSet} _config = {_config}");
 
-            _autoResetEvent.Set();
+            _manualResetEvent.Set();
 
             return _embed_channel;
         }

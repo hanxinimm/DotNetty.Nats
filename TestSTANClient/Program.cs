@@ -82,22 +82,26 @@ namespace TestSTANClient
 
             //await client.ConnectAsync();
 
-            //var Testbytes1 = Encoding.UTF8.GetBytes($"序号 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            var Testbytes1 = Encoding.UTF8.GetBytes($"序号 这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-            //for (int ii = 0; ii < 30; ii++)
-            //{
-            //    await Task.Factory.StartNew(async () =>
-            //    {
-            //        for (int j = 0; j < 30; j++)
-            //        {
-            //            await Task.Factory.StartNew(async () =>
-            //            {
-            //                await client.PublishAsync("Test2", Testbytes1);
-            //            });
-            //        }
-            //    });
-            //}
-
+            while (true)
+            {
+                for (int ii = 0; ii < 5; ii++)
+                {
+                    await Task.Factory.StartNew(async () =>
+                    {
+                        for (int j = 0; j < 5; j++)
+                        {
+                            await Task.Factory.StartNew(async () =>
+                            {
+                                await client.PublishAsync("Test2", Testbytes1);
+                            });
+                        }
+                    });
+                }
+                Console.WriteLine("按任意键开始下一次发送");
+                Console.ReadLine();
+            }
             //await client.DisposeAsync();
 
             //await client.DisposeAsync();
