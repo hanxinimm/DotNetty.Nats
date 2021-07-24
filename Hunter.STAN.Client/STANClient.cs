@@ -256,7 +256,9 @@ namespace Hunter.STAN.Client
                 return _embed_channel;
             }
 
-            _embed_channel = await ConnectAsync();
+            await ConnectAsync();
+
+            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.IsSet}");
 
             _autoResetEvent.Set();
 

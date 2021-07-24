@@ -17,7 +17,7 @@ namespace Hunter.STAN.Client
 {
     public sealed partial class STANClient
     {
-        public async Task<IChannel> ConnectAsync()
+        public async Task ConnectAsync()
         {
             _logger.LogInformation($"开始连接Stan客户端 客户端编号 {_clientId}");
 
@@ -25,14 +25,12 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation($"开始执行Stan客户端连接 客户端编号 {_clientId}");
 
-            var channel = await _connectPolicy.ExecuteAsync(async () => await ExecuteConnectAsync());
+            await _connectPolicy.ExecuteAsync(async () => await ExecuteConnectAsync());
 
             _logger.LogInformation($"完成执行Stan客户端连接 客户端编号 {_clientId}");
-
-            return channel;
         }
 
-        public async Task<IChannel> ExecuteConnectAsync()
+        public async Task ExecuteConnectAsync()
         {
             _logger.LogInformation("STAN 执行客户端通讯连接频道");
 
@@ -46,29 +44,29 @@ namespace Hunter.STAN.Client
          
             _logger.LogInformation("STAN 开始连接频道");
 
-            var channel = await _bootstrap.ConnectAsync(ClusterNode);
+            _embed_channel = await _bootstrap.ConnectAsync(ClusterNode);
 
             _logger.LogInformation("STAN 开始订阅心跳箱");
 
-            await SubscribeHeartBeatInboxAsync(channel);
+            await SubscribeHeartBeatInboxAsync();
 
             _logger.LogInformation("STAN 完成订阅心跳箱");
 
             _logger.LogInformation("STAN 开始订阅答复箱");
 
-            await SubscribeReplyInboxAsync(channel);
+            await SubscribeReplyInboxAsync();
 
             _logger.LogInformation("STAN 完成订阅答复箱");
 
             _logger.LogInformation("STAN 开始客户端连接请求");
 
-            var config = await ConnectRequestAsync(channel);
+            var config = await ConnectRequestAsync();
 
             _logger.LogInformation("STAN 完成客户端连接请求");
 
             if (config.Error == ProtocolConstants.Already_Registered)
             {
-                var pingResponse = await ConnectPingAsync(channel);
+                var pingResponse = await ConnectPingAsync();
 
                 if (pingResponse == null || !string.IsNullOrEmpty(pingResponse.Error))
                 {
@@ -79,7 +77,7 @@ namespace Hunter.STAN.Client
 
                 _logger.LogInformation("STAN 开始订阅之前订阅的消息");
 
-                await SubscriptionMessageAsync(channel);
+                await SubscriptionMessageAsync();
 
                 _logger.LogInformation("STAN 完成订阅之前订阅的消息");
             }
@@ -98,11 +96,9 @@ namespace Hunter.STAN.Client
             _logger.LogInformation("STAN 完成连接频道");
 
             _connectionState = STANConnectionState.Connected;
-
-            return channel;
         }
 
-        private async Task<STANConnectionConfig> ConnectRequestAsync(IChannel _channel)
+        private async Task<STANConnectionConfig> ConnectRequestAsync()
         {
             var ConnectId = Guid.NewGuid().ToString("N");
 
@@ -113,7 +109,7 @@ namespace Hunter.STAN.Client
                 ConnectId,
                 _heartbeatInboxId);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var ConnectResponse = await _connectResponseTaskCompletionSource.Task;
 
@@ -139,18 +135,18 @@ namespace Hunter.STAN.Client
                 ConnectResponse.Message.PublicKey);
         }
 
-        private async Task SubscribeHeartBeatInboxAsync(IChannel _channel)
+        private async Task SubscribeHeartBeatInboxAsync()
         {
             _logger.LogDebug($"开始订阅消息服务器心跳消息 HeartbeatInbox = {_heartbeatInboxId}");
 
             var Packet = new HeartbeatInboxPacket(_heartbeatInboxId);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             _logger.LogDebug("结束订阅消息服务器心跳消息");
         }
 
-        private async Task<PingResponse> ConnectPingAsync(IChannel _channel)
+        private async Task<PingResponse> ConnectPingAsync()
         {
             _logger.LogDebug($"开始Ping消息服务器 Ping = {_config.ConnectionId}");
 
@@ -160,11 +156,9 @@ namespace Hunter.STAN.Client
 
             var Handler = new ReplyPacketHandler<ConnectPingResponsePacket>(Packet.ReplyTo, ConnectPingResponseReady);
 
-            //var _channel = await _instance.Value;
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            _channel.Pipeline.AddLast(Handler);
-
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var ConnectResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -175,32 +169,32 @@ namespace Hunter.STAN.Client
 
             await ConnectResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             _logger.LogDebug("结束Ping消息服务器");
 
             return ConnectPingResponse?.Message;
         }
 
-        private async Task SubscribeReplyInboxAsync(IChannel _channel)
+        private async Task SubscribeReplyInboxAsync()
         {
             _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
-            await _channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
+            await _embed_channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
 
             _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
         }
 
 
-        private async Task SubscriptionMessageAsync(IChannel _channel)
+        private async Task SubscriptionMessageAsync()
         {
             foreach (var subscriptionMessageHandler in _subscriptionMessageHandler)
             {
                 _logger.LogDebug($"开始设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
 
-                _channel.Pipeline.AddLast(subscriptionMessageHandler);
+                _embed_channel.Pipeline.AddLast(subscriptionMessageHandler);
 
-                await _channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.Inbox));
+                await _embed_channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.Inbox));
 
                 _logger.LogDebug($"完成设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
             }
