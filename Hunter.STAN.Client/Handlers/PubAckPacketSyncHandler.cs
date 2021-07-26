@@ -25,6 +25,8 @@ namespace DotNetty.Handlers.STAN
             _waitPubAckTaskSchedule = waitPubAckTaskSchedule;
         }
 
+        public override bool IsSharable => true;
+
         protected override void ChannelRead0(IChannelHandlerContext contex, PubAckPacket msg)
         {
 

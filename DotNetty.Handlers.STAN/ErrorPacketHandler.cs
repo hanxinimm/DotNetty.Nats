@@ -18,6 +18,9 @@ namespace DotNetty.Handlers.STAN
             _logger = logger;
         }
 
+        public override bool IsSharable => true;
+
+
         protected override void ChannelRead0(IChannelHandlerContext contex, UnknownErrorPacket msg)
         {
             _logger.LogError("[ErrorPacketHandler]STAN消息服务发生错误 错误信息:{0}", msg.Message);

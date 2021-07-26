@@ -22,6 +22,8 @@ namespace DotNetty.Handlers.STAN
             _logger = logger;
         }
 
+        public override bool IsSharable => true;
+
         protected override void ChannelRead0(IChannelHandlerContext contex, PubAckPacket msg)
         {
             if (!string.IsNullOrEmpty(msg.Message.Error))

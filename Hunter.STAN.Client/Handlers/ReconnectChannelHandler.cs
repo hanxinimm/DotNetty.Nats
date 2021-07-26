@@ -19,6 +19,7 @@ namespace Hunter.STAN.Client.Handlers
             _logger = logger;
             _reconnectHandler = reconnectHandler;
         }
+        public override bool IsSharable => true;
 
         public override void ChannelInactive(IChannelHandlerContext context)
         {

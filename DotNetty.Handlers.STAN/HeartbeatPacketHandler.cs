@@ -6,6 +6,9 @@ namespace DotNetty.Handlers.STAN
 {
     public class HeartbeatPacketHandler : SimpleChannelInboundHandler<HeartbeatPacket>
     {
+        public override bool IsSharable => true;
+
+
         protected override void ChannelRead0(IChannelHandlerContext contex, HeartbeatPacket msg)
         {
             contex.WriteAndFlushAsync(new HeartbeatAckPacket(msg.ReplyTo));

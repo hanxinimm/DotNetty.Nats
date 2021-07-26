@@ -18,6 +18,9 @@ namespace DotNetty.Handlers.STAN
             _clientId = clientId;
         }
 
+        public override bool IsSharable => true;
+
+
         protected override void ChannelRead0(IChannelHandlerContext contex, PongPacket msg)
         {
             _logger.LogDebug($"STAN 服务器心跳 客户端编号 {_clientId} PongPacket => PingPacket");
