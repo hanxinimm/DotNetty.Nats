@@ -140,7 +140,10 @@ namespace Hunter.STAN.Client
                     logger.LogError(ex, $"第 {retryAttempt}次 重新连接Stan客户端 客户端标识{_clientId} 将在 {retrySecond} 秒后重试");
                 });
 
-            _connectPolicy = connectPolicyRetry;
+            //超时
+            var connectPolicyTimeout = Policy.TimeoutAsync(10, TimeoutStrategy.Pessimistic);
+
+            _connectPolicy = Policy.WrapAsync(connectPolicyRetry, connectPolicyTimeout);
 
             #endregion;
 

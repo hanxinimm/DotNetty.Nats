@@ -142,14 +142,10 @@ namespace Hunter.NATS.Client
                     logger.LogError(ex, $"连接Stan客户端异常 客户端标识{_clientId}  将在 {retrySecond} 秒后重试");
                 });
 
-            //短路保护
-            var connectPolicyBreaker = Policy
-                .Handle<ConnectException>()
-                .Or<TimeoutException>()
-                .Or<SocketException>()
-                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
+            //超时
+            var connectPolicyTimeout = Policy.TimeoutAsync(10, TimeoutStrategy.Pessimistic);
 
-            _connectPolicy = Policy.WrapAsync(connectPolicyRetry, connectPolicyBreaker);
+            _connectPolicy = Policy.WrapAsync(connectPolicyRetry, connectPolicyTimeout);
 
             #endregion;
 
