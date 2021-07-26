@@ -116,6 +116,7 @@ namespace Hunter.NATS.Client
 
             _bootstrap = InitBootstrap();
             _logger = logger;
+            _autoResetEvent = new AutoResetEvent(true);
 
             _jetStreamSetting = new JsonSerializerSettings
             {

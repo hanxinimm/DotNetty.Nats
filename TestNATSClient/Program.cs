@@ -85,9 +85,9 @@ namespace TestNATSClient
             {
                 options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                options.Host = "127.0.0.1";
+                //options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
-                //options.Host = "mq.nats.yd.com";
+                options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
                 //options.IsAuthentication = true;
@@ -117,7 +117,7 @@ namespace TestNATSClient
 
             //return;
 
-            await client.ConnectAsync();
+            //await client.ConnectAsync();
 
             //var streamList = await client.StreamListAsync();
 
@@ -153,7 +153,7 @@ namespace TestNATSClient
             //        Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
             //    });
 
-            var s = await client.SubscribeAsync("ApiGateway.EventTrigger.After.Test", async (bytes) =>
+            var s = await client.SubscribeAsync("ApiGateway.Statistics.Recruit-Browse", async (bytes) =>
             {
                 Console.WriteLine("开始接受收消息");
                 var sss = Encoding.UTF8.GetString(bytes.Data);
@@ -188,7 +188,7 @@ namespace TestNATSClient
                 //        {
                             await Task.Factory.StartNew(async () =>
                             {
-                                await client.StreamPublishAsync("ApiGateway.EventTrigger.After.Test", Testbytes);
+                                await client.PublishAsync("ApiGateway.Statistics.Recruit-Browse", Testbytes);
                             });
                     //    }
                     //});
