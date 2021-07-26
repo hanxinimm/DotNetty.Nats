@@ -82,9 +82,15 @@ namespace Hunter.STAN.Client
         private STANConnectionConfig _config;
 
         /// <summary>
-        /// 请求响应任务
+        /// 请求连接处理器
         /// </summary>
         private ConnectRequestPacketHandler _connectResponseReplyHandler;
+
+        /// <summary>
+        /// 请求关闭处理器
+        /// </summary>
+        private CloseRequestPacketHandler _closeResponseReplyHandler;
+
 
         /// <summary>
         /// 等待发送消息确认安排表
@@ -117,6 +123,7 @@ namespace Hunter.STAN.Client
             _heartbeatInboxId = _identity;
             _replyInboxId = _identity;
             _connectResponseReplyHandler = new ConnectRequestPacketHandler(_replyInboxId);
+            _closeResponseReplyHandler = new CloseRequestPacketHandler(_replyInboxId);
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _bootstrap = InitBootstrap();
             _logger = logger;
@@ -201,6 +208,7 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(STANEncoder.Instance, new STANDecoder(_logger));
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeed));
                 channel.Pipeline.AddLast(_connectResponseReplyHandler);
+                channel.Pipeline.AddLast(_closeResponseReplyHandler);
 
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());

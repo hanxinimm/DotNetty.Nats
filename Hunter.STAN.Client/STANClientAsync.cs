@@ -791,18 +791,12 @@ namespace Hunter.STAN.Client
 
             var Packet = new CloseRequestPacket(_replyInboxId, _config.CloseRequests, _clientId);
 
-            var CloseRequestReady = new TaskCompletionSource<CloseResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<CloseResponsePacket>(Packet.ReplyTo, CloseRequestReady);
-
-            _channel.Pipeline.AddLast(Handler);
+            _closeResponseReplyHandler.CompletionSource = new TaskCompletionSource<CloseResponsePacket>();
 
             //发送关闭
             await _channel.WriteAndFlushAsync(Packet);
 
-            var Result = await CloseRequestReady.Task;
-
-            _channel.Pipeline.Remove(Handler);
+            var Result = await _closeResponseReplyHandler.CompletionSource.Task;
 
             _config = null;
 
@@ -819,11 +813,15 @@ namespace Hunter.STAN.Client
 
             if (_channel != null && _channel.Active)
             {
+                _logger.LogWarning($"开始释放Stan 通道 客户端编号 {_clientId}");
+
                 if (_channel.Open && _config != null)
                     await CloseRequestAsync();
 
                 await _channel.DisconnectAsync();
                 await _channel.EventLoop.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(1));
+
+                _logger.LogWarning($"结束释放Stan 通道 客户端编号 {_clientId}");
             }
 
             _connectionState = STANConnectionState.Disconnected;

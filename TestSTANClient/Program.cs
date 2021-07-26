@@ -98,6 +98,14 @@ namespace TestSTANClient
                     {
                         await client.PublishAsync("Test2", Testbytes1);
                     }).Start();
+
+                    if (j == 10)
+                    {
+                        new Thread(async () =>
+                        {
+                            await client.DisposeAsync();
+                        }).Start();
+                    }
                     //tks.Add(Task.Factory.StartNew();
                 }
 
