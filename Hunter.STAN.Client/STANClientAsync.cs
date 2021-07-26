@@ -150,7 +150,7 @@ namespace Hunter.STAN.Client
 
             var ConnectPingResponseReady = new TaskCompletionSource<ConnectPingResponsePacket>();
 
-            var Handler = new ReplyPacketHandler<ConnectPingResponsePacket>(Packet.ReplyTo, ConnectPingResponseReady);
+            var Handler = new ReplyPacketHandler<ConnectPingResponsePacket>(STANInboxs.PingResponse, Packet.ReplyTo, ConnectPingResponseReady);
 
             _embed_channel.Pipeline.AddLast(Handler);
 

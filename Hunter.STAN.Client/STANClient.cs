@@ -136,6 +136,7 @@ namespace Hunter.STAN.Client
                 .Handle<ConnectException>()
                 .Or<SocketException>()
                 .Or<TimeoutException>()
+                .Or<TimeoutRejectedException>()
                 .WaitAndRetryForeverAsync(
                     (retryAttempt, context) =>
                 {
@@ -173,7 +174,7 @@ namespace Hunter.STAN.Client
                 });
 
             //超时
-            var policyTimeout = Policy.TimeoutAsync(20, TimeoutStrategy.Pessimistic);
+            var policyTimeout = Policy.TimeoutAsync(20000, TimeoutStrategy.Pessimistic);
 
             //短路保护
             var policyBreaker = Policy.Handle<TimeoutRejectedException>()

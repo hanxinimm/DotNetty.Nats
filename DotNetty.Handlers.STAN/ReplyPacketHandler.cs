@@ -13,9 +13,9 @@ namespace DotNetty.Handlers.STAN
     {
         private readonly string _replyTo;
         private readonly TaskCompletionSource<TPacket> _completionSource;
-        public ReplyPacketHandler(string inboxId, TaskCompletionSource<TPacket> completionSource)
+        public ReplyPacketHandler(string inboxPrefix, string inboxId, TaskCompletionSource<TPacket> completionSource)
         {
-            _replyTo = $"{STANInboxs.ConnectResponse}{inboxId}";
+            _replyTo = $"{inboxPrefix}{inboxId}";
             _completionSource = completionSource;
         }
 

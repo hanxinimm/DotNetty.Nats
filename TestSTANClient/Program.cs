@@ -68,7 +68,8 @@ namespace TestSTANClient
                 //options.Host = "mq.stan.yidujob.com";
                 //options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
-                options.Host = "mq.stan.yd.com";
+                //options.Host = "mq.stan.yd.com";
+                options.Host = "mq.stan.laboroa.cn";
                 options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
@@ -92,20 +93,20 @@ namespace TestSTANClient
                 //{
                 //    await Task.Factory.StartNew(async () =>
                 //    {
-                for (int j = 0; j < 20; j++)
+                for (int j = 0; j < 5; j++)
                 {
                     new Thread(async () =>
                     {
                         await client.PublishAsync("Test2", Testbytes1);
                     }).Start();
 
-                    if (j == 10)
-                    {
-                        new Thread(async () =>
-                        {
-                            await client.DisposeAsync();
-                        }).Start();
-                    }
+                    //if (j == 10)
+                    //{
+                    //    new Thread(async () =>
+                    //    {
+                    //        await client.DisposeAsync();
+                    //    }).Start();
+                    //}
                     //tks.Add(Task.Factory.StartNew();
                 }
 
