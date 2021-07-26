@@ -1,5 +1,4 @@
-﻿using DotNetty.Codecs.NATS;
-using DotNetty.Codecs.NATS.Packets;
+﻿using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.NATSJetStream;
 using DotNetty.Handlers.NATS;
 using DotNetty.Transport.Bootstrapping;
@@ -58,7 +57,7 @@ namespace Hunter.NATS.Client
         ///// <summary>
         ///// 连接通道实例
         ///// </summary>
-        private IChannel _channel;
+        private IChannel _embed_channel;
 
         /// <summary>
         /// 订阅编号
@@ -68,7 +67,7 @@ namespace Hunter.NATS.Client
         /// <summary>
         /// 限制并发线程
         /// </summary>
-        private readonly ManualResetEventSlim _autoResetEvent;
+        private readonly AutoResetEvent _autoResetEvent;
 
         /// <summary>
         /// 连接状态
@@ -215,41 +214,43 @@ namespace Hunter.NATS.Client
         {
             _logger.LogInformation("NATS连接端口 开始实例化新的连接管道");
 
-            _channel = null;
-
-            _autoResetEvent.Set();
+            _embed_channel = null;
 
             _logger.LogInformation("NATS连接端口 完成实例化新的连接管道");
         }
 
         async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
         {
-            if (_channel != null && _channel.Active)
-                return _channel;
+            if (_embed_channel != null && _embed_channel.Active)
+                return _embed_channel;
+
+            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed}");
 
             if (timeout.HasValue)
             {
-                var receivesSignal = _autoResetEvent.Wait(timeout.Value);
+                var receivesSignal = _autoResetEvent.WaitOne(timeout.Value);
                 if (!receivesSignal) return null;
             }
             else
             {
-                _autoResetEvent.Wait();
+                _autoResetEvent.WaitOne();
             }
 
-            _autoResetEvent.Reset();
+            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed}");
 
-            if (_channel != null && _channel.Active)
+            if (_embed_channel != null && _embed_channel.Active)
             {
                 _autoResetEvent.Set();
-                return _channel;
+                return _embed_channel;
             }
 
-            _channel = await ConnectAsync();
+            await ConnectAsync();
+
+            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed}");
 
             _autoResetEvent.Set();
 
-            return _channel;
+            return _embed_channel;
         }
     }
 }

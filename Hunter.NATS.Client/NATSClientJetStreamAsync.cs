@@ -62,7 +62,7 @@ namespace Hunter.NATS.Client
 
                     var Packet = new PublishHigherPacket(subject, data, messageHeaders);
 
-                    await _channel.WriteAndFlushAsync(Packet);
+                    await _embed_channel.WriteAndFlushAsync(Packet);
                 });
             }
             else
@@ -73,7 +73,7 @@ namespace Hunter.NATS.Client
 
                     var Packet = new PublishHigherPacket(subject, data);
 
-                    await _channel.WriteAndFlushAsync(Packet);
+                    await _embed_channel.WriteAndFlushAsync(Packet);
                 });
             }
         }
@@ -94,9 +94,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<InfoResponsePacket>(Packet.ReplyTo, InfoResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var InfoResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -107,7 +107,7 @@ namespace Hunter.NATS.Client
 
             await InfoResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (InfoResponse == null) throw new ArgumentNullException();
@@ -126,9 +126,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<CreateResponsePacket>(Packet.ReplyTo, CreateResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var CreateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -139,7 +139,7 @@ namespace Hunter.NATS.Client
 
             await CreateResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (CreateResponse == null) throw new ArgumentNullException();
@@ -158,9 +158,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<UpdateResponsePacket>(Packet.ReplyTo, UpdateResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var UpdateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -171,7 +171,7 @@ namespace Hunter.NATS.Client
 
             await UpdateResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (UpdateResponse == null) throw new ArgumentNullException();
@@ -189,9 +189,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<NamesResponsePacket>(Packet.ReplyTo, NamesResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var NamesResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -202,7 +202,7 @@ namespace Hunter.NATS.Client
 
             await NamesResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (NamesResponse == null) throw new ArgumentNullException();
@@ -220,9 +220,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<ListResponsePacket>(Packet.ReplyTo, ListResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var ListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -233,7 +233,7 @@ namespace Hunter.NATS.Client
 
             await ListResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (ListResponse == null) throw new ArgumentNullException();
@@ -254,9 +254,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -267,7 +267,7 @@ namespace Hunter.NATS.Client
 
             await GetMessageResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (GetMessageResponse == null) throw new ArgumentNullException();
@@ -288,9 +288,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -301,7 +301,7 @@ namespace Hunter.NATS.Client
 
             await GetMessageResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (GetMessageResponse == null) throw new ArgumentNullException();
@@ -370,9 +370,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<ConsumerCreateResponsePacket>(Packet.ReplyTo, ConsumerCreateResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var ConsumerCreateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -383,7 +383,7 @@ namespace Hunter.NATS.Client
 
             await ConsumerCreateResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (ConsumerCreateResponse == null) throw new ArgumentNullException();
@@ -401,9 +401,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<ConsumerNamesResponsePacket>(Packet.ReplyTo, ConsumerNamesResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var ConsumerNamesResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -414,7 +414,7 @@ namespace Hunter.NATS.Client
 
             await ConsumerNamesResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (ConsumerNamesResponse == null) throw new ArgumentNullException();
@@ -432,9 +432,9 @@ namespace Hunter.NATS.Client
 
             var Handler = new ReplyPacketHandler<ConsumerListResponsePacket>(Packet.ReplyTo, ConsumerListResponseReady);
 
-            _channel.Pipeline.AddLast(Handler);
+            _embed_channel.Pipeline.AddLast(Handler);
 
-            await _channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             var ConsumerListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
             {
@@ -445,7 +445,7 @@ namespace Hunter.NATS.Client
 
             await ConsumerListResponseCancellationToken.DisposeAsync();
 
-            _channel.Pipeline.Remove(Handler);
+            _embed_channel.Pipeline.Remove(Handler);
 
             //TODO:待优化
             if (ConsumerListResponse == null) throw new ArgumentNullException();
@@ -485,7 +485,7 @@ namespace Hunter.NATS.Client
             _logger.LogDebug($"开始添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
             //添加订阅响应管道
-            _channel.Pipeline.AddLast(messageHandler);
+            _embed_channel.Pipeline.AddLast(messageHandler);
 
             _logger.LogDebug($"结束添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
@@ -494,7 +494,7 @@ namespace Hunter.NATS.Client
 
             var SubscribePacketMsg = new SubscribePacket(SubscribeId, subject, queueGroup);
 
-            await _channel.WriteAndFlushAsync(SubscribePacketMsg);
+            await _embed_channel.WriteAndFlushAsync(SubscribePacketMsg);
 
             _logger.LogDebug($"结束发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
 
@@ -604,7 +604,7 @@ namespace Hunter.NATS.Client
                     break;
             }
 
-            await _channel.WriteAndFlushAsync(ackPacket);
+            await _embed_channel.WriteAndFlushAsync(ackPacket);
         }
 
         #endregion;

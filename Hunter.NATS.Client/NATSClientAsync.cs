@@ -12,7 +12,7 @@ namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
-        public async Task<IChannel> ConnectAsync()
+        public async Task ConnectAsync()
         {
 
             _logger.LogInformation($"开始连接Nats客户端 客户端编号 {_clientId}");
@@ -21,14 +21,12 @@ namespace Hunter.NATS.Client
 
             _logger.LogInformation($"开始执行Nats客户端 客户端编号 {_clientId}");
 
-            var channel =  await _connectPolicy.ExecuteAsync(async () => await ExecuteConnectAsync());
+            await _connectPolicy.ExecuteAsync(async () => await ExecuteConnectAsync());
 
             _logger.LogInformation($"完成执行Nats客户端 客户端编号 {_clientId}");
-
-            return channel;
         }
 
-        private async Task<IChannel> ExecuteConnectAsync()
+        private async Task ExecuteConnectAsync()
         {
             //TODO:集群节点待优化
             if (!_options.ClusterNodes.Any())
@@ -41,64 +39,60 @@ namespace Hunter.NATS.Client
 
             if (_info == null)
             {
-                var channel = await _bootstrap.ConnectAsync(ClusterNode);
+                _embed_channel = await _bootstrap.ConnectAsync(ClusterNode);
 
-                _info = await ConnectRequestAsync(channel);
+                _info = await ConnectRequestAsync();
 
-                await SubscribeReplyInboxAsync(channel);
+                await SubscribeReplyInboxAsync();
 
                 _connectionState = NATSConnectionState.Connected;
-
-                return channel;
             }
             else
             {
-                var channel = await _bootstrap.ConnectAsync(ClusterNode);
+                _embed_channel = await _bootstrap.ConnectAsync(ClusterNode);
 
-                _info = await ConnectRequestAsync(channel);
+                _info = await ConnectRequestAsync();
 
-                await SubscribeReplyInboxAsync(channel);
+                await SubscribeReplyInboxAsync();
 
-                await SubscriptionMessageAsync(channel);
+                await SubscriptionMessageAsync();
 
                 _connectionState = NATSConnectionState.Connected;
-
-                return channel;
             }
         }
 
-        private async Task<DotNetty.Codecs.NATS.Packets.InfoPacket> ConnectRequestAsync(IChannel channel)
+        private async Task<DotNetty.Codecs.NATS.Packets.InfoPacket> ConnectRequestAsync()
         {
             var Packet = _options.IsAuthentication ?
                 new ConnectPacket(_options.IsVerbose, false, false, _options.UserName, _options.Password, _clientId, null)
                 : new ConnectPacket(_options.IsVerbose, false, false, _clientId);
 
-            await channel.WriteAndFlushAsync(Packet);
+            await _embed_channel.WriteAndFlushAsync(Packet);
 
             _info = await _infoTaskCompletionSource.Task;
 
             return _info;
         }
 
-        private async Task SubscribeReplyInboxAsync(IChannel channel)
+        private async Task SubscribeReplyInboxAsync()
         {
             _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
-            await channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
+            await _embed_channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
 
             _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
         }
 
 
-        private async Task SubscriptionMessageAsync(IChannel channel)
+        private async Task SubscriptionMessageAsync()
         {
             foreach (var subscriptionMessageHandler in _subscriptionMessageHandler)
             {
                 _logger.LogDebug($"开始设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
 
-                channel.Pipeline.AddLast(subscriptionMessageHandler);
+                _embed_channel.Pipeline.AddLast(subscriptionMessageHandler);
 
-                await channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.SubscribeId, subscriptionMessageHandler.SubscriptionConfig.Subject, subscriptionMessageHandler.SubscriptionConfig.SubscribeGroup));
+                await _embed_channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.SubscribeId, subscriptionMessageHandler.SubscriptionConfig.Subject, subscriptionMessageHandler.SubscriptionConfig.SubscribeGroup));
 
                 _logger.LogDebug($"完成设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
             }
@@ -107,7 +101,6 @@ namespace Hunter.NATS.Client
         public async Task<string> HandleSubscribeAsync(string subject, string queueGroup,
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
-
             return await _policy.ExecuteAsync(async () =>
             {
                 return await InternalSubscribeAsync(subject, queueGroup, messageHandlerSetup, maxMsg, subscribeId);
