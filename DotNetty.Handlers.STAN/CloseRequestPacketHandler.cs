@@ -17,6 +17,8 @@ namespace DotNetty.Handlers.STAN
             _replyTo = $"{STANInboxs.CloseResponse}{inboxId}.CloseRequest";
         }
 
+        public override bool IsSharable => true;
+
         protected override void ChannelRead0(IChannelHandlerContext contex, CloseResponsePacket msg)
         {
             if (msg.Subject == _replyTo)

@@ -17,6 +17,8 @@ namespace DotNetty.Handlers.STAN
             _replyTo = $"{STANInboxs.ConnectResponse}{inboxId}.ConnectRequest";
         }
 
+        public override bool IsSharable => true;
+
         protected override void ChannelRead0(IChannelHandlerContext contex, ConnectResponsePacket msg)
         {
             if (msg.Subject == _replyTo)

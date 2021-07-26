@@ -173,7 +173,7 @@ namespace Hunter.STAN.Client
                 });
 
             //超时
-            var policyTimeout = Policy.TimeoutAsync(10, TimeoutStrategy.Pessimistic);
+            var policyTimeout = Policy.TimeoutAsync(20, TimeoutStrategy.Pessimistic);
 
             //短路保护
             var policyBreaker = Policy.Handle<TimeoutRejectedException>()
