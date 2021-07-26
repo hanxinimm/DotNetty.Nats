@@ -12,7 +12,7 @@ namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
-        public async Task ConnectAsync()
+        async Task ChannelConnectAsync()
         {
 
             _logger.LogInformation($"开始连接Nats客户端 客户端编号 {_clientId}");
@@ -26,7 +26,7 @@ namespace Hunter.NATS.Client
             _logger.LogInformation($"完成执行Nats客户端 客户端编号 {_clientId}");
         }
 
-        private async Task ExecuteConnectAsync()
+        async Task ExecuteConnectAsync()
         {
             //TODO:集群节点待优化
             if (!_options.ClusterNodes.Any())
@@ -112,7 +112,7 @@ namespace Hunter.NATS.Client
         public async Task<string> InternalSubscribeAsync(string subject, string queueGroup,
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
-            var _channel = await ChannelConnectAsync();
+            var _channel = await ConnectAsync();
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -200,14 +200,14 @@ namespace Hunter.NATS.Client
 
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync((Func<Task>)(async () =>
             {
-                var _channel = await ChannelConnectAsync();
+                var _channel = await ConnectAsync();
 
                 var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
                 await _channel.WriteAndFlushAsync(UnSubscribePacket);
-            });
+            }));
         }
 
         /// <summary>
@@ -218,14 +218,14 @@ namespace Hunter.NATS.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync((Func<Task>)(async () =>
             {
-                var _channel = await ChannelConnectAsync();
+                var _channel = await ConnectAsync();
 
                 var Packet = new PublishPacket(subject, data);
 
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }));
         }
 
         protected void InfoAsync(DotNetty.Codecs.NATS.Packets.InfoPacket info)
@@ -235,26 +235,26 @@ namespace Hunter.NATS.Client
 
         public async Task PingAsync()
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync((Func<Task>)(async () =>
             {
-                var _channel = await ChannelConnectAsync();
+                var _channel = await ConnectAsync();
 
                 var Packet = new PingPacket();
 
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }));
         }
 
         public async Task PongAsync()
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync((Func<Task>)(async () =>
             {
-                var _channel = await ChannelConnectAsync();
+                var _channel = await ConnectAsync();
 
                 var Packet = new PongPacket();
 
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }));
         }
 
         public async ValueTask DisposeAsync()
@@ -263,7 +263,7 @@ namespace Hunter.NATS.Client
 
             _connectionState = NATSConnectionState.Disconnecting;
 
-            var _channel = await ChannelConnectAsync(TimeSpan.FromSeconds(5));
+            var _channel = await ConnectAsync(TimeSpan.FromSeconds(5));
 
             if (_channel != null && _channel.Active)
             {

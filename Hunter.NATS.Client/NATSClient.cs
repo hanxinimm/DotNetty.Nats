@@ -220,7 +220,7 @@ namespace Hunter.NATS.Client
             _logger.LogInformation("NATS连接端口 完成实例化新的连接管道");
         }
 
-        async ValueTask<IChannel> ChannelConnectAsync(TimeSpan? timeout = null)
+        public async ValueTask<IChannel> ConnectAsync(TimeSpan? timeout = null)
         {
             if (_embed_channel != null && _embed_channel.Active)
                 return _embed_channel;
@@ -245,7 +245,7 @@ namespace Hunter.NATS.Client
                 return _embed_channel;
             }
 
-            await ConnectAsync();
+            await ChannelConnectAsync();
 
             _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed}");
 

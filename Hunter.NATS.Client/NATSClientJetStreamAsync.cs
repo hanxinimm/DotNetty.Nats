@@ -56,25 +56,25 @@ namespace Hunter.NATS.Client
                     messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.MessageId);
                 }
 
-                await _policy.ExecuteAsync(async () =>
+                await _policy.ExecuteAsync((Func<Task>)(async () =>
                 {
-                    var _channel = await ChannelConnectAsync();
+                    var _channel = await ConnectAsync();
 
                     var Packet = new PublishHigherPacket(subject, data, messageHeaders);
 
                     await _embed_channel.WriteAndFlushAsync(Packet);
-                });
+                }));
             }
             else
             {
-                await _policy.ExecuteAsync(async () =>
+                await _policy.ExecuteAsync((Func<Task>)(async () =>
                 {
-                    var _channel = await ChannelConnectAsync();
+                    var _channel = await ConnectAsync();
 
                     var Packet = new PublishHigherPacket(subject, data);
 
                     await _embed_channel.WriteAndFlushAsync(Packet);
-                });
+                }));
             }
         }
 
@@ -471,7 +471,7 @@ namespace Hunter.NATS.Client
         public async Task<string> InternalConsumerSubscribeAsync(string subject, string queueGroup,
             Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, string subscribeId = null)
         {
-            var _channel = await ChannelConnectAsync();
+            var _channel = await ConnectAsync();
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
