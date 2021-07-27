@@ -19,7 +19,6 @@ namespace DotNetty.Handlers.NATS
         protected override void ChannelRead0(IChannelHandlerContext contex, PongPacket msg)
         {
             _logger.LogDebug("NATS 服务器心跳 PongPacket => PingPacket");
-            contex.WriteAndFlushAsync(new PingPacket());
         }
     }
 }

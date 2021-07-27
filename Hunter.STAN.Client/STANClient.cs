@@ -210,7 +210,7 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeed));
                 channel.Pipeline.AddLast(_connectResponseReplyHandler);
                 channel.Pipeline.AddLast(_closeResponseReplyHandler);
-
+                //TODO:考虑不用每次都new对象
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
 

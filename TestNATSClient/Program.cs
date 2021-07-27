@@ -160,9 +160,9 @@ namespace TestNATSClient
                 Console.WriteLine("收到消息 {0}", sss);
             });
 
-            //Console.ReadLine();
+            Console.ReadLine();
 
-            //return;
+            return;
 
 
             #region  发布测试

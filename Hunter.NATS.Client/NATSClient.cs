@@ -99,6 +99,11 @@ namespace Hunter.NATS.Client
         /// </summary>
         private readonly AsyncPolicy _policy;
 
+        /// <summary>
+        /// 心跳服务定时器
+        /// </summary>
+        private readonly System.Timers.Timer _pingTimer;
+
         private static readonly Regex _publishSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
         private static readonly Regex _subscribeSubjectRegex = new Regex(@"^[a-zA-Z\d]+(\.(\*|\>|[a-zA-Z\d]+))*$", RegexOptions.Compiled);
 
@@ -117,6 +122,9 @@ namespace Hunter.NATS.Client
             _bootstrap = InitBootstrap();
             _logger = logger;
             _autoResetEvent = new AutoResetEvent(true);
+            _pingTimer = new System.Timers.Timer(TimeSpan.FromMinutes(1).TotalMilliseconds);
+            _pingTimer.Elapsed += _pingTimer_Elapsed;
+            _pingTimer.Enabled = false;
 
             _jetStreamSetting = new JsonSerializerSettings
             {
@@ -183,7 +191,7 @@ namespace Hunter.NATS.Client
             ILogger<NATSClient> logger,
             IOptions<NATSOptions> options) : this(logger, options.Value)
         {
-            
+
         }
 
         public NATSConnectionState ConnectionState => _connectionState;
@@ -211,7 +219,14 @@ namespace Hunter.NATS.Client
         {
             _logger.LogInformation("NATS连接端口 开始实例化新的连接管道");
 
+            _pingTimer.Stop();
+
             _embed_channel = null;
+
+            if (_subscriptionMessageHandler.Count > 0)
+            {
+                Task.Factory.StartNew(async () => await ConnectAsync());
+            }
 
             _logger.LogInformation("NATS连接端口 完成实例化新的连接管道");
         }
@@ -247,7 +262,18 @@ namespace Hunter.NATS.Client
 
             _autoResetEvent.Set();
 
+            _pingTimer.Start();
+
             return _embed_channel;
         }
+
+        private void _pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            Task.Factory.StartNew(async () =>
+            {
+                await PingAsync();
+            });
+        }
+
     }
 }
