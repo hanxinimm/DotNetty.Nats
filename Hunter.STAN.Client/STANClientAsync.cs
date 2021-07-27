@@ -58,19 +58,20 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation("STAN 开始客户端连接请求");
 
-            await ConnectRequestAsync();
+            var config = await ConnectRequestAsync();
 
             _logger.LogInformation("STAN 完成客户端连接请求");
 
 
-            if (!string.IsNullOrEmpty(_config.Error))
+            if (!string.IsNullOrEmpty(config.Error))
             {
-                if (_config.Error != ProtocolConstants.Already_Registered)
-                    throw new StanConnectRequestException(_config.Error);
+                if (config.Error != ProtocolConstants.Already_Registered)
+                    throw new StanConnectRequestException(config.Error);
             }
             else
             {
-                var pingResponse = await ConnectPingAsync();
+
+                var pingResponse = await ConnectPingAsync(config);
 
                 if (pingResponse == null || !string.IsNullOrEmpty(pingResponse.Error))
                 {
@@ -78,6 +79,8 @@ namespace Hunter.STAN.Client
 
                     throw new StanConnectRequestException(pingResponse?.Error ?? "连接已存在但是无法使用");
                 }
+
+                _config = config;
             }
             
 
@@ -87,13 +90,12 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation("STAN 完成订阅之前订阅的消息");
 
-
             _logger.LogInformation("STAN 完成连接频道");
 
             _connectionState = STANConnectionState.Connected;
         }
 
-        private async Task ConnectRequestAsync()
+        private async Task<STANConnectionConfig> ConnectRequestAsync()
         {
             var ConnectId = Guid.NewGuid().ToString("N");
 
@@ -117,7 +119,7 @@ namespace Hunter.STAN.Client
                 _logger.LogError("STAN 连接请求发生异常 {0}", ConnectResponse.Message.Error);
             }
 
-            _config = new STANConnectionConfig(
+            return new STANConnectionConfig(
                 ConnectId,
                 ConnectResponse.Message.Error,
                 ConnectResponse.Message.PubPrefix,
@@ -143,11 +145,13 @@ namespace Hunter.STAN.Client
             _logger.LogDebug("结束订阅消息服务器心跳消息");
         }
 
-        private async Task<PingResponse> ConnectPingAsync()
+        private async Task<PingResponse> ConnectPingAsync(STANConnectionConfig config = null)
         {
-            _logger.LogDebug($"开始Ping消息服务器 Ping = {_config.ConnectionId}");
+            var ConnectConfig = config ?? _config;
 
-            var Packet = new ConnectPingPacket(_replyInboxId, _config.PingRequests, _config.ConnectionId);
+            _logger.LogDebug($"开始Ping消息服务器 Ping = {ConnectConfig.ConnectionId}");
+
+            var Packet = new ConnectPingPacket(_replyInboxId, ConnectConfig.PingRequests, ConnectConfig.ConnectionId);
 
             _pingResponseReplyHandler.CompletionSource = new TaskCompletionSource<ConnectPingResponsePacket>();
 
@@ -674,7 +678,7 @@ namespace Hunter.STAN.Client
 
         public async Task UnSubscribeAsync(STANSubscriptionConfig subscriptionConfig)
         {
-            await _policy.ExecuteAsync((Func<Context, Task>)(async (cnt) =>
+            await _policy.ExecuteAsync(async (cnt) =>
             {
                 if (subscriptionConfig.IsUnSubscribe) return;
 
@@ -691,7 +695,7 @@ namespace Hunter.STAN.Client
 
                 //发送取消订阅请求
                 await _channel.WriteAndFlushAsync(Packet);
-            }), new Dictionary<string, object>() { { "hld", "UnSubscribeAsync" }, { "sub", subscriptionConfig.Subject } });
+            }, new Dictionary<string, object>() { { "hld", "UnSubscribeAsync" }, { "sub", subscriptionConfig.Subject } });
         }
 
         /// <summary>
@@ -704,7 +708,7 @@ namespace Hunter.STAN.Client
         {
 
 
-            return await _policy.ExecuteAsync((Func<Context, Task<PubAckPacket>>)(async (cnt) =>
+            return await _policy.ExecuteAsync(async (cnt) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -730,7 +734,7 @@ namespace Hunter.STAN.Client
                 }, TaskScheduler.Current);
 
                 return await PubAckReady.Task;
-            }), new Dictionary<string, object>() { { "hld", "PublishWaitAckAsync" }, { "sub", subject } });
+            }, new Dictionary<string, object>() { { "hld", "PublishWaitAckAsync" }, { "sub", subject } });
         }
 
         /// <summary>
@@ -741,7 +745,7 @@ namespace Hunter.STAN.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            await _policy.ExecuteAsync((Func<Context, Task>)(async (cnt) =>
+            await _policy.ExecuteAsync(async (cnt) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -754,7 +758,7 @@ namespace Hunter.STAN.Client
                 data);
 
                 await _channel.WriteAndFlushAsync(Packet);
-            }), new Dictionary<string, object>() { { "hld", "PublishAsync" }, { "sub", subject } });
+            }, new Dictionary<string, object>() { { "hld", "PublishAsync" }, { "sub", subject } });
         }
 
         #region 消息发送确认
