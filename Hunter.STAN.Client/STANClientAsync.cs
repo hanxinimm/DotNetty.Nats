@@ -62,7 +62,13 @@ namespace Hunter.STAN.Client
 
             _logger.LogInformation("STAN 完成客户端连接请求");
 
-            if (_config.Error == ProtocolConstants.Already_Registered)
+
+            if (!string.IsNullOrEmpty(_config.Error))
+            {
+                if (_config.Error != ProtocolConstants.Already_Registered)
+                    throw new StanConnectRequestException(_config.Error);
+            }
+            else
             {
                 var pingResponse = await ConnectPingAsync();
 
@@ -72,20 +78,15 @@ namespace Hunter.STAN.Client
 
                     throw new StanConnectRequestException(pingResponse?.Error ?? "连接已存在但是无法使用");
                 }
-
-                _logger.LogInformation("STAN 开始订阅之前订阅的消息");
-
-                await SubscriptionMessageAsync();
-
-                _logger.LogInformation("STAN 完成订阅之前订阅的消息");
             }
-            else
-            {
-                if (!string.IsNullOrEmpty(_config.Error))
-                {
-                    throw new StanConnectRequestException(_config.Error);
-                }
-            }
+            
+
+            _logger.LogInformation("STAN 开始订阅之前订阅的消息");
+
+            await SubscriptionMessageAsync();
+
+            _logger.LogInformation("STAN 完成订阅之前订阅的消息");
+
 
             _logger.LogInformation("STAN 完成连接频道");
 
@@ -148,24 +149,11 @@ namespace Hunter.STAN.Client
 
             var Packet = new ConnectPingPacket(_replyInboxId, _config.PingRequests, _config.ConnectionId);
 
-            var ConnectPingResponseReady = new TaskCompletionSource<ConnectPingResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<ConnectPingResponsePacket>(STANInboxs.PingResponse, Packet.ReplyTo, ConnectPingResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
+            _pingResponseReplyHandler.CompletionSource = new TaskCompletionSource<ConnectPingResponsePacket>();
 
             await _embed_channel.WriteAndFlushAsync(Packet);
 
-            var ConnectResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
-            {
-                ConnectPingResponseReady.TrySetResult(null);
-            });
-
-            var ConnectPingResponse = await ConnectPingResponseReady.Task;
-
-            await ConnectResponseCancellationToken.DisposeAsync();
-
-            _embed_channel.Pipeline.Remove(Handler);
+            var ConnectPingResponse = await _pingResponseReplyHandler.CompletionSource.Task;
 
             _logger.LogDebug("结束Ping消息服务器");
 
@@ -188,7 +176,11 @@ namespace Hunter.STAN.Client
             {
                 _logger.LogDebug($"开始设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
 
-                _embed_channel.Pipeline.AddLast(subscriptionMessageHandler);
+                var subscriptionPipeline = _embed_channel.Pipeline.Get(subscriptionMessageHandler.SubscriptionConfig.Id);
+                if (subscriptionPipeline == null)
+                {
+                    _embed_channel.Pipeline.AddLast(subscriptionMessageHandler.SubscriptionConfig.Id, subscriptionMessageHandler);
+                }
 
                 await _embed_channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.Inbox));
 
@@ -269,7 +261,7 @@ namespace Hunter.STAN.Client
             }
 
             //订阅配置信息
-            var SubscriptionConfig = new STANSubscriptionConfig(subject, Packet.ReplyTo, Packet.Message.Inbox);
+            var SubscriptionConfig = new STANSubscriptionConfig(SubscribePacket.Id, subject, Packet.ReplyTo, Packet.Message.Inbox);
 
             //订阅响应任务源
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>(SubscriptionConfig);
@@ -287,7 +279,7 @@ namespace Hunter.STAN.Client
             _subscriptionMessageHandler.Add(messageHandler);
 
             //订阅消息处理器添加到管道
-            _channel.Pipeline.AddLast(messageHandler);
+            _channel.Pipeline.AddLast(SubscribePacket.Id, messageHandler);
 
             _logger.LogDebug($"开始发送订阅请求 包裹主题 {Packet.Subject } 订阅主题 {Packet.Message.Subject}");
 
@@ -616,8 +608,8 @@ namespace Hunter.STAN.Client
             }
 
             //订阅配置信息
-            var SubscriptionConfig = count.HasValue ? new STANSubscriptionConfig(subject, Packet.ReplyTo, Packet.Message.Inbox, count.Value) :
-                new STANSubscriptionConfig(subject, Packet.ReplyTo, Packet.Message.Inbox);
+            var SubscriptionConfig = count.HasValue ? new STANSubscriptionConfig(SubscribePacket.Id, subject, Packet.ReplyTo, Packet.Message.Inbox, count.Value) :
+                new STANSubscriptionConfig(SubscribePacket.Id, subject, Packet.ReplyTo, Packet.Message.Inbox);
 
             //订阅响应任务源
             var SubscriptionResponseReady = new TaskCompletionSource<SubscriptionResponsePacket>(SubscriptionConfig);

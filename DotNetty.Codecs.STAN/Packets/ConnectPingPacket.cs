@@ -16,7 +16,7 @@ namespace DotNetty.Codecs.STAN.Packets
             ByteString connectID)
         {
             Subject = pingRequests;
-            ReplyTo = $"{STANInboxs.PingResponse}{inboxId}.{Guid.NewGuid():N}";
+            ReplyTo = $"{STANInboxs.PingResponse}{inboxId}.PingRequest";
             Message = new Ping()
             {
                 ConnID = connectID,

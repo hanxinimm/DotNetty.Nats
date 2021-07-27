@@ -61,22 +61,9 @@ namespace TestSTANClient
                 options.AddConsole();
             });
 
-            services.AddSTANServer(options =>
-            {
-                options.ClusterID = "stan-k8s-cluster";
-                options.ClientId = $"Security-StatefulManagerService";
-                //options.Host = "mq.stan.yidujob.com";
-                //options.Host = "127.0.0.1";
-                //options.Host = "192.168.4.131";
-                //options.Host = "mq.stan.yd.com";
-                options.Host = "mq.stan.laboroa.cn";
-                options.Port = 4222;
-                //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
-            });
-
             //services.AddSTANServer(options =>
             //{
-            //    options.ClusterID = "main-cluster";
+            //    options.ClusterID = "stan-k8s-cluster";
             //    options.ClientId = $"Security-StatefulManagerService";
             //    //options.Host = "mq.stan.yidujob.com";
             //    //options.Host = "127.0.0.1";
@@ -86,6 +73,19 @@ namespace TestSTANClient
             //    options.Port = 4222;
             //    //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             //});
+
+            services.AddSTANServer(options =>
+            {
+                options.ClusterID = "main-cluster";
+                options.ClientId = $"Security-StatefulManagerService";
+                //options.Host = "mq.stan.yidujob.com";
+                options.Host = "127.0.0.1";
+                //options.Host = "192.168.4.131";
+                //options.Host = "mq.stan.yd.com";
+                //options.Host = "mq.stan.laboroa.cn";
+                options.Port = 4222;
+                //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
+            });
 
 
             var _serviceProvider = services.BuildServiceProvider();
@@ -101,34 +101,16 @@ namespace TestSTANClient
 
             while (true)
             {
-                List<Task> tks = new List<Task>();
-                //for (int ii = 0; ii < 5; ii++)
-                //{
-                //    await Task.Factory.StartNew(async () =>
-                //    {
-                for (int j = 0; j < 5; j++)
+                List<Task> tks = new List<Task>();  
+                for (int j = 0; j < 1; j++)
                 {
-                    new Thread(async () =>
-                    {
-                        await client.PublishAsync("Test2", Testbytes1);
-                    }).Start();
-
-                    //if (j == 10)
-                    //{
-                    //    new Thread(async () =>
-                    //    {
-                    //        await client.DisposeAsync();
-                    //    }).Start();
-                    //}
-                    //tks.Add(Task.Factory.StartNew();
+                    await client.PublishAsync("Test", Testbytes1);
                 }
 
-                //Task.WaitAll(tks.ToArray());
-                //    });
-                //}
                 Console.WriteLine("按任意键开始下一次发送");
                 Console.ReadLine();
             }
+
             //await client.DisposeAsync();
 
             //await client.DisposeAsync();
@@ -180,6 +162,8 @@ namespace TestSTANClient
             //});
 
             //Console.WriteLine("完成订阅");
+
+            //Console.ReadLine();
 
             //// 防止此主机进程终止，以使服务保持运行。
 

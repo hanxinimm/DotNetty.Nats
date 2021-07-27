@@ -91,6 +91,11 @@ namespace Hunter.STAN.Client
         /// </summary>
         private CloseRequestPacketHandler _closeResponseReplyHandler;
 
+        /// <summary>
+        /// 请求关闭处理器
+        /// </summary>
+        private PingRequestPacketHandler _pingResponseReplyHandler;
+
 
         /// <summary>
         /// 等待发送消息确认安排表
@@ -113,6 +118,11 @@ namespace Hunter.STAN.Client
         /// </summary>
         private readonly AsyncPolicy _policy;
 
+        /// <summary>
+        /// 心跳服务定时器
+        /// </summary>
+        private readonly System.Timers.Timer _pingTimer;
+
         public STANClient(
             ILogger<STANClient> logger,
             STANOptions options)
@@ -124,10 +134,15 @@ namespace Hunter.STAN.Client
             _replyInboxId = _identity;
             _connectResponseReplyHandler = new ConnectRequestPacketHandler(_replyInboxId);
             _closeResponseReplyHandler = new CloseRequestPacketHandler(_replyInboxId);
+            _pingResponseReplyHandler = new PingRequestPacketHandler(_replyInboxId);
             _subscriptionMessageHandler = new List<SubscriptionMessageHandler>();
             _bootstrap = InitBootstrap();
             _logger = logger;
             _autoResetEvent = new AutoResetEvent(true);
+
+            _pingTimer = new System.Timers.Timer(TimeSpan.FromMinutes(1).TotalMilliseconds);
+            _pingTimer.Elapsed += _pingTimer_Elapsed;
+            _pingTimer.Enabled = false;
 
             #region Connect;
 
@@ -194,8 +209,6 @@ namespace Hunter.STAN.Client
 
         }
 
-        //public bool IsOpen => _channel?.Open ?? false;
-
         public STANConnectionState ConnectionState => _connectionState;
 
         private Bootstrap InitBootstrap()
@@ -210,7 +223,8 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new ReconnectChannelHandler(_logger, ReconnectIfNeed));
                 channel.Pipeline.AddLast(_connectResponseReplyHandler);
                 channel.Pipeline.AddLast(_closeResponseReplyHandler);
-                //TODO:考虑不用每次都new对象
+                channel.Pipeline.AddLast(_pingResponseReplyHandler);
+
                 channel.Pipeline.AddLast(new ErrorPacketHandler(_logger));
                 channel.Pipeline.AddLast(new HeartbeatPacketHandler());
 
@@ -227,7 +241,14 @@ namespace Hunter.STAN.Client
         {
             _logger.LogInformation($"STAN连接端口 ClientId = {_clientId} 开始实例化新的连接管道");
 
-            _embed_channel = null; 
+            _pingTimer.Stop();
+
+            _embed_channel = null;
+
+            if (_subscriptionMessageHandler.Count > 0)
+            {
+                Task.Factory.StartNew(async () => await ConnectAsync());
+            }
 
             _logger.LogInformation($"STAN连接端口 ClientId = {_clientId} 完成实例化新的连接管道");
         }
@@ -265,6 +286,8 @@ namespace Hunter.STAN.Client
 
             _autoResetEvent.Set();
 
+            _pingTimer.Start();
+
             return _embed_channel;
         }
 
@@ -280,6 +303,14 @@ namespace Hunter.STAN.Client
         private void CheckQueueGroup(string queueGroup)
         {
             if (string.IsNullOrEmpty(queueGroup)) throw new ArgumentNullException(nameof(queueGroup));
+        }
+
+        private void _pingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            Task.Factory.StartNew(async () =>
+            {
+                await ConnectPingAsync();
+            });
         }
     }
 }

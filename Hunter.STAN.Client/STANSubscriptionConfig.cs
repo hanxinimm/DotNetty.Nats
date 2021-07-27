@@ -9,20 +9,27 @@ namespace Hunter.STAN.Client
     {
         public STANSubscriptionConfig() { }
 
-        public STANSubscriptionConfig(string subject, string replyTo, string inbox)
+        public STANSubscriptionConfig(string id, string subject, string replyTo, string inbox)
         {
+            Id = id;
             Subject = subject;
             ReplyTo = replyTo;
             Inbox = inbox;
         }
 
-        public STANSubscriptionConfig(string subject, string replyTo, string inbox, int maxMsg)
+        public STANSubscriptionConfig(string id, string subject, string replyTo, string inbox, int maxMsg)
         {
+            Id = id;
             Subject = subject;
             ReplyTo = replyTo;
             Inbox = inbox;
             MaxMsg = maxMsg;
         }
+
+        /// <summary>
+        /// 订阅唯一编号
+        /// </summary>
+        public string Id { get; set; }
 
         /// <summary>
         /// 是否取消订阅

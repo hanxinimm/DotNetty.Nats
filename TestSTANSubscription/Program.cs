@@ -142,40 +142,43 @@ namespace TestSTANSubscription
             //return;
 
             var services = new ServiceCollection();
-            services.AddLogging(options =>
-            {
+
+            services.AddLogging(options => {
+                options.SetMinimumLevel(LogLevel.Debug);
                 options.AddConsole();
-                options.AddDebug();
-                options.SetMinimumLevel(LogLevel.Trace);
             });
 
+            //services.AddSTANServer(options =>
+            //{
+            //    options.ClusterID = "stan-k8s-cluster";
+            //    options.ClientId = $"Security-StatefulManagerService";
+            //    //options.Host = "mq.stan.yidujob.com";
+            //    //options.Host = "127.0.0.1";
+            //    //options.Host = "192.168.4.131";
+            //    //options.Host = "mq.stan.yd.com";
+            //    options.Host = "mq.stan.laboroa.cn";
+            //    options.Port = 4222;
+            //    //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
+            //});
 
-
-
-            var options = new STANOptions();
-            options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.4.138"), 4222));
-            options.ClusterID = "main-cluster";
-            options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
-
-            services.Configure<STANOptions>(options =>
+            services.AddSTANServer(options =>
             {
-                options.ClusterNodes.Add(new IPEndPoint(IPAddress.Parse("192.168.4.138"), 4222));
                 options.ClusterID = "main-cluster";
-                options.ClientId = "TestClientIdSender" + Guid.NewGuid().ToString();
+                options.ClientId = $"Security-StatefulManagerService";
+                //options.Host = "mq.stan.yidujob.com";
+                options.Host = "127.0.0.1";
+                //options.Host = "192.168.4.131";
+                //options.Host = "mq.stan.yd.com";
+                //options.Host = "mq.stan.laboroa.cn";
+                options.Port = 4222;
+                //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
-            services.AddSingleton<STANClient>();
-
-            var spr = services.BuildServiceProvider();
-
-            var client = spr.GetRequiredService<STANClient>();
-
-            var logger = spr.GetRequiredService<ILogger<STANClient>>();
 
 
-            logger.LogDebug("测试调试信息输出");
+            var _serviceProvider = services.BuildServiceProvider();
 
 
-            await client.ConnectAsync();
+            await using var client = _serviceProvider.GetRequiredService<STANClient>();
 
             //var s = await client.SubscribeAsync("Agent-Recruit-Commission",
             //    new STANSubscribeOptions() { Position = StartPosition.SequenceStart, StartSequence = 57 },
@@ -187,9 +190,9 @@ namespace TestSTANSubscription
             //    return new ValueTask<bool>(true);
             //});
 
-            var sss = await client.ReadAsync("Agent-Recruit-Commission", 1,200);
+            //var sss = await client.ReadAsync("Agent-Recruit-Commission", 1,200);
 
-            Console.WriteLine(sss.Count);
+            //Console.WriteLine(sss.Count);
 
             //for (int i = 0; i < 20; i++)
             //{
@@ -207,12 +210,12 @@ namespace TestSTANSubscription
 
             //}
 
-            //var ss = await client.SubscribeAsync("Test-Security-App-1", (content) =>
-            //{
-            //    var data = Encoding.UTF8.GetString(content.Data);
-            //    Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
-            //    return new ValueTask<bool>(true);
-            //});
+            var s1s = await client.SubscribeAsync("Test", (content) =>
+            {
+                var data = Encoding.UTF8.GetString(content.Data);
+                Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
+                return new ValueTask<bool>(true);
+            });
 
             //await client.ReadAsync("Security-App-1", 1, 20);
             //await client.ReadAsync("Security-App-1", 1, 20);
