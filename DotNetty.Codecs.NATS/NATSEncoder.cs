@@ -20,7 +20,6 @@ namespace DotNetty.Codecs.NATS
         public static readonly byte[] SPACES_BYTES;
         public static readonly byte[] CRLF_BYTES;
 
-        public static readonly byte[] COLON_BYTES;
         public static readonly byte[] HEADER_VERSION_BYTES;
         public static readonly byte[] HEADER_VERSION_BYTES_PLUS_CRLF;
 
@@ -41,26 +40,25 @@ namespace DotNetty.Codecs.NATS
         static NATSEncoder()
         {
             EMPTY_BYTES = Array.Empty<byte>();
-            SPACES_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.SPACES);
-            CRLF_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.CRLF);
+            SPACES_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.SPACES);
+            CRLF_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.CRLF);
 
-            COLON_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.COLON);
-            HEADER_VERSION_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.HEADER_VERSION);
-            HEADER_VERSION_BYTES_PLUS_CRLF = Encoding.UTF8.GetBytes(ProtocolSignatures.HEADER_VERSION + ProtocolSignatures.CRLF);
+            HEADER_VERSION_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.HEADER_VERSION);
+            HEADER_VERSION_BYTES_PLUS_CRLF = Encoding.UTF8.GetBytes(NATSSignatures.HEADER_VERSION + NATSSignatures.CRLF);
 
-            CONNECT_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.CONNECT);
-            PUB_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.PUB);
-            HPUB_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.HPUB);
-            SUB_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.SUB);
-            UNSUB_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.UNSUB);
-            PING_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.PING);
-            PONG_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.PONG);
+            CONNECT_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.CONNECT);
+            PUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.PUB);
+            HPUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.HPUB);
+            SUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.SUB);
+            UNSUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.UNSUB);
+            PING_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.PING);
+            PONG_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.PONG);
 
-            ACK_ACK_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckAck);
-            ACK_NAK_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckNak);
-            ACK_PROGRESS_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckProgress);
-            ACK_NEXT_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckNext);
-            ACK_TERM_BYTES = Encoding.UTF8.GetBytes(ProtocolSignatures.AckTerm);
+            ACK_ACK_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.AckAck);
+            ACK_NAK_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.AckNak);
+            ACK_PROGRESS_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.AckProgress);
+            ACK_NEXT_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.AckNext);
+            ACK_TERM_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.AckTerm);
         }
 
         public override bool IsSharable => true;
@@ -72,33 +70,33 @@ namespace DotNetty.Codecs.NATS
                 throw new ArgumentException("Unknown packet type: " + packet.PacketType, nameof(packet));
         }
 
-        protected virtual bool DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
+        protected virtual bool DoHighFrequencyEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
         {
             switch (packet.PacketType)
             {
-                case NATSPacketType.CONNECT:
-                    EncodeConnectMessage(bufferAllocator, (ConnectPacket)packet, output);
-                    break;
                 case NATSPacketType.PUB:
                     EncodePublishMessage(bufferAllocator, (PublishPacket)packet, output);
                     break;
-                case NATSPacketType.HPUB:
-                    EncodePublishHigherMessage(bufferAllocator, (PublishHigherPacket)packet, output);
-                    break;
-
-                case NATSPacketType.ACK_ACK:
-                case NATSPacketType.ACK_NAK:
-                case NATSPacketType.ACK_PROGRESS:
-                case NATSPacketType.ACK_NEXT:
-                case NATSPacketType.ACK_TERM:
-                    EncodeAckMessage(bufferAllocator, (AckPacket)packet, output);
-                    break;
-
                 case NATSPacketType.PING:
                     EncodePingMessage(bufferAllocator, (PingPacket)packet, output);
                     break;
                 case NATSPacketType.PONG:
                     EncodePongMessage(bufferAllocator, (PongPacket)packet, output);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        }
+
+        protected virtual bool DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
+        {
+            if (DoHighFrequencyEncode(bufferAllocator, packet, output)) return true;
+
+            switch (packet.PacketType)
+            {
+                case NATSPacketType.CONNECT:
+                    EncodeConnectMessage(bufferAllocator, (ConnectPacket)packet, output);
                     break;
                 case NATSPacketType.SUB:
                     EncodeSubscribeMessage(bufferAllocator, (SubscribePacket)packet, output);
@@ -178,77 +176,6 @@ namespace DotNetty.Codecs.NATS
             }
         }
 
-        protected static void EncodePublishHigherMessage(IByteBufferAllocator bufferAllocator, PublishHigherPacket packet, List<object> output)
-        {
-            byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
-            byte[] ReplyToBytes = EncodeStringInUtf8(packet.ReplyTo);
-
-            int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
-            variablePartSize += (ReplyToBytes.Length > 0 ? ReplyToBytes.Length + SPACES_BYTES.Length : 0);
-
-            byte[] HeadersBytes = Array.Empty<byte>();
-            if (packet.Headers != null && packet.Headers.Count > 0)
-            {
-                variablePartSize += HEADER_VERSION_BYTES_PLUS_CRLF.Length;
-                StringBuilder headersBuilder = new();
-                foreach (var packetHeaders in packet.Headers)
-                {
-                    headersBuilder.Append(packetHeaders.Key);
-                    headersBuilder.Append(ProtocolSignatures.COLON);
-                    headersBuilder.Append(packetHeaders.Value);
-                    headersBuilder.Append(ProtocolSignatures.CRLF);
-                }
-                HeadersBytes = EncodeStringInUtf8(headersBuilder.ToString());
-                variablePartSize += HeadersBytes.Length;
-
-                variablePartSize += CRLF_BYTES.Length;
-            }
-
-            byte[] PayloadSize = EncodeStringInUtf8(packet.PayloadLength.ToString());
-
-            variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
-            variablePartSize += packet.PayloadLength + CRLF_BYTES.Length;
-
-            int fixedHeaderBufferSize = HPUB_BYTES.Length + SPACES_BYTES.Length;
-
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
-                buf.WriteBytes(HPUB_BYTES);
-                buf.WriteBytes(SPACES_BYTES);
-                buf.WriteBytes(SubjectNameBytes);
-                buf.WriteBytes(SPACES_BYTES);
-                if (!string.IsNullOrEmpty(packet.ReplyTo))
-                {
-                    buf.WriteBytes(ReplyToBytes);
-                    buf.WriteBytes(SPACES_BYTES);
-                }
-                if (HeadersBytes.Length > 0)
-                {
-                    buf.WriteBytes(HEADER_VERSION_BYTES_PLUS_CRLF);
-
-                    buf.WriteBytes(HeadersBytes);
-
-                    buf.WriteBytes(CRLF_BYTES);
-                    buf.WriteBytes(SPACES_BYTES);
-                }
-                buf.WriteBytes(PayloadSize);
-                buf.WriteBytes(CRLF_BYTES);
-                if (packet.Payload != null)
-                {
-                    buf.WriteBytes(packet.Payload);
-                }
-                buf.WriteBytes(CRLF_BYTES);
-
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
-        }
 
         protected static void EncodeSubscribeMessage(IByteBufferAllocator bufferAllocator, SubscribePacket packet, List<object> output)
         {
@@ -363,73 +290,6 @@ namespace DotNetty.Codecs.NATS
                 buf?.SafeRelease();
             }
         }
-
-        static void EncodeAckMessage(IByteBufferAllocator bufferAllocator, AckPacket packet, List<object> output)
-        {
-
-            byte[] packetPayload = null;
-
-            switch (packet.PacketType)
-            {
-                case NATSPacketType.ACK_ACK:
-                    packetPayload = ACK_ACK_BYTES;
-                    break;
-                case NATSPacketType.ACK_NAK:
-                    packetPayload = ACK_NAK_BYTES;
-                    break;
-                case NATSPacketType.ACK_PROGRESS:
-                    packetPayload = ACK_PROGRESS_BYTES;
-                    break;
-                case NATSPacketType.ACK_NEXT:
-                    packetPayload = ACK_NEXT_BYTES;
-                    break;
-                case NATSPacketType.ACK_TERM:
-                    packetPayload = ACK_TERM_BYTES;
-                    break;
-                default:
-                    packetPayload = ACK_ACK_BYTES;
-                    break;
-            }
-       
-
-            byte[] SubjectNameBytes = EncodeStringInUtf8(packet.Subject);
-
-            int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
-
-            byte[] PayloadSize = EncodeStringInUtf8(packetPayload.Length.ToString());
-
-            variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
-            variablePartSize += packetPayload.Length + CRLF_BYTES.Length;
-
-            int fixedHeaderBufferSize = PUB_BYTES.Length + SPACES_BYTES.Length;
-
-            IByteBuffer buf = null;
-            try
-            {
-                buf = bufferAllocator.Buffer(fixedHeaderBufferSize + variablePartSize);
-                buf.WriteBytes(PUB_BYTES);
-                buf.WriteBytes(SPACES_BYTES);
-                buf.WriteBytes(SubjectNameBytes);
-                buf.WriteBytes(SPACES_BYTES);
-
-                buf.WriteBytes(PayloadSize);
-                buf.WriteBytes(CRLF_BYTES);
-                if (packetPayload != null)
-                {
-                    buf.WriteBytes(packetPayload);
-                }
-                buf.WriteBytes(CRLF_BYTES);
-
-                output.Add(buf);
-                buf = null;
-            }
-            finally
-            {
-                buf?.SafeRelease();
-            }
-        }
-
-
 
         protected static byte[] EncodeStringInUtf8(string s)
         {

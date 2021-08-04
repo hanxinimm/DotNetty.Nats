@@ -56,25 +56,25 @@ namespace Hunter.NATS.Client
                     messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.MessageId);
                 }
 
-                await _policy.ExecuteAsync((Func<Task>)(async () =>
+                await _policy.ExecuteAsync(async () =>
                 {
                     var _channel = await ConnectAsync();
 
-                    var Packet = new PublishHigherPacket(subject, data, messageHeaders);
+                    var Packet = new PublishHigherPacket(_replyInboxId, subject, data, messageHeaders);
 
                     await _embed_channel.WriteAndFlushAsync(Packet);
-                }));
+                });
             }
             else
             {
-                await _policy.ExecuteAsync((Func<Task>)(async () =>
+                await _policy.ExecuteAsync(async () =>
                 {
                     var _channel = await ConnectAsync();
 
-                    var Packet = new PublishHigherPacket(subject, data);
+                    var Packet = new PublishHigherPacket(_replyInboxId, subject, data);
 
                     await _embed_channel.WriteAndFlushAsync(Packet);
-                }));
+                });
             }
         }
 

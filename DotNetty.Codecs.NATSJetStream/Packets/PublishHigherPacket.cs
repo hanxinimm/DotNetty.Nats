@@ -3,9 +3,11 @@ using DotNetty.Common;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using DotNetty.Codecs.NATS.Packets;
 using System.Text;
+using DotNetty.Codecs.NATSJetStream.Protocol;
 
-namespace DotNetty.Codecs.NATS.Packets
+namespace DotNetty.Codecs.NATSJetStream.Packets
 {
     [DataContract]
     public class PublishHigherPacket : NATSPacket
@@ -15,35 +17,37 @@ namespace DotNetty.Codecs.NATS.Packets
 
         public PublishHigherPacket() { }
 
-        public PublishHigherPacket(string subject)
+        public PublishHigherPacket(string inboxId, string subject)
         {
-            Subject = subject;
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_INFO}.{subject}";
+            ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{Guid.NewGuid():N}";
         }
 
-        public PublishHigherPacket(string subject, byte[] payload)
+        public PublishHigherPacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = subject;
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_INFO}.{subject}";
+            ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }
 
-        public PublishHigherPacket(string subject, byte[] payload, Dictionary<string, string> headers)
+        public PublishHigherPacket(string inboxId, string subject, byte[] payload, Dictionary<string, string> headers)
         {
             Subject = subject;
-            Payload = payload;
+            ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{Guid.NewGuid():N}";
             Headers = headers;
         }
 
-        public PublishHigherPacket(string subject, string replyTo, byte[] payload)
+        public PublishHigherPacket(string inboxId, string subject, string replyTo, byte[] payload)
         {
             Subject = subject;
-            ReplyTo = replyTo;
+            ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{replyTo}";
             Payload = payload;
         }
 
-        public PublishHigherPacket(string subject, string replyTo, byte[] payload, Dictionary<string, string> headers)
+        public PublishHigherPacket(string inboxId,string subject, string replyTo, byte[] payload, Dictionary<string, string> headers)
         {
             Subject = subject;
-            ReplyTo = replyTo;
+            ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{replyTo}";
             Payload = payload;
             Headers = headers;
         }

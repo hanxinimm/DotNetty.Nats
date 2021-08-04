@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public DeletePacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_STREAM_DELETE}.{subject}";
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_DELETE}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.DeleteResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }

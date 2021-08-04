@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public InfoPacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_STREAM_INFO}.{subject}";
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_INFO}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.InfoResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }

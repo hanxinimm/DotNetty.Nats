@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public RestorePacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_STREAM_RESTORE}.{subject}";
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_RESTORE}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.RestoreResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }

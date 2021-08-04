@@ -27,17 +27,17 @@ namespace DotNetty.Codecs.NATS
         {
             switch (packetSignature)
             {
-                case ProtocolSignatures.INFO:
+                case NATSSignatures.INFO:
                     return DecodeInfoPacket(buffer, context);
-                case ProtocolSignatures.MSG:
+                case NATSSignatures.MSG:
                     return DecodeMessagePacket(buffer, context);
-                case ProtocolSignatures.OK:
+                case NATSSignatures.OK:
                     return DecodeOKPacket(buffer, context);
-                case ProtocolSignatures.PING:
+                case NATSSignatures.PING:
                     return DecodePingPacket(buffer, context);
-                case ProtocolSignatures.PONG:
+                case NATSSignatures.PONG:
                     return DecodePongPacket(buffer, context);
-                case ProtocolSignatures.ERR:
+                case NATSSignatures.ERR:
                     return DecodeErrorPacket(buffer, context);
                 default:
 #if DEBUG
@@ -51,7 +51,7 @@ namespace DotNetty.Codecs.NATS
 
         NATSPacket DecodeInfoPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            if (TryGetStringFromNewlineDelimiter(buffer, ProtocolSignatures.INFO, out var infoJson))
+            if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.INFO, out var infoJson))
             {
                 return InfoPacket.CreateFromJson(infoJson);
             }
@@ -60,17 +60,17 @@ namespace DotNetty.Codecs.NATS
 
         NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            if (TryGetStringFromFieldDelimiter(buffer, ProtocolSignatures.MSG, out var subject))
+            if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.MSG, out var subject))
             {
-                if (TryGetStringFromFieldDelimiter(buffer, ProtocolSignatures.MSG, out var subscribeId))
+                if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.MSG, out var subscribeId))
                 {
-                    var ReplyTo = GetStringFromFieldDelimiter(buffer, ProtocolSignatures.MSG);
+                    var ReplyTo = GetStringFromFieldDelimiter(buffer, NATSSignatures.MSG);
 
-                    if (TryGetStringFromNewlineDelimiter(buffer, ProtocolSignatures.MSG, out var payloadSizeString))
+                    if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.MSG, out var payloadSizeString))
                     {
                         if (int.TryParse(payloadSizeString, out int payloadSize))
                         {
-                            if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, ProtocolSignatures.MSG, out var payload))
+                            if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.MSG, out var payload))
                             {
                                 return DecodeMessagePacket(subject, subscribeId, ReplyTo, payloadSize, payload);
 
@@ -97,7 +97,7 @@ namespace DotNetty.Codecs.NATS
 
         NATSPacket DecodeErrorPacket(IByteBuffer buffer, IChannelHandlerContext context)
         {
-            if (TryGetStringFromNewlineDelimiter(buffer, ProtocolSignatures.ERR, out var error))
+            if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.ERR, out var error))
             {
                 switch (error)
                 {

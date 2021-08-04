@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public RemovePeerPacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_STREAM_PEER_REMOVE}.{subject}";
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_PEER_REMOVE}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.RemovePeerResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }

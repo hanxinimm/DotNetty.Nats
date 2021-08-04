@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public PurgePacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_STREAM_PURGE}.{subject}";
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_PURGE}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.PurgeResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }

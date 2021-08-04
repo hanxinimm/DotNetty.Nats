@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public LeaderStepDownPacket(string inboxId, string subject)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_STREAM_LEADER_STEPDOWN}.{subject}";
+            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_LEADER_STEPDOWN}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.LeaderStepDownResponse}{inboxId}.{Guid.NewGuid():N}";
         }
 

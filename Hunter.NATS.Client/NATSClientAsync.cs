@@ -218,14 +218,14 @@ namespace Hunter.NATS.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            await _policy.ExecuteAsync((Func<Task>)(async () =>
+            await _policy.ExecuteAsync(async () =>
             {
                 var _channel = await ConnectAsync();
 
                 var Packet = new PublishPacket(subject, data);
 
                 await _channel.WriteAndFlushAsync(Packet);
-            }));
+            });
         }
 
         protected void InfoAsync(DotNetty.Codecs.NATS.Packets.InfoPacket info)
@@ -235,26 +235,26 @@ namespace Hunter.NATS.Client
 
         public async Task PingAsync()
         {
-            await _policy.ExecuteAsync((Func<Task>)(async () =>
+            await _policy.ExecuteAsync(async () =>
             {
                 var _channel = await ConnectAsync();
 
                 var Packet = new PingPacket();
 
                 await _channel.WriteAndFlushAsync(Packet);
-            }));
+            });
         }
 
         public async Task PongAsync()
         {
-            await _policy.ExecuteAsync((Func<Task>)(async () =>
+            await _policy.ExecuteAsync(async () =>
             {
                 var _channel = await ConnectAsync();
 
                 var Packet = new PongPacket();
 
                 await _channel.WriteAndFlushAsync(Packet);
-            }));
+            });
         }
 
         public async ValueTask DisposeAsync()

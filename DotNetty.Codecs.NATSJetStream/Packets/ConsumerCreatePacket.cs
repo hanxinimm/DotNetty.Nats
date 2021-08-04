@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public ConsumerCreatePacket(string inboxId, string subject, string durableName, byte[] payload)
         {
-            Subject = string.IsNullOrEmpty(durableName) ? $"{ProtocolSignatures.JSAPI_CONSUMER_CREATE}.{subject}" : $"{ProtocolSignatures.JSAPI_DURABLE_CREATE}.{subject}.{durableName}";
+            Subject = string.IsNullOrEmpty(durableName) ? $"{NATSJetStreamSignatures.JSAPI_CONSUMER_CREATE}.{subject}" : $"{NATSJetStreamSignatures.JSAPI_DURABLE_CREATE}.{subject}.{durableName}";
             ReplyTo = $"{NATSJetStreamInboxs.ConsumerCreateResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }

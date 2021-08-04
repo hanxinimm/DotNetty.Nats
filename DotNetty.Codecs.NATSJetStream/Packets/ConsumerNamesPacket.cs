@@ -14,7 +14,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
     {
         public ConsumerNamesPacket(string inboxId, string subject)
         {
-            Subject = $"{ProtocolSignatures.JSAPI_CONSUMER_NAMES}.{subject}";
+            Subject = $"{NATSJetStreamSignatures.JSAPI_CONSUMER_NAMES}.{subject}";
             ReplyTo = $"{NATSJetStreamInboxs.ConsumerNamesResponse}{inboxId}.{Guid.NewGuid():N}";
         }
 

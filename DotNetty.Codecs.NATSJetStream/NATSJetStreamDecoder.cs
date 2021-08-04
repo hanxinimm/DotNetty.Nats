@@ -20,11 +20,14 @@ namespace DotNetty.Codecs.NATSJetStream
     {
         public NATSJetStreamDecoder(ILogger logger) : base(logger) { }
 
+
         protected override NATSPacket DecodeMessagePacket(string subject, string subscribeId, string replyTo, int payloadSize, byte[] payload)
         {
             switch (GetInbox(subject))
             {
                 case NATSJetStreamInboxs.GetMessageResponse:
+                    return GetMessagePacket<GetMessageResponsePacket, GetMessageResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                case NATSJetStreamInboxs.PublishResponse:
                     return GetMessagePacket<GetMessageResponsePacket, GetMessageResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.CreateResponse:
                     return GetMessagePacket<CreateResponsePacket, CreateResponse>(subject, subscribeId, replyTo, payloadSize, payload);
