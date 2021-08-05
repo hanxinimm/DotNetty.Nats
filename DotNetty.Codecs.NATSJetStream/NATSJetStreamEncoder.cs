@@ -58,7 +58,7 @@ namespace DotNetty.Codecs.NATSJetStream
 
         protected override bool DoEncode(IByteBufferAllocator bufferAllocator, NATSPacket packet, List<object> output)
         {
-            if (!base.DoEncode(bufferAllocator, packet, output)) return true;
+            if (base.DoEncode(bufferAllocator, packet, output)) return true;
 
             switch (packet.PacketType)
             {

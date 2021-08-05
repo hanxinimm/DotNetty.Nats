@@ -119,7 +119,7 @@ namespace TestNATSClient
 
             //await client.ConnectAsync();
 
-            //var streamList = await client.StreamListAsync();
+            var streamList = await client.StreamListAsync();
 
             //var streamNames = await client.StreamNamesAsync();
 
@@ -169,6 +169,12 @@ namespace TestNATSClient
 
             int msg_sq = 0;
 
+            var header = new Dictionary<string, string>();
+
+            header.Add("Content-Type", "Json");
+            header.Add("Safe", "true");
+            header.Add("Token", "auth");
+
             while (true)
             {
                 Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -177,7 +183,7 @@ namespace TestNATSClient
                 stopwatch.Start(); //  开始监视代码运行时间
 
 
-                var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                var Testbytes = Encoding.UTF8.GetBytes($"1");
 
 
                 //for (int i = 0; i < 30; i++)
@@ -186,9 +192,10 @@ namespace TestNATSClient
                 //    {
                 //        for (int j = 0; j < 30; j++)
                 //        {
+
                             await Task.Factory.StartNew(async () =>
                             {
-                                await client.StreamPublishAsync("ApiGateway.Statistics.Recruit-Browse", Testbytes);
+                                await client.PublishAsync("TestAll", Testbytes, header);
                             });
                     //    }
                     //});

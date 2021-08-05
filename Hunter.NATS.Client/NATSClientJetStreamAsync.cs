@@ -23,6 +23,28 @@ namespace Hunter.NATS.Client
         /// </summary>
         private readonly List<ConsumerMessageHandler> _consumerMessageHandler;
 
+        private async Task SubscribeReplyInboxAsync()
+        {
+            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+
+            await _embed_channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
+
+            _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
+        }
+
+        /// <summary>
+        /// 异步发送
+        /// </summary>
+        /// <param name="subject">主体</param>
+        /// <param name="data">数据</param>
+        /// <param name="headers">消息头部</param>
+        /// <returns></returns>
+        public Task PublishAsync(string subject, byte[] data, IDictionary<string, string> headers)
+        {
+            return PublishAsync(subject, data, headers, null);
+        }
+
+
         /// <summary>
         /// 异步发送
         /// </summary>
@@ -30,11 +52,24 @@ namespace Hunter.NATS.Client
         /// <param name="data">数据</param>
         /// <param name="publishOptions">发布选项</param>
         /// <returns></returns>
-        public async Task StreamPublishAsync(string subject, byte[] data, PublishOptions publishOptions = null)
+        public Task PublishAsync(string subject, byte[] data, PublishOptions publishOptions)
         {
-            if (publishOptions != null)
+            return PublishAsync(subject, data, null, publishOptions);
+        }
+
+        /// <summary>
+        /// 异步发送
+        /// </summary>
+        /// <param name="subject">主体</param>
+        /// <param name="data">数据</param>
+        /// <param name="headers">消息头部</param>
+        /// <param name="publishOptions">发布选项</param>
+        /// <returns></returns>
+        public async Task PublishAsync(string subject, byte[] data, IDictionary<string, string> headers = null, PublishOptions publishOptions = null)
+        {
+            if (headers != null || publishOptions != null)
             {
-                var messageHeaders = new Dictionary<string, string>();
+                var messageHeaders = headers != null ? new Dictionary<string, string>(headers) : new Dictionary<string, string>();
 
                 if (publishOptions.ExpectedSequence.HasValue)
                 {
@@ -71,13 +106,12 @@ namespace Hunter.NATS.Client
                 {
                     var _channel = await ConnectAsync();
 
-                    var Packet = new PublishHigherPacket(_replyInboxId, subject, data);
+                    var Packet = new PublishPacket(_replyInboxId, subject, data);
 
                     await _embed_channel.WriteAndFlushAsync(Packet);
                 });
             }
         }
-
 
         #region Stream;
 
@@ -212,33 +246,38 @@ namespace Hunter.NATS.Client
 
         public async Task<ListResponse> StreamListAsync()
         {
-            var Packet = new ListPacket(
+            return await _policy.ExecuteAsync(async () =>
+            {
+                var _channel = await ConnectAsync();
+
+                var Packet = new ListPacket(
                 _replyInboxId,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new IterableRequest(), _jetStreamSetting)));
 
-            var ListResponseReady = new TaskCompletionSource<ListResponsePacket>();
+                var ListResponseReady = new TaskCompletionSource<ListResponsePacket>();
 
-            var Handler = new ReplyPacketHandler<ListResponsePacket>(Packet.ReplyTo, ListResponseReady);
+                var Handler = new ReplyPacketHandler<ListResponsePacket>(Packet.ReplyTo, ListResponseReady);
 
-            _embed_channel.Pipeline.AddLast(Handler);
+                _embed_channel.Pipeline.AddLast(Handler);
 
-            await _embed_channel.WriteAndFlushAsync(Packet);
+                await _embed_channel.WriteAndFlushAsync(Packet);
 
-            var ListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
-            {
-                ListResponseReady.TrySetResult(null);
+                var ListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+                {
+                    ListResponseReady.TrySetResult(null);
+                });
+
+                var ListResponse = await ListResponseReady.Task;
+
+                await ListResponseCancellationToken.DisposeAsync();
+
+                _embed_channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (ListResponse == null) throw new ArgumentNullException();
+
+                return ListResponse.Message;
             });
-
-            var ListResponse = await ListResponseReady.Task;
-
-            await ListResponseCancellationToken.DisposeAsync();
-
-            _embed_channel.Pipeline.Remove(Handler);
-
-            //TODO:待优化
-            if (ListResponse == null) throw new ArgumentNullException();
-
-            return ListResponse.Message;
         }
 
         public async Task<GetMessageResponse> StreamReadMessageAsync(string name, long sequence)

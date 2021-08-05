@@ -1,6 +1,4 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
-using DotNetty.Codecs.NATSJetStream.Packets;
-using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -43,7 +41,8 @@ namespace Hunter.NATS.Client
 
                 _info = await ConnectRequestAsync();
 
-                await SubscribeReplyInboxAsync();
+                if (_info.JetStream)
+                    await SubscribeReplyInboxAsync();
 
                 _connectionState = NATSConnectionState.Connected;
             }
@@ -53,7 +52,8 @@ namespace Hunter.NATS.Client
 
                 _info = await ConnectRequestAsync();
 
-                await SubscribeReplyInboxAsync();
+                if (_info.JetStream)
+                    await SubscribeReplyInboxAsync();
 
                 await SubscriptionMessageAsync();
 
@@ -61,7 +61,7 @@ namespace Hunter.NATS.Client
             }
         }
 
-        private async Task<DotNetty.Codecs.NATS.Packets.InfoPacket> ConnectRequestAsync()
+        private async Task<InfoPacket> ConnectRequestAsync()
         {
             var Packet = _options.IsAuthentication ?
                 new ConnectPacket(_options.IsVerbose, false, false, _options.UserName, _options.Password, _clientId, null)
@@ -73,16 +73,6 @@ namespace Hunter.NATS.Client
 
             return _info;
         }
-
-        private async Task SubscribeReplyInboxAsync()
-        {
-            _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
-
-            await _embed_channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
-
-            _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
-        }
-
 
         private async Task SubscriptionMessageAsync()
         {
@@ -200,14 +190,14 @@ namespace Hunter.NATS.Client
 
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
-            await _policy.ExecuteAsync((Func<Task>)(async () =>
+            await _policy.ExecuteAsync(async () =>
             {
                 var _channel = await ConnectAsync();
 
                 var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
                 await _channel.WriteAndFlushAsync(UnSubscribePacket);
-            }));
+            });
         }
 
         /// <summary>
@@ -228,7 +218,7 @@ namespace Hunter.NATS.Client
             });
         }
 
-        protected void InfoAsync(DotNetty.Codecs.NATS.Packets.InfoPacket info)
+        protected void InfoAsync(InfoPacket info)
         {
             _infoTaskCompletionSource.TrySetResult(info);
         }

@@ -19,13 +19,13 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
 
         public PublishHigherPacket(string inboxId, string subject)
         {
-            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_INFO}.{subject}";
+            Subject = subject;
             ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{Guid.NewGuid():N}";
         }
 
         public PublishHigherPacket(string inboxId, string subject, byte[] payload)
         {
-            Subject = $"{NATSJetStreamSignatures.JSAPI_STREAM_INFO}.{subject}";
+            Subject = subject;
             ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{Guid.NewGuid():N}";
             Payload = payload;
         }
