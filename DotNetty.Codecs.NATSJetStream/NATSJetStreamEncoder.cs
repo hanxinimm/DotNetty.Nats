@@ -125,27 +125,30 @@ namespace DotNetty.Codecs.NATSJetStream
             int variablePartSize = SubjectNameBytes.Length + SPACES_BYTES.Length;
             variablePartSize += (ReplyToBytes.Length > 0 ? ReplyToBytes.Length + SPACES_BYTES.Length : 0);
 
-            byte[] HeadersBytes = Array.Empty<byte>();
-            if (packet.Headers != null && packet.Headers.Count > 0)
+            StringBuilder headersBuilder = new();
+            foreach (var packetHeaders in packet.Headers)
             {
-                variablePartSize += HEADER_VERSION_BYTES_PLUS_CRLF.Length;
-                StringBuilder headersBuilder = new();
-                foreach (var packetHeaders in packet.Headers)
-                {
-                    headersBuilder.Append(packetHeaders.Key);
-                    headersBuilder.Append(NATSJetStreamSignatures.COLON);
-                    headersBuilder.Append(packetHeaders.Value);
+                if (headersBuilder.Length > 0)
                     headersBuilder.Append(NATSSignatures.CRLF);
-                }
-                HeadersBytes = EncodeStringInUtf8(headersBuilder.ToString());
-                variablePartSize += HeadersBytes.Length;
 
-                variablePartSize += CRLF_BYTES.Length;
+                headersBuilder.Append(packetHeaders.Key);
+                headersBuilder.Append(NATSJetStreamSignatures.COLON);
+                headersBuilder.Append(packetHeaders.Value);
             }
+            var HeadersBytes = EncodeStringInUtf8(headersBuilder.ToString());
 
-            byte[] PayloadSize = EncodeStringInUtf8(packet.PayloadLength.ToString());
+            var HeadersBodyBytesLength = CRLF_BYTES.Length + HEADER_VERSION_BYTES.Length + CRLF_BYTES.Length + HeadersBytes.Length + CRLF_BYTES.Length;
 
-            variablePartSize += PayloadSize.Length + CRLF_BYTES.Length;
+            byte[] HeadersSize = EncodeStringInUtf8(HeadersBodyBytesLength.ToString());
+
+            variablePartSize += HeadersSize.Length + SPACES_BYTES.Length;
+            variablePartSize += HeadersBodyBytesLength;
+
+
+            var TotalBytesLength = HeadersBodyBytesLength + packet.PayloadLength;
+            byte[] TotalSize = EncodeStringInUtf8(TotalBytesLength.ToString());
+
+            variablePartSize += TotalSize.Length + CRLF_BYTES.Length;
             variablePartSize += packet.PayloadLength + CRLF_BYTES.Length;
 
             int fixedHeaderBufferSize = HPUB_BYTES.Length + SPACES_BYTES.Length;
@@ -163,17 +166,21 @@ namespace DotNetty.Codecs.NATSJetStream
                     buf.WriteBytes(ReplyToBytes);
                     buf.WriteBytes(SPACES_BYTES);
                 }
-                if (HeadersBytes.Length > 0)
-                {
-                    buf.WriteBytes(HEADER_VERSION_BYTES_PLUS_CRLF);
 
-                    buf.WriteBytes(HeadersBytes);
-
-                    buf.WriteBytes(CRLF_BYTES);
-                    buf.WriteBytes(SPACES_BYTES);
-                }
-                buf.WriteBytes(PayloadSize);
+                buf.WriteBytes(HeadersSize);
+                buf.WriteBytes(SPACES_BYTES);
+                buf.WriteBytes(TotalSize);
                 buf.WriteBytes(CRLF_BYTES);
+
+                buf.WriteBytes(HEADER_VERSION_BYTES);
+                buf.WriteBytes(CRLF_BYTES);
+
+
+                buf.WriteBytes(HeadersBytes);
+
+                buf.WriteBytes(CRLF_BYTES);
+                buf.WriteBytes(CRLF_BYTES);
+                
                 if (packet.Payload != null)
                 {
                     buf.WriteBytes(packet.Payload);

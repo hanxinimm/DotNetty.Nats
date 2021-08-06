@@ -69,36 +69,56 @@ namespace Hunter.NATS.Client
         {
             if (headers != null || publishOptions != null)
             {
-                var messageHeaders = headers != null ? new Dictionary<string, string>(headers) : new Dictionary<string, string>();
-
-                if (publishOptions.ExpectedSequence.HasValue)
+                if (publishOptions != null)
                 {
-                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedSequence.ToString());
+                    var messageHeaders = headers != null ? new Dictionary<string, string>(headers) : new Dictionary<string, string>();
+
+                    if (publishOptions.ExpectedSequence.HasValue)
+                    {
+                        messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedSequence.ToString());
+                    }
+
+                    if (!string.IsNullOrEmpty(publishOptions.ExpectedMessageId))
+                    {
+                        messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedMessageId);
+                    }
+
+                    if (!string.IsNullOrEmpty(publishOptions.ExpectedStreamName))
+                    {
+                        messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedStreamName);
+                    }
+
+                    if (!string.IsNullOrEmpty(publishOptions.MessageId))
+                    {
+                        messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.MessageId);
+                    }
+
+                    await _policy.ExecuteAsync(async () =>
+                    {
+                        var _channel = await ConnectAsync();
+
+                        if(!_info.JetStream)
+                            throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                        var Packet = new PublishHigherPacket(_replyInboxId, subject, data, messageHeaders);
+
+                        await _embed_channel.WriteAndFlushAsync(Packet);
+                    });
                 }
-
-                if (!string.IsNullOrEmpty(publishOptions.ExpectedMessageId))
+                else
                 {
-                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedMessageId);
+                    await _policy.ExecuteAsync(async () =>
+                    {
+                        var _channel = await ConnectAsync();
+
+                        if (!_info.JetStream)
+                            throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                        var Packet = new PublishHigherPacket(_replyInboxId, subject, data, headers);
+
+                        await _embed_channel.WriteAndFlushAsync(Packet);
+                    });
                 }
-
-                if (!string.IsNullOrEmpty(publishOptions.ExpectedStreamName))
-                {
-                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.ExpectedStreamName);
-                }
-
-                if (!string.IsNullOrEmpty(publishOptions.MessageId))
-                {
-                    messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.MessageId);
-                }
-
-                await _policy.ExecuteAsync(async () =>
-                {
-                    var _channel = await ConnectAsync();
-
-                    var Packet = new PublishHigherPacket(_replyInboxId, subject, data, messageHeaders);
-
-                    await _embed_channel.WriteAndFlushAsync(Packet);
-                });
             }
             else
             {

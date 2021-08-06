@@ -21,7 +21,6 @@ namespace DotNetty.Codecs.NATS
         public static readonly byte[] CRLF_BYTES;
 
         public static readonly byte[] HEADER_VERSION_BYTES;
-        public static readonly byte[] HEADER_VERSION_BYTES_PLUS_CRLF;
 
         public static readonly byte[] CONNECT_BYTES;
         public static readonly byte[] PUB_BYTES;
@@ -44,7 +43,6 @@ namespace DotNetty.Codecs.NATS
             CRLF_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.CRLF);
 
             HEADER_VERSION_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.HEADER_VERSION);
-            HEADER_VERSION_BYTES_PLUS_CRLF = Encoding.UTF8.GetBytes(NATSSignatures.HEADER_VERSION + NATSSignatures.CRLF);
 
             CONNECT_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.CONNECT);
             PUB_BYTES = Encoding.UTF8.GetBytes(NATSSignatures.PUB);

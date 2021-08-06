@@ -30,7 +30,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
             Payload = payload;
         }
 
-        public PublishHigherPacket(string inboxId, string subject, byte[] payload, Dictionary<string, string> headers)
+        public PublishHigherPacket(string inboxId, string subject, byte[] payload, IDictionary<string, string> headers)
         {
             Subject = subject;
             ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{Guid.NewGuid():N}";
@@ -44,7 +44,7 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
             Payload = payload;
         }
 
-        public PublishHigherPacket(string inboxId,string subject, string replyTo, byte[] payload, Dictionary<string, string> headers)
+        public PublishHigherPacket(string inboxId,string subject, string replyTo, byte[] payload, IDictionary<string, string> headers)
         {
             Subject = subject;
             ReplyTo = $"{NATSJetStreamInboxs.PublishResponse}{inboxId}.{replyTo}";
@@ -80,6 +80,6 @@ namespace DotNetty.Codecs.NATSJetStream.Packets
         /// 头部
         /// </summary>
         [DataMember(Name = "headers")]
-        public Dictionary<string,string> Headers { get; set; }
+        public IDictionary<string,string> Headers { get; set; }
     }
 }
