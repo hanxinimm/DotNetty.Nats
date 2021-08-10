@@ -153,12 +153,12 @@ namespace TestNATSClient
             //        Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
             //    });
 
-            //var s = await client.SubscribeAsync("ApiGateway.Statistics.Recruit-Browse", async (bytes) =>
-            //{
-            //    Console.WriteLine("开始接受收消息");
-            //    var sss = Encoding.UTF8.GetString(bytes.Data);
-            //    Console.WriteLine("收到消息 {0}", sss);
-            //});
+            var s = await client.SubscribeAsync("TestAll.*", async (bytes) =>
+            {
+                Console.WriteLine("开始接受收消息");
+                var sss = Encoding.UTF8.GetString(bytes.Data);
+                Console.WriteLine("收到消息 {0}", sss);
+            });
 
             //Console.ReadLine();
 
@@ -195,7 +195,7 @@ namespace TestNATSClient
 
                             await Task.Factory.StartNew(async () =>
                             {
-                                await client.PublishAsync("TestAll", Testbytes, header);
+                                await client.PublishAsync("TestAll.Txt", Testbytes, header);
                             });
                     //    }
                     //});

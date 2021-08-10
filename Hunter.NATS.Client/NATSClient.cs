@@ -171,7 +171,21 @@ namespace Hunter.NATS.Client
                 },
                 (ex, retryAttempt, retrySecond, context) =>
                 {
-                    logger.LogError(ex, $"第 {retryAttempt}次 重新执行当前命令 客户端标识{_clientId} 操作 {context["hld"]} 主题 {context["sub"]} 将在 {retrySecond} 秒后重试");
+                    if (context.TryGetValue("hld", out var handleName))
+                    {
+                        if (context.TryGetValue("sub", out var handleSubject))
+                        {
+                            logger.LogError(ex, $"第 {retryAttempt}次 重新执行当前命令 客户端标识{_clientId} 操作 {handleName} 主题 {handleSubject} 将在 {retrySecond} 秒后重试");
+                        }
+                        else
+                        {
+                            logger.LogError(ex, $"第 {retryAttempt}次 重新执行当前命令 客户端标识{_clientId} 操作 {handleName} 将在 {retrySecond} 秒后重试");
+                        }
+                    }
+                    else
+                    {
+                        logger.LogError(ex, $"第 {retryAttempt}次 重新执行当前命令 客户端标识{_clientId} 操作未知 将在 {retrySecond} 秒后重试");
+                    }
                 });
 
             //超时

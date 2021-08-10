@@ -266,7 +266,7 @@ namespace Hunter.NATS.Client
 
         public async Task<ListResponse> StreamListAsync()
         {
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -297,7 +297,8 @@ namespace Hunter.NATS.Client
                 if (ListResponse == null) throw new ArgumentNullException();
 
                 return ListResponse.Message;
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "StreamListAsync" } });
         }
 
         public async Task<GetMessageResponse> StreamReadMessageAsync(string name, long sequence)
