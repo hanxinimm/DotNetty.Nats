@@ -233,8 +233,6 @@ namespace Hunter.STAN.Client
                 channel.Pipeline.AddLast(new PingPacketHandler(_logger, _clientId));
                 channel.Pipeline.AddLast(new PongPacketHandler(_logger, _clientId));
             }));
-
-            
         }
 
         private void ReconnectIfNeed(EndPoint socketAddress)
@@ -309,7 +307,14 @@ namespace Hunter.STAN.Client
         {
             Task.Factory.StartNew(async () =>
             {
-                await ConnectPingAsync();
+                var pingResponse = await ConnectPingAsync();
+
+                if (pingResponse == null || !string.IsNullOrEmpty(pingResponse.Error))
+                {
+                    _logger.LogError($"STAN 连接不再有效 Client Ping 错误:{pingResponse?.Error}");
+
+                    ReconnectIfNeed(null);
+                }
             });
         }
     }

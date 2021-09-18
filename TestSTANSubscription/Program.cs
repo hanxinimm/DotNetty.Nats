@@ -163,13 +163,13 @@ namespace TestSTANSubscription
 
             services.AddSTANServer(options =>
             {
-                options.ClusterID = "main-cluster";
+                options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = $"Security-StatefulManagerService";
                 //options.Host = "mq.stan.yidujob.com";
-                options.Host = "127.0.0.1";
+                //options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
                 //options.Host = "mq.stan.yd.com";
-                //options.Host = "mq.stan.laboroa.cn";
+                options.Host = "mq.stan.laboroa.cn";
                 options.Port = 4222;
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
@@ -210,12 +210,21 @@ namespace TestSTANSubscription
 
             //}
 
-            var s1s = await client.SubscribeAsync("Test", (content) =>
+            Console.WriteLine("请输入要订阅的消息主题");
+
+
+            var SubscribeSubject = Console.ReadLine();
+
+            var SubscribeResult = await client.SubscribeAsync(SubscribeSubject, (content) =>
             {
                 var data = Encoding.UTF8.GetString(content.Data);
                 Console.WriteLine($"订阅 sequence={content.Sequence} data={data}");
                 return new ValueTask<bool>(true);
             });
+
+            Console.WriteLine("等待消息进入 订阅主题 {0}", SubscribeResult.Id);
+
+            Thread.Sleep(Timeout.Infinite);
 
             //await client.ReadAsync("Security-App-1", 1, 20);
             //await client.ReadAsync("Security-App-1", 1, 20);
