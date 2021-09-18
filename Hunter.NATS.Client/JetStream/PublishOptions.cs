@@ -6,7 +6,10 @@ namespace Hunter.NATS.Client.JetStream
 {
     public class PublishOptions
     {
-        public TimeSpan ttl { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public TimeSpan TTL { get; set; }
 
         /// <summary>
         /// 消息编号

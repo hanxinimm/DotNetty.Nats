@@ -44,7 +44,6 @@ namespace Hunter.NATS.Client
             return PublishAsync(subject, data, headers, null);
         }
 
-
         /// <summary>
         /// 异步发送
         /// </summary>
@@ -116,7 +115,7 @@ namespace Hunter.NATS.Client
 
                         var Packet = new PublishHigherPacket(_replyInboxId, subject, data, headers);
 
-                        await _embed_channel.WriteAndFlushAsync(Packet);
+                        await _channel.WriteAndFlushAsync(Packet);
                     });
                 }
             }
@@ -128,7 +127,7 @@ namespace Hunter.NATS.Client
 
                     var Packet = new PublishPacket(_replyInboxId, subject, data);
 
-                    await _embed_channel.WriteAndFlushAsync(Packet);
+                    await _channel.WriteAndFlushAsync(Packet);
                 });
             }
         }
@@ -144,29 +143,32 @@ namespace Hunter.NATS.Client
                 jetStreamConfig.Name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
 
-            var InfoResponseReady = new TaskCompletionSource<InfoResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<InfoResponsePacket>(Packet.ReplyTo, InfoResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var InfoResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async () =>
             {
-                InfoResponseReady.TrySetResult(null);
+                var _channel = await ConnectAsync();
+
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                var InfoResponseReady = new TaskCompletionSource<InfoResponsePacket>();
+
+                var Handler = new ReplyPacketHandler<InfoResponsePacket>(Packet.ReplyTo, InfoResponseReady);
+
+                _embed_channel.Pipeline.AddLast(Handler);
+
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var InfoResponse = await InfoResponseReady.Task;
+
+                _embed_channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (InfoResponse == null) throw new ArgumentNullException();
+
+                return InfoResponse.Message;
             });
 
-            var InfoResponse = await InfoResponseReady.Task;
 
-            await InfoResponseCancellationToken.DisposeAsync();
-
-            _embed_channel.Pipeline.Remove(Handler);
-
-            //TODO:待优化
-            if (InfoResponse == null) throw new ArgumentNullException();
-
-            return InfoResponse.Message;
         }
 
         public async Task<CreateResponse> StreamCreateAsync(JetStreamConfig jetStreamConfig)
@@ -176,29 +178,30 @@ namespace Hunter.NATS.Client
                 jetStreamConfig.Name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
 
-            var CreateResponseReady = new TaskCompletionSource<CreateResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<CreateResponsePacket>(Packet.ReplyTo, CreateResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var CreateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async () =>
             {
-                CreateResponseReady.TrySetResult(null);
+                var _channel = await ConnectAsync();
+
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                var CreateResponseReady = new TaskCompletionSource<CreateResponsePacket>();
+
+                var Handler = new ReplyPacketHandler<CreateResponsePacket>(Packet.ReplyTo, CreateResponseReady);
+
+                _embed_channel.Pipeline.AddLast(Handler);
+
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var CreateResponse = await CreateResponseReady.Task;
+
+                _embed_channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (CreateResponse == null) throw new ArgumentNullException();
+
+                return CreateResponse.Message;
             });
-
-            var CreateResponse = await CreateResponseReady.Task;
-
-            await CreateResponseCancellationToken.DisposeAsync();
-
-            _embed_channel.Pipeline.Remove(Handler);
-
-            //TODO:待优化
-            if (CreateResponse == null) throw new ArgumentNullException();
-
-            return CreateResponse.Message;
         }
 
         public async Task<UpdateResponse> StreamUpdateAsync(JetStreamConfig jetStreamConfig)
@@ -369,6 +372,41 @@ namespace Hunter.NATS.Client
             return GetMessageResponse.Message;
         }
 
+        public async Task<DeleteResponse> StreamDeleteAsync(string name)
+        {
+            var jetStreamConfig = JetStreamConfig.Builder().SetName(name).Build();
+
+            var Packet = new DeletePacket(
+                _replyInboxId,
+                jetStreamConfig.Name);
+
+            return await _policy.ExecuteAsync(async () =>
+            {
+                var _channel = await ConnectAsync();
+
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                var DeleteResponseReady = new TaskCompletionSource<DeleteResponsePacket>();
+
+                var Handler = new ReplyPacketHandler<DeleteResponsePacket>(Packet.ReplyTo, DeleteResponseReady);
+
+                _embed_channel.Pipeline.AddLast(Handler);
+
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var DeleteResponse = await DeleteResponseReady.Task;
+
+                _embed_channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (DeleteResponse == null) throw new ArgumentNullException();
+
+                return DeleteResponse.Message;
+            });
+
+
+        }
 
         #endregion;
 

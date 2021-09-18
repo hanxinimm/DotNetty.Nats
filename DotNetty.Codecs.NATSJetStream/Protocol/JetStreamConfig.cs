@@ -6,6 +6,9 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
     public class JetStreamConfig
     {
+        /// <summary>
+        /// 流的名称
+        /// </summary>
         [JsonProperty("name")]
         public string Name { get; private set; }
         [JsonProperty("subjects")]

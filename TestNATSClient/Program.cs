@@ -85,9 +85,9 @@ namespace TestNATSClient
             {
                 //options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                //options.Host = "127.0.0.1";
+                options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
-                options.Host = "mq.nats.yd.com";
+                //options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
                 //options.IsAuthentication = true;
@@ -125,7 +125,17 @@ namespace TestNATSClient
 
             //var streamName = streamNames.Streams.FirstOrDefault();
 
-            //var streamInfo = await client.StreamInfoAsync(streamName);
+
+            //var streamCreate = await client.StreamCreateAsync(JetStreamConfig.Builder()
+            //    .SetName("TestAll-Work")
+            //    .SetSubjects("TestAll-Work.>")
+            //    .SetMaxAge(TimeSpan.FromMinutes(5))
+            //    .SetRetentionPolicy(RetentionPolicy.Interest).Build());
+
+
+            var streamInfo = await client.StreamInfoAsync("TestAll-Work");
+
+            //var streamDelete = await client.StreamDeleteAsync("TestAll");
 
             //Console.WriteLine("streamInfo = {0}", streamInfo);
 
@@ -133,7 +143,7 @@ namespace TestNATSClient
             //    .SetRetentionPolicy(RetentionPolicy.Interest).Build());
 
 
-
+            //var consumerCreate = await client.
 
             //var consumerNames = await client.ConsumerNamesAsync(streamName);
 
@@ -141,28 +151,30 @@ namespace TestNATSClient
 
             //var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
 
-            //var consumerCreate = await client.ConsumerCreateAsync("TestAll",
-            //    ConsumerConfig.Builder()
-            //    .SetDeliverPolicy(DeliverPolicy.DeliverNew),
-            //    //.SetFilterSubject("ApiGateway.EventTrigger.>"),
-            //     //.SetDurable("T"),
-            //     (bytes) =>
-            //    {
-            //        Console.WriteLine("开始接受收消息");
-            //        var sss = Encoding.UTF8.GetString(bytes.Data);
-            //        Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
-            //    });
+            var consumerCreate = await client.ConsumerCreateAsync("TestAll-Work",
+                ConsumerConfig.Builder()
+                .SetDeliverPolicy(DeliverPolicy.DeliverAll),
+                 //.SetFilterSubject("ApiGateway.EventTrigger.>"),
+                 //.SetDurable("T"),
+                 (bytes) =>
+                {
+                    Console.WriteLine("开始接受收消息");
+                    var sss = Encoding.UTF8.GetString(bytes.Data);
+                    Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
+                });
 
-            var s = await client.SubscribeAsync("ApiGateway.EventTrigger.Before.>", async (bytes) =>
-            {
-                Console.WriteLine("开始接受收消息");
-                var sss = Encoding.UTF8.GetString(bytes.Data);
-                Console.WriteLine("收到消息 {0}", sss);
-            });
+            //var s = await client.SubscribeAsync("ApiGateway.EventTrigger.Before.>", async (bytes) =>
+            //{
+            //    Console.WriteLine("开始接受收消息");
+            //    var sss = Encoding.UTF8.GetString(bytes.Data);
+            //    Console.WriteLine("收到消息 {0}", sss);
+            //});
+
+            Console.WriteLine("按任意键开始发布消息");
 
             Console.ReadLine();
 
-            return;
+            //return;
 
 
             #region  发布测试
@@ -183,7 +195,7 @@ namespace TestNATSClient
                 stopwatch.Start(); //  开始监视代码运行时间
 
 
-                var Testbytes = Encoding.UTF8.GetBytes($"1");
+                var Testbytes = Encoding.UTF8.GetBytes($"TestAll 的测试消息");
 
 
                 //for (int i = 0; i < 30; i++)
@@ -193,10 +205,10 @@ namespace TestNATSClient
                 //        for (int j = 0; j < 30; j++)
                 //        {
 
-                            await Task.Factory.StartNew(async () =>
-                            {
-                                await client.PublishAsync("TestAll.Txt", Testbytes, header);
-                            });
+                await Task.Factory.StartNew(async () =>
+                {
+                    await client.PublishAsync("TestAll-Work.CheckIn.1", Testbytes, header);
+                });
                     //    }
                     //});
                     //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
