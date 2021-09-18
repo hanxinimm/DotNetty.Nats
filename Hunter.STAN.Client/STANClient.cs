@@ -237,7 +237,7 @@ namespace Hunter.STAN.Client
 
         private void ReconnectIfNeed(EndPoint socketAddress)
         {
-            _logger.LogInformation($"STAN连接端口 ClientId = {_clientId} 开始实例化新的连接管道");
+            _logger.LogInformation($"STAN重新连接端口 ClientId = {_clientId} 开始实例化新的连接管道");
 
             _pingTimer.Stop();
 
@@ -248,7 +248,7 @@ namespace Hunter.STAN.Client
                 Task.Factory.StartNew(async () => await ConnectAsync());
             }
 
-            _logger.LogInformation($"STAN连接端口 ClientId = {_clientId} 完成实例化新的连接管道");
+            _logger.LogInformation($"STAN重新连接端口 ClientId = {_clientId} 完成实例化新的连接管道");
         }
 
         public async ValueTask<IChannel> ConnectAsync(TimeSpan? timeout = null)
