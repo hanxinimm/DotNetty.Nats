@@ -458,35 +458,37 @@ namespace Hunter.NATS.Client
 
         public async Task<ConsumerCreateResponse> ConsumerCreateAsync(ConsumerCreateRequest createRequest)
         {
+
             var Packet = new ConsumerCreatePacket(
                 _replyInboxId,
                 createRequest.Stream,
                 createRequest.Config.DurableName,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(createRequest, _jetStreamSetting)));
 
-            var ConsumerCreateResponseReady = new TaskCompletionSource<ConsumerCreateResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<ConsumerCreateResponsePacket>(Packet.ReplyTo, ConsumerCreateResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var ConsumerCreateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async () =>
             {
-                ConsumerCreateResponseReady.TrySetResult(null);
+                var _channel = await ConnectAsync();
+
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                var ConsumerCreateResponseReady = new TaskCompletionSource<ConsumerCreateResponsePacket>();
+
+                var Handler = new ReplyPacketHandler<ConsumerCreateResponsePacket>(Packet.ReplyTo, ConsumerCreateResponseReady);
+
+                _embed_channel.Pipeline.AddLast(Handler);
+
+                await _embed_channel.WriteAndFlushAsync(Packet);
+
+                var ConsumerCreateResponse = await ConsumerCreateResponseReady.Task;
+
+                _embed_channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (ConsumerCreateResponse == null) throw new ArgumentNullException();
+
+                return ConsumerCreateResponse.Message;
             });
-
-            var ConsumerCreateResponse = await ConsumerCreateResponseReady.Task;
-
-            await ConsumerCreateResponseCancellationToken.DisposeAsync();
-
-            _embed_channel.Pipeline.Remove(Handler);
-
-            //TODO:待优化
-            if (ConsumerCreateResponse == null) throw new ArgumentNullException();
-
-            return ConsumerCreateResponse.Message;
         }
 
         public async Task<ConsumerNamesResponse> ConsumerNamesAsync(string consumerName)
@@ -495,29 +497,30 @@ namespace Hunter.NATS.Client
                 _replyInboxId,
                 consumerName);
 
-            var ConsumerNamesResponseReady = new TaskCompletionSource<ConsumerNamesResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<ConsumerNamesResponsePacket>(Packet.ReplyTo, ConsumerNamesResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var ConsumerNamesResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async () =>
             {
-                ConsumerNamesResponseReady.TrySetResult(null);
+                var _channel = await ConnectAsync();
+
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                var ConsumerNamesResponseReady = new TaskCompletionSource<ConsumerNamesResponsePacket>();
+
+                var Handler = new ReplyPacketHandler<ConsumerNamesResponsePacket>(Packet.ReplyTo, ConsumerNamesResponseReady);
+
+                _embed_channel.Pipeline.AddLast(Handler);
+
+                await _embed_channel.WriteAndFlushAsync(Packet);
+
+                var ConsumerNamesResponse = await ConsumerNamesResponseReady.Task;
+
+                _embed_channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (ConsumerNamesResponse == null) throw new ArgumentNullException();
+
+                return ConsumerNamesResponse.Message;
             });
-
-            var ConsumerNamesResponse = await ConsumerNamesResponseReady.Task;
-
-            await ConsumerNamesResponseCancellationToken.DisposeAsync();
-
-            _embed_channel.Pipeline.Remove(Handler);
-
-            //TODO:待优化
-            if (ConsumerNamesResponse == null) throw new ArgumentNullException();
-
-            return ConsumerNamesResponse.Message;
         }
 
         public async Task<ConsumerListResponse> ConsumerListAsync(string consumerName)
@@ -526,29 +529,30 @@ namespace Hunter.NATS.Client
                 _replyInboxId,
                 consumerName);
 
-            var ConsumerListResponseReady = new TaskCompletionSource<ConsumerListResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<ConsumerListResponsePacket>(Packet.ReplyTo, ConsumerListResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var ConsumerListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async () =>
             {
-                ConsumerListResponseReady.TrySetResult(null);
+                var _channel = await ConnectAsync();
+
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                var ConsumerListResponseReady = new TaskCompletionSource<ConsumerListResponsePacket>();
+
+                var Handler = new ReplyPacketHandler<ConsumerListResponsePacket>(Packet.ReplyTo, ConsumerListResponseReady);
+
+                _embed_channel.Pipeline.AddLast(Handler);
+
+                await _embed_channel.WriteAndFlushAsync(Packet);
+
+                var ConsumerListResponse = await ConsumerListResponseReady.Task;
+
+                _embed_channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (ConsumerListResponse == null) throw new ArgumentNullException();
+
+                return ConsumerListResponse.Message;
             });
-
-            var ConsumerListResponse = await ConsumerListResponseReady.Task;
-
-            await ConsumerListResponseCancellationToken.DisposeAsync();
-
-            _embed_channel.Pipeline.Remove(Handler);
-
-            //TODO:待优化
-            if (ConsumerListResponse == null) throw new ArgumentNullException();
-
-            return ConsumerListResponse.Message;
         }
 
         #endregion;

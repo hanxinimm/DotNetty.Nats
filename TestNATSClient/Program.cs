@@ -143,7 +143,6 @@ namespace TestNATSClient
             //var streamUpdate = await client.StreamUpdateAsync(JetStreamConfig.Builder(streamInfo.Config)
             //    .SetRetentionPolicy(RetentionPolicy.Interest).Build());
 
-
             //var consumerCreate = await client.
 
             //var consumerNames = await client.ConsumerNamesAsync(streamName);
@@ -154,7 +153,7 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateAsync("TestAll-Work",
                 ConsumerConfig.Builder()
-                .SetDeliverPolicy(DeliverPolicy.DeliverNew),
+                .SetDeliverPolicy(DeliverPolicy.DeliverAll),
                  //.SetFilterSubject("ApiGateway.EventTrigger.>"),
                  //.SetDurable("T"),
                  (bytes) =>
