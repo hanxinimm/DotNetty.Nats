@@ -153,8 +153,8 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateAsync("TestAll-Work",
                 ConsumerConfig.Builder()
-                .SetDeliverPolicy(DeliverPolicy.DeliverAll),
-                 //.SetFilterSubject("ApiGateway.EventTrigger.>"),
+                .SetDeliverPolicy(DeliverPolicy.DeliverAll)
+                 .SetFilterSubject("TestAll-Work.CheckIn.1"),
                  //.SetDurable("T"),
                  (bytes) =>
                 {
@@ -205,9 +205,13 @@ namespace TestNATSClient
                 //        for (int j = 0; j < 30; j++)
                 //        {
 
+
+
                 await Task.Factory.StartNew(async () =>
                 {
-                    await client.PublishAsync("TestAll-Work.CheckIn.1", Testbytes, header);
+                    var sub = $"TestAll-Work.CheckIn.{DateTime.Now.Ticks % 2}";
+                    Console.WriteLine("消息主题 {0}", sub);
+                    await client.PublishAsync(sub, Testbytes, header);
                 });
                     //    }
                     //});
