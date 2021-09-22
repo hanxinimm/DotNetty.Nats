@@ -8,19 +8,19 @@ namespace Hunter.NATS.Client
 {
     public class ConsumerMessageAckAsynHandler : ConsumerMessageHandler
     {
-        private readonly Func<NATSJetStreamMsgContent, Task<MessageAck>> _messageHandler;
+        private readonly Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> _messageHandler;
 
         public ConsumerMessageAckAsynHandler(
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
-            Func<NATSJetStreamMsgContent, Task<MessageAck>> messageHandler,
-            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> messageAckCallback)
+            Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> messageHandler,
+            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> messageAckCallback)
             : base(logger, subscriptionConfig, messageAckCallback)
         {
             _messageHandler = messageHandler;
         }
 
-        protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> ackCallback)
+        protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> ackCallback)
         {
             Task.Factory.StartNew(async _msg =>
             {

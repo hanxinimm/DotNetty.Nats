@@ -14,13 +14,13 @@ namespace Hunter.NATS.Client
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
             Func<NATSJetStreamMsgContent, MessageAck> messageHandler,
-            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> messageAckCallback)
+            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> messageAckCallback)
             : base(logger, subscriptionConfig, messageAckCallback)
         {
             _messageHandler = messageHandler;
         }
 
-        protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> ackCallback)
+        protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> ackCallback)
         {
             Task.Factory.StartNew(async _msg =>
             {

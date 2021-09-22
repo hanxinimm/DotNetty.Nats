@@ -16,12 +16,12 @@ namespace Hunter.NATS.Client
     {
         protected readonly ILogger _logger;
         protected readonly NATSConsumerSubscriptionConfig _subscriptionConfig;
-        protected readonly Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> _messageAckCallback;
+        protected readonly Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> _messageAckCallback;
         private readonly Action<IChannelHandlerContext, MessagePacket> _channelRead;
         public ConsumerMessageHandler(
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
-            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> messageAckCallback)
+            Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> messageAckCallback)
         {
             _logger = logger;
             _subscriptionConfig = subscriptionConfig;
@@ -31,7 +31,7 @@ namespace Hunter.NATS.Client
 
         public override bool IsSharable => true;
 
-        protected abstract void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, Task> ackCallback);
+        protected abstract void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> ackCallback);
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
         {

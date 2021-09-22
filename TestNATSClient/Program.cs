@@ -153,8 +153,9 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateAsync("TestAll-Work",
                 ConsumerConfig.Builder()
-                .SetDeliverPolicy(DeliverPolicy.DeliverAll)
-                 .SetFilterSubject("TestAll-Work.CheckIn.1"),
+                .SetDeliverPolicy(DeliverPolicy.DeliverByStartSequence)
+                .SetStartSequence(0)
+                 .SetFilterSubject("TestAll-Work.CheckIn.>"),
                  //.SetDurable("T"),
                  (bytes) =>
                 {
