@@ -20,51 +20,52 @@ namespace TestNATSClient
         private static readonly Regex _clientIdReplacer = new Regex("\\W\\D");
         static async Task Main(string[] args)
         {
+            var bin = Encoding.UTF8.GetBytes("\n");
+            Console.WriteLine(string.Format("{0:x}", bin[0]));
+            // var SubscriptionMsgContentReady = new TaskCompletionSource<bool>();
 
-           // var SubscriptionMsgContentReady = new TaskCompletionSource<bool>();
 
+            // await Task.Factory.StartNew(async () =>
+            //{
+            //    var rlt = await SubscriptionMsgContentReady.Task;
+            //    if (rlt)
+            //    {
+            //        Console.WriteLine("1链接成功");
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine("1链接失败");
+            //    }
+            //},new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token);
 
-           // await Task.Factory.StartNew(async () =>
-           //{
-           //    var rlt = await SubscriptionMsgContentReady.Task;
-           //    if (rlt)
-           //    {
-           //        Console.WriteLine("1链接成功");
-           //    }
-           //    else
-           //    {
-           //        Console.WriteLine("1链接失败");
-           //    }
-           //},new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token);
+            // await Task.Factory.StartNew(async () =>
+            // {
+            //     var rlt = await SubscriptionMsgContentReady.Task;
+            //     if (rlt)
+            //     {
+            //         Console.WriteLine("2链接成功");
+            //     }
+            //     else
+            //     {
+            //         Console.WriteLine("2链接失败");
+            //     }
+            // });
 
-           // await Task.Factory.StartNew(async () =>
-           // {
-           //     var rlt = await SubscriptionMsgContentReady.Task;
-           //     if (rlt)
-           //     {
-           //         Console.WriteLine("2链接成功");
-           //     }
-           //     else
-           //     {
-           //         Console.WriteLine("2链接失败");
-           //     }
-           // });
+            // await Task.Factory.StartNew(() =>
+            // {
+            //     Console.WriteLine("等待开始");
+            //     System.Threading.Thread.Sleep(1000 * 5);
+            //     Console.WriteLine("等待完成");
 
-           // await Task.Factory.StartNew(() =>
-           // {
-           //     Console.WriteLine("等待开始");
-           //     System.Threading.Thread.Sleep(1000 * 5);
-           //     Console.WriteLine("等待完成");
+            //     SubscriptionMsgContentReady.SetResult(true);
 
-           //     SubscriptionMsgContentReady.SetResult(true);
+            // });
 
-           // });
+            // Console.ReadLine();
 
-           // Console.ReadLine();
+            // Console.WriteLine("完成");
 
-           // Console.WriteLine("完成");
-
-           // return;
+            // return;
 
             //var ss = Guid.NewGuid().ToString("N");
 
@@ -133,7 +134,7 @@ namespace TestNATSClient
             //    .SetRetentionPolicy(RetentionPolicy.Interest).Build());
 
 
-            var streamInfo = await client.StreamInfoAsync("TestAll-Work");
+            //var streamInfo = await client.StreamInfoAsync("TestAll-Work");
 
             //var streamDelete = await client.StreamDeleteAsync("TestAll");
 
@@ -153,7 +154,7 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateAsync("TestAll-Work",
                 ConsumerConfig.Builder()
-                .SetDeliverPolicy(DeliverPolicy.DeliverAll),
+                .SetDeliverPolicy(DeliverPolicy.DeliverNew),
                  //.SetFilterSubject("ApiGateway.EventTrigger.>"),
                  //.SetDurable("T"),
                  (bytes) =>

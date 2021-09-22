@@ -6,20 +6,25 @@ namespace DotNetty.Codecs.Protocol
 {
     public static class ProtocolConstants
     {
-        internal const byte FIELDDELIMITER_SPACES = 0x20;
+        internal const byte FIELD_DELIMITER_SPACES = 0x20;
 
-        internal const byte FIELDDELIMITER_TAB = 0x09;
+        internal const byte FIELD_DELIMITER_TAB = 0x09;
+
+        /// <summary>
+        /// :
+        /// </summary>
+        internal const byte FIELD_DELIMITER_COLON = 0x3A;
 
         /// <summary>
         /// \r
         /// </summary>
-        internal const byte NEWLINES_CR = 0x0D;
+        internal const byte NEW_LINES_CR = 0x0D;
 
         /// <summary>
         /// \n
         /// </summary>
 
-        internal const byte NEWLINES_LF = 0x0A;
+        internal const byte NEW_LINES_LF = 0x0A;
 
         #region 迁移到客户端版本
 

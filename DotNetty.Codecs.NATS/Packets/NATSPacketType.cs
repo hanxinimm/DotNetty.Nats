@@ -35,6 +35,10 @@ namespace DotNetty.Codecs.NATS.Packets
         /// </summary>
         MSG,
         /// <summary>
+        /// Server	Delivers a higher message payload to a subscriber
+        /// </summary>
+        HMSG,
+        /// <summary>
         /// Both	PING keep-alive message
         /// </summary>
         PING,

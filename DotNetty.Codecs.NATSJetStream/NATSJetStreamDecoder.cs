@@ -18,7 +18,121 @@ namespace DotNetty.Codecs.NATSJetStream
 
     public sealed class NATSJetStreamDecoder : NATSDecoder
     {
+        delegate bool TryGetStringFromDelimiterDelegate(Span<byte> input, ref int startIndex, out string value);
+
         public NATSJetStreamDecoder(ILogger logger) : base(logger) { }
+
+        protected override NATSPacket DoHighFrequency(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        {
+            var packet = base.DoHighFrequency(buffer, packetSignature, context);
+            if (packet != null) return packet;
+
+            switch (packetSignature)
+            {
+                case NATSSignatures.HMSG:
+                    return DecodeMessagePacket(buffer, context);
+                default:
+                    return null;
+            }
+        }
+
+        NATSPacket DecodeMessagePacket(IByteBuffer buffer, IChannelHandlerContext context)
+        {
+            if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.HMSG, out var subject))
+            {
+                if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.HMSG, out var subscribeId))
+                {
+                    var ReplyTo = GetStringFromFieldDelimiter(buffer, NATSSignatures.HMSG);
+
+                    if (TryGetStringFromFieldDelimiter(buffer, NATSSignatures.HMSG, out var headerSizeString))
+                    {
+                        if (int.TryParse(headerSizeString, out int headerSize))
+                        {
+                            if (TryGetStringFromNewlineDelimiter(buffer, NATSSignatures.HMSG, out var totalSizeString))
+                            {
+                                if (int.TryParse(totalSizeString, out int totalSize))
+                                {
+                                    if (TryGetBytesFromNewlineDelimiter(buffer, headerSize - 2, NATSSignatures.HMSG, out var header))
+                                    {
+                                        var payloadSize = totalSize - headerSize;
+                                        if (TryGetBytesFromNewlineDelimiter(buffer, payloadSize, NATSSignatures.HMSG, out var payload))
+                                        {
+                                            return DecodeMessagePacket(subject, subscribeId, ReplyTo, headerSize, header, totalSize, payload);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        NATSPacket DecodeMessagePacket(
+            string subject, 
+            string subscribeId, 
+            string replyTo, 
+            int headerSize,
+            byte[] header,
+            int payloadSize, 
+            byte[] payload)
+        {
+            TryGetStringFromDelimiterDelegate TryGetStringFromDelimiter = TryGetStringFromColonDelimiter;
+
+            var headerDictionary = new Dictionary<string, string>();
+
+            int startIndex = 0;
+
+            if (TryGetStringFromNewlineDelimiter(header, ref startIndex, out string headerVersion))
+            {
+                startIndex++;
+
+                while (startIndex < header.Length)
+                {
+                    if (TryGetStringFromDelimiter(header, ref startIndex, out string headerKey))
+                    {
+                        startIndex++;
+
+                        TryGetStringFromDelimiter = TryGetStringFromNewlineDelimiter;
+
+                        while (startIndex < header.Length)
+                        {
+                            if (TryGetStringFromDelimiter(header, ref startIndex, out string headerValue))
+                            {
+                                startIndex++;
+
+                                headerDictionary.Add(headerKey, headerValue);
+
+                                TryGetStringFromDelimiter = TryGetStringFromColonDelimiter;
+
+                                break;
+                            }
+                            else
+                            {
+                                startIndex++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        startIndex++;
+                    }
+                }
+            }
+
+            return new MessageHigherPacket
+            {
+                Subject = subject,
+                SubscribeId = subscribeId,
+                ReplyTo = replyTo,
+                PayloadSize = payloadSize,
+                Payload = payload,
+                Version = headerVersion,
+                Headers = headerDictionary
+            };
+        }
 
 
         protected override NATSPacket DecodeMessagePacket(string subject, string subscribeId, string replyTo, int payloadSize, byte[] payload)

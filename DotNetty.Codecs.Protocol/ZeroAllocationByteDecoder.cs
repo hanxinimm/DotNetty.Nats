@@ -18,7 +18,7 @@ namespace DotNetty.Codecs.Protocol
         {
             _logger = logger;
         }
-
+        
         protected override void Decode(IChannelHandlerContext context, IByteBuffer input, List<object> output)
         {
             try
@@ -49,8 +49,6 @@ namespace DotNetty.Codecs.Protocol
             }
         }
 
-
-
         private bool TryDecodePacket(IByteBuffer buffer, IChannelHandlerContext context, out ProtocolPacket packet)
         {
             if (buffer.ReadableBytes == 0)
@@ -79,11 +77,11 @@ namespace DotNetty.Codecs.Protocol
             {
                 switch (input.ReadByte())
                 {
-                    case ProtocolConstants.FIELDDELIMITER_SPACES:
-                    case ProtocolConstants.FIELDDELIMITER_TAB:
+                    case ProtocolConstants.FIELD_DELIMITER_SPACES:
+                    case ProtocolConstants.FIELD_DELIMITER_TAB:
                         return input.GetString(startIndex, i, Encoding.UTF8);
-                    case ProtocolConstants.NEWLINES_CR:
-                        if (ProtocolConstants.NEWLINES_LF == input.SafeReadByte())
+                    case ProtocolConstants.NEW_LINES_CR:
+                        if (ProtocolConstants.NEW_LINES_LF == input.SafeReadByte())
                         {
                             //只有OK,PING,PONG支持换行符结尾
                             switch (input.GetString(startIndex, i, Encoding.UTF8))
@@ -120,12 +118,12 @@ namespace DotNetty.Codecs.Protocol
             {
                 switch (input.ReadByte())
                 {
-                    case ProtocolConstants.FIELDDELIMITER_SPACES:
-                    case ProtocolConstants.FIELDDELIMITER_TAB:
+                    case ProtocolConstants.FIELD_DELIMITER_SPACES:
+                    case ProtocolConstants.FIELD_DELIMITER_TAB:
                         value = input.GetString(startIndex, i, Encoding.UTF8);
                         return true;
-                    case ProtocolConstants.NEWLINES_CR:
-                    case ProtocolConstants.NEWLINES_LF:
+                    case ProtocolConstants.NEW_LINES_CR:
+                    case ProtocolConstants.NEW_LINES_LF:
 #if DEBUG
                         _logger.LogWarning($"[130]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
@@ -144,11 +142,11 @@ namespace DotNetty.Codecs.Protocol
             {
                 switch (input.ReadByte())
                 {
-                    case ProtocolConstants.FIELDDELIMITER_SPACES:
-                    case ProtocolConstants.FIELDDELIMITER_TAB:
+                    case ProtocolConstants.FIELD_DELIMITER_SPACES:
+                    case ProtocolConstants.FIELD_DELIMITER_TAB:
                         return input.GetString(startIndex, i, Encoding.UTF8);
-                    case ProtocolConstants.NEWLINES_CR:
-                        if (ProtocolConstants.NEWLINES_LF == input.SafeReadByte())
+                    case ProtocolConstants.NEW_LINES_CR:
+                        if (ProtocolConstants.NEW_LINES_LF == input.SafeReadByte())
                         {
                             input.SetReaderIndex(startIndex);
                             return string.Empty;
@@ -170,9 +168,9 @@ namespace DotNetty.Codecs.Protocol
             int startIndex = input.ReaderIndex;
             for (int i = 0; input.ReadableBytes > 0; i++)
             {
-                if (ProtocolConstants.NEWLINES_CR == input.ReadByte())
+                if (ProtocolConstants.NEW_LINES_CR == input.ReadByte())
                 {
-                    if (ProtocolConstants.NEWLINES_LF == input.SafeReadByte())
+                    if (ProtocolConstants.NEW_LINES_LF == input.SafeReadByte())
                     {
                         value = input.GetString(startIndex, i, Encoding.UTF8);
                         return true;
@@ -181,6 +179,57 @@ namespace DotNetty.Codecs.Protocol
                     _logger.LogWarning($"[181]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
                     break;
+                }
+            }
+            return false;
+        }
+
+        protected bool TryGetStringFromColonDelimiter(Span<byte> input, ref int startIndex, out string value)
+        {
+            value = null;
+            for (int i = startIndex; input.Length > 0; i++)
+            {
+                if (ProtocolConstants.FIELD_DELIMITER_COLON == input[i])
+                {
+                    value = Encoding.UTF8.GetString(input.Slice(startIndex, i - startIndex).ToArray());
+
+                    startIndex = i;
+
+                    return true;
+                }
+            }
+#if DEBUG
+            _logger.LogWarning($"[181]NATS protocol name of `header` is invalid. Text = ", Encoding.UTF8.GetString(input.Slice(startIndex, input.Length - startIndex).ToArray()));
+#endif
+
+            return false;
+        }
+
+        protected bool TryGetStringFromNewlineDelimiter(Span<byte> input, ref int startIndex, out string value)
+        {
+            value = null;
+            for (int i = startIndex; input.Length > 0; i++)
+            {
+                if (ProtocolConstants.NEW_LINES_LF == input[i])
+                {
+                    if (ProtocolConstants.NEW_LINES_CR == input[i - 1])
+                    {
+                        value = Encoding.UTF8.GetString(input.Slice(startIndex, i - startIndex - 1).ToArray());
+
+                        startIndex = i;
+
+                        return true;
+                    }
+                    else
+                    {
+#if DEBUG
+                        _logger.LogWarning($"[181]NATS protocol name of `header` is invalid. Text = ", Encoding.UTF8.GetString(input.Slice(i - startIndex, i).ToArray()));
+#endif
+
+                        startIndex = i++;
+
+                        break;
+                    }
                 }
             }
             return false;
@@ -197,7 +246,7 @@ namespace DotNetty.Codecs.Protocol
 
             if (payloadSize == 0)
             {
-                if (ProtocolConstants.NEWLINES_CR == input.ReadByte() && ProtocolConstants.NEWLINES_LF == input.ReadByte())
+                if (ProtocolConstants.NEW_LINES_CR == input.ReadByte() && ProtocolConstants.NEW_LINES_LF == input.ReadByte())
                 {
                     value = new byte[0];
                     return true;
@@ -208,7 +257,7 @@ namespace DotNetty.Codecs.Protocol
                 return false;
             }
 
-            if (ProtocolConstants.NEWLINES_CR != input.GetByte(input.ReaderIndex + payloadSize) || ProtocolConstants.NEWLINES_LF != input.GetByte(input.ReaderIndex + payloadSize + 1))
+            if (ProtocolConstants.NEW_LINES_CR != input.GetByte(input.ReaderIndex + payloadSize) || ProtocolConstants.NEW_LINES_LF != input.GetByte(input.ReaderIndex + payloadSize + 1))
 #if DEBUG
                 _logger.LogWarning($"[213]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #else

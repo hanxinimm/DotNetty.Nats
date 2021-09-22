@@ -16,6 +16,8 @@ namespace DotNetty.Codecs.NATS
         public const string SUB = "SUB";
         public const string UNSUB = "UNSUB";
         public const string MSG = "MSG";
+        public const string HMSG = "HMSG";
+
         public const string PING = "PING";
         public const string PONG = "PONG";
         public const string OK = "+OK";

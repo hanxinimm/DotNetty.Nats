@@ -16,19 +16,23 @@ namespace DotNetty.Codecs.NATS
         { }
 
         protected override ProtocolPacket DecodePacket(
-            IByteBuffer buffer, 
+            IByteBuffer buffer,
             string packetSignature,
             IChannelHandlerContext context)
         {
-            return DecodePacketInternal(buffer, packetSignature, context);
+            var packet = DoDecode(buffer, packetSignature, context);
+            if (packet != null) return packet;
+#if DEBUG
+            Console.WriteLine("--|{0}|--", packetSignature);
+            throw new DecoderException($"NATS protocol operation name of `{packetSignature}` is invalid.");
+#else
+            return null;
+#endif
         }
-
-        NATSPacket DecodePacketInternal(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        protected virtual NATSPacket DoHighFrequency(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
         {
             switch (packetSignature)
             {
-                case NATSSignatures.INFO:
-                    return DecodeInfoPacket(buffer, context);
                 case NATSSignatures.MSG:
                     return DecodeMessagePacket(buffer, context);
                 case NATSSignatures.OK:
@@ -37,6 +41,20 @@ namespace DotNetty.Codecs.NATS
                     return DecodePingPacket(buffer, context);
                 case NATSSignatures.PONG:
                     return DecodePongPacket(buffer, context);
+                default:
+                    return null;
+            }
+        }
+
+        NATSPacket DoDecode(IByteBuffer buffer, string packetSignature, IChannelHandlerContext context)
+        {
+            var packet = DoHighFrequency(buffer, packetSignature, context);
+            if (packet != null) return packet;
+
+            switch (packetSignature)
+            {
+                case NATSSignatures.INFO:
+                    return DecodeInfoPacket(buffer, context);
                 case NATSSignatures.ERR:
                     return DecodeErrorPacket(buffer, context);
                 default:
