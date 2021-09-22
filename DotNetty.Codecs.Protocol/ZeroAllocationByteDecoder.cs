@@ -11,7 +11,7 @@ namespace DotNetty.Codecs.Protocol
 
     public abstract class ZeroAllocationByteDecoder : ReplayingDecoder<ParseState>
     {
-        private readonly ILogger _logger;
+        protected readonly ILogger _logger;
 
         public ZeroAllocationByteDecoder(ILogger logger)
             : base(ParseState.Ready)
@@ -252,17 +252,19 @@ namespace DotNetty.Codecs.Protocol
                     return true;
                 }
 #if DEBUG
-                _logger.LogWarning($"[206]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
+                _logger.LogWarning($"[255]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
                 return false;
             }
 
             if (ProtocolConstants.NEW_LINES_CR != input.GetByte(input.ReaderIndex + payloadSize) || ProtocolConstants.NEW_LINES_LF != input.GetByte(input.ReaderIndex + payloadSize + 1))
+            {
 #if DEBUG
-                _logger.LogWarning($"[213]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
-#else
-                return false;
+                _logger.LogWarning($"[262]NATS protocol name of `{packetSignature}` is invalid. Text = ", input.ReadString(input.ReadableBytes, Encoding.UTF8));
 #endif
+
+                return false;
+            }
 
             value = new byte[payloadSize];
             for (int i = 0; payloadSize > i; i++)

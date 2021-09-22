@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
+using DotNetty.Codecs.Protocol;
 
 namespace TestNATSClient
 {
@@ -153,15 +154,15 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateAsync("TestAll-Work",
                 ConsumerConfig.Builder()
-                .SetDeliverPolicy(DeliverPolicy.DeliverByStartSequence)
-                .SetStartSequence(0)
-                 .SetFilterSubject("TestAll-Work.CheckIn.>"),
+                .SetDeliverPolicy(DeliverPolicy.DeliverAll)
+                 .SetFilterSubject("TestAll-Work.CheckIn.1"),
                  //.SetDurable("T"),
                  (bytes) =>
                 {
                     Console.WriteLine("开始接受收消息");
                     var sss = Encoding.UTF8.GetString(bytes.Data);
                     Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
+                    return DateTime.Now.Ticks % 2 ==0?  MessageAck.Nak: MessageAck.Ack;
                 });
 
             //var s = await client.SubscribeAsync("ApiGateway.EventTrigger.Before.>", async (bytes) =>
