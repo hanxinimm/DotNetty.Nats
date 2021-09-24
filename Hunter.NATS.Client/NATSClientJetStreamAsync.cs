@@ -479,13 +479,13 @@ namespace Hunter.NATS.Client
 
                 var Handler = new ReplyPacketHandler<ConsumerCreateResponsePacket>(Packet.ReplyTo, ConsumerCreateResponseReady);
 
-                _embed_channel.Pipeline.AddLast(Handler);
+                _channel.Pipeline.AddLast(Handler);
 
-                await _embed_channel.WriteAndFlushAsync(Packet);
+                await _channel.WriteAndFlushAsync(Packet);
 
                 var ConsumerCreateResponse = await ConsumerCreateResponseReady.Task;
 
-                _embed_channel.Pipeline.Remove(Handler);
+                _channel.Pipeline.Remove(Handler);
 
                 //TODO:待优化
                 if (ConsumerCreateResponse == null) throw new ArgumentNullException();
@@ -559,6 +559,40 @@ namespace Hunter.NATS.Client
                 return ConsumerListResponse.Message;
 
             }, new Dictionary<string, object>() { { "hld", "ConsumerListAsync" } });
+        }
+
+        public async Task<ConsumerDeleteResponse> ConsumerDeleteAsync(string streamName, string consumerName)
+        {
+            var Packet = new ConsumerDeletePacket(
+                _replyInboxId,
+                streamName,
+                consumerName);
+
+            return await _policy.ExecuteAsync(async (content) =>
+            {
+                var _channel = await ConnectAsync();
+
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
+
+                var ConsumerDeleteResponseReady = new TaskCompletionSource<ConsumerDeleteResponsePacket>();
+
+                var Handler = new ReplyPacketHandler<ConsumerDeleteResponsePacket>(Packet.ReplyTo, ConsumerDeleteResponseReady);
+
+                _channel.Pipeline.AddLast(Handler);
+
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var ConsumerDeleteResponse = await ConsumerDeleteResponseReady.Task;
+
+                _channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (ConsumerDeleteResponse == null) throw new ArgumentNullException();
+
+                return ConsumerDeleteResponse.Message;
+
+            }, new Dictionary<string, object>() { { "hld", "ConsumerDeleteAsync" } });
         }
 
         #endregion;

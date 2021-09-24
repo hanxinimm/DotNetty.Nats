@@ -107,6 +107,9 @@ namespace DotNetty.Codecs.NATSJetStream
                 case NATSPacketType.CONSUMER_LIST:
                     EncodePublishMessage(bufferAllocator, (ConsumerListPacket)packet, output);
                     break;
+                case NATSPacketType.CONSUMER_DELETE:
+                    EncodePublishMessage(bufferAllocator, (ConsumerDeletePacket)packet, output);
+                    break;
                 case NATSPacketType.STREAM_INFO:
                     EncodePublishMessage(bufferAllocator, (Packets.InfoPacket)packet, output);
                     break;

@@ -10,7 +10,7 @@ using System.Text;
 namespace DotNetty.Codecs.NATSJetStream.Packets
 {
     [DataContract]
-    public class ConsumerDeleteResponsePacket : MessagePacket<InfoResponse>
+    public class ConsumerDeleteResponsePacket : MessagePacket<ConsumerDeleteResponse>
     {
         public override NATSPacketType PacketType => NATSPacketType.CONSUMER_DELETE_RESPONSE;
 

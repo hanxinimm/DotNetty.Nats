@@ -218,7 +218,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              */
             public ConsumerConfigBuilder SetAckWait(TimeSpan timeout)
             {
-                this.AckWait = timeout.Seconds;
+                this.AckWait = NATSJetStreamDuration.OfSeconds(timeout.Seconds).Nanos;
                 return this;
             }
 
@@ -295,7 +295,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              */
             public ConsumerConfigBuilder SetHeartbeat(TimeSpan heartbeat)
             {
-                this.Heartbeat = heartbeat.Seconds;
+                this.Heartbeat = NATSJetStreamDuration.OfSeconds(heartbeat.Seconds).Nanos;
                 return this;
             }
 

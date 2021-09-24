@@ -73,14 +73,17 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             this.MaxConsumers = maxConsumers;
             this.MaxMsgs = maxMsgs;
             this.MaxBytes = maxBytes;
-            this.MaxAge = maxAge.Milliseconds * 1000000;
+            this.MaxAge = NATSJetStreamDuration.OfMillis( maxAge.Milliseconds).Nanos;
             this.MaxMsgSize = maxMsgSize;
             this.StorageType = storageType;
             this.Replicas = replicas;
             this.NoAck = noAck;
             this.TemplateOwner = templateOwner;
             this.DiscardPolicy = discardPolicy;
-            this.DuplicateWindow = duplicateWindow?.Milliseconds * 1000000;
+            if (duplicateWindow.HasValue)
+            {
+                this.DuplicateWindow = NATSJetStreamDuration.OfMillis(duplicateWindow.Value.Milliseconds).Nanos;
+            }
             this.Placement = placement;
             this.Mirror = mirror;
             this.Sources = sources;
@@ -175,7 +178,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
                     this.MaxConsumers = jetStreamConfig.MaxConsumers;
                     this.MaxMsgs = jetStreamConfig.MaxMsgs;
                     this.MaxBytes = jetStreamConfig.MaxBytes;
-                    this.MaxAge = TimeSpan.FromMilliseconds(jetStreamConfig.MaxAge / 1000000);
+                    this.MaxAge = TimeSpan.FromMilliseconds(NATSJetStreamDuration.OfNanos(jetStreamConfig.MaxAge).Millis);
                     this.MaxMsgSize = jetStreamConfig.MaxMsgSize;
                     this.StorageType = jetStreamConfig.StorageType;
                     this.Replicas = jetStreamConfig.Replicas;
@@ -183,7 +186,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
                     this.TemplateOwner = jetStreamConfig.TemplateOwner;
                     this.DiscardPolicy = jetStreamConfig.DiscardPolicy;
                     if (jetStreamConfig.DuplicateWindow.HasValue)
-                        this.DuplicateWindow = TimeSpan.FromMilliseconds(jetStreamConfig.DuplicateWindow.Value / 1000000);
+                        this.DuplicateWindow = TimeSpan.FromMilliseconds(NATSJetStreamDuration.OfNanos(jetStreamConfig.DuplicateWindow.Value).Millis);
                     this.Placement = jetStreamConfig.Placement;
                     this.Mirror = jetStreamConfig.Mirror;
                     SetSources(jetStreamConfig.Sources);

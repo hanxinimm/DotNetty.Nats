@@ -159,6 +159,8 @@ namespace DotNetty.Codecs.NATSJetStream
                     return GetMessagePacket<ConsumerNamesResponsePacket, ConsumerNamesResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.ConsumerListResponse:
                     return GetMessagePacket<ConsumerListResponsePacket, ConsumerListResponse>(subject, subscribeId, replyTo, payloadSize, payload);
+                case NATSJetStreamInboxs.ConsumerDeleteResponse:
+                    return GetMessagePacket<ConsumerDeleteResponsePacket, ConsumerDeleteResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.PurgeResponse:
                     return GetMessagePacket<PurgeResponsePacket, PurgeResponse>(subject, subscribeId, replyTo, payloadSize, payload);
                 case NATSJetStreamInboxs.SnapshotResponse:

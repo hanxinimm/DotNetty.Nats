@@ -5,9 +5,8 @@ using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
-    public class DeleteMessageResponse : JetStreamResponse
+    public class DeleteMessageResponse : JetStreamOperationResponse
     {
-        [JsonProperty("success")]
-        public bool Success { get; set; }
+
     }
 }
