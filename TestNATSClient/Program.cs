@@ -161,23 +161,26 @@ namespace TestNATSClient
 
             foreach (var consumerName in consumerNames.Consumers)
             {
-                var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
+                Console.WriteLine($"consumerName = {consumerName}");
+                //var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
             }
 
-            //var consumerCreate = await client.ConsumerCreateAsync("Labor-Work-Personal",
-            //    ConsumerConfig.Builder()
-            //    .SetDeliverPolicy(DeliverPolicy.DeliverLast)
-            //     .SetAckPolicy(AckPolicy.AckAll)
-            //     .SetMaxDeliver(3)
-            //     .SetDurable("T5")
-            //     .SetAckWait(TimeSpan.FromSeconds(20)),
-            //     (bytes) =>
-            //    {
-            //        Console.WriteLine("开始接受收消息");
-            //        var sss = Encoding.UTF8.GetString(bytes.Data);
-            //        Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
-            //        return MessageAck.Ack;
-            //    });
+            var consumerCreate = await client.ConsumerCreateAsync("Labor-Work-Personal",
+                ConsumerConfig.Builder()
+                .SetDeliverPolicy(DeliverPolicy.DeliverLast)
+                 .SetAckPolicy(AckPolicy.AckAll)
+                 .SetMaxDeliver(3)
+                 .SetDurable("T")
+                 .SetAckWait(TimeSpan.FromSeconds(20)),
+                 (bytes) =>
+                {
+                    Console.WriteLine("开始接受收消息");
+                    var sss = Encoding.UTF8.GetString(bytes.Data);
+                    Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
+                    return MessageAck.Ack;
+                });
+
+            Console.WriteLine($"Type = {consumerCreate?.Type} ErrorCode = {consumerCreate?.Error?.Code} ErrorDescription = {consumerCreate?.Error?.Description}");
 
             //var s = await client.SubscribeAsync("ApiGateway.EventTrigger.Before.>", async (bytes) =>
             //{

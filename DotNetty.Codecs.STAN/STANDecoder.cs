@@ -51,8 +51,8 @@ namespace DotNetty.Codecs.STAN
                     return DecodeErrorPacket(buffer, context);
                 default:
 #if DEBUG
-                    Console.WriteLine("--|{0}|--", packetSignature);
-                    throw new DecoderException($"NATS protocol operation name of `{packetSignature}` is invalid.");
+                    _logger.LogWarning("[55] --|{0}|--", packetSignature);
+                    return null;
 #else
                     return null;
 #endif

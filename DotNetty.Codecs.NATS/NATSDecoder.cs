@@ -23,8 +23,8 @@ namespace DotNetty.Codecs.NATS
             var packet = DoDecode(buffer, packetSignature, context);
             if (packet != null) return packet;
 #if DEBUG
-            _logger.LogWarning("--|{0}|--", packetSignature);
-            throw new DecoderException($"NATS protocol operation name of `{packetSignature}` is invalid.");
+            _logger.LogWarning("[27] --|{0}|--", packetSignature);
+            return null;
 #else
             return null;
 #endif
