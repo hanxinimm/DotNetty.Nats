@@ -92,7 +92,7 @@ namespace Hunter.NATS.Client
                         messageHeaders.Add(NATSJetStreamConstants.EXPECTED_LAST_SEQ_HDR, publishOptions.MessageId);
                     }
 
-                    await _policy.ExecuteAsync(async () =>
+                    await _policy.ExecuteAsync(async (content) =>
                     {
                         var _channel = await ConnectAsync();
 
@@ -102,11 +102,11 @@ namespace Hunter.NATS.Client
                         var Packet = new PublishHigherPacket(_replyInboxId, subject, data, messageHeaders);
 
                         await _embed_channel.WriteAndFlushAsync(Packet);
-                    });
+                    }, new Dictionary<string, object>() { { "hld", "PublishHigherAsync" } });
                 }
                 else
                 {
-                    await _policy.ExecuteAsync(async () =>
+                    await _policy.ExecuteAsync(async (content) =>
                     {
                         var _channel = await ConnectAsync();
 
@@ -116,19 +116,19 @@ namespace Hunter.NATS.Client
                         var Packet = new PublishHigherPacket(_replyInboxId, subject, data, headers);
 
                         await _channel.WriteAndFlushAsync(Packet);
-                    });
+                    }, new Dictionary<string, object>() { { "hld", "PublishHigherAsync" } });
                 }
             }
             else
             {
-                await _policy.ExecuteAsync(async () =>
+                await _policy.ExecuteAsync(async (content) =>
                 {
                     var _channel = await ConnectAsync();
 
                     var Packet = new PublishPacket(_replyInboxId, subject, data);
 
                     await _channel.WriteAndFlushAsync(Packet);
-                });
+                }, new Dictionary<string, object>() { { "hld", "PublishAsync" } });
             }
         }
 
@@ -143,7 +143,7 @@ namespace Hunter.NATS.Client
                 jetStreamConfig.Name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -166,7 +166,8 @@ namespace Hunter.NATS.Client
                 if (InfoResponse == null) throw new ArgumentNullException();
 
                 return InfoResponse.Message;
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "StreamInfoAsync" } });
 
 
         }
@@ -178,7 +179,7 @@ namespace Hunter.NATS.Client
                 jetStreamConfig.Name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -201,7 +202,8 @@ namespace Hunter.NATS.Client
                 if (CreateResponse == null) throw new ArgumentNullException();
 
                 return CreateResponse.Message;
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "StreamCreateAsync" } });
         }
 
         public async Task<UpdateResponse> StreamUpdateAsync(JetStreamConfig jetStreamConfig)
@@ -380,7 +382,7 @@ namespace Hunter.NATS.Client
                 _replyInboxId,
                 jetStreamConfig.Name);
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -403,7 +405,8 @@ namespace Hunter.NATS.Client
                 if (DeleteResponse == null) throw new ArgumentNullException();
 
                 return DeleteResponse.Message;
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "StreamDeleteAsync" } });
 
 
         }
@@ -465,7 +468,7 @@ namespace Hunter.NATS.Client
                 createRequest.Config.DurableName,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(createRequest, _jetStreamSetting)));
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -488,7 +491,8 @@ namespace Hunter.NATS.Client
                 if (ConsumerCreateResponse == null) throw new ArgumentNullException();
 
                 return ConsumerCreateResponse.Message;
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "ConsumerCreateAsync" } });
         }
 
         public async Task<ConsumerNamesResponse> ConsumerNamesAsync(string consumerName)
@@ -497,7 +501,7 @@ namespace Hunter.NATS.Client
                 _replyInboxId,
                 consumerName);
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -520,7 +524,8 @@ namespace Hunter.NATS.Client
                 if (ConsumerNamesResponse == null) throw new ArgumentNullException();
 
                 return ConsumerNamesResponse.Message;
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "ConsumerNamesAsync" } });
         }
 
         public async Task<ConsumerListResponse> ConsumerListAsync(string consumerName)
@@ -529,7 +534,7 @@ namespace Hunter.NATS.Client
                 _replyInboxId,
                 consumerName);
 
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
@@ -552,7 +557,8 @@ namespace Hunter.NATS.Client
                 if (ConsumerListResponse == null) throw new ArgumentNullException();
 
                 return ConsumerListResponse.Message;
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "ConsumerListAsync" } });
         }
 
         #endregion;
@@ -562,10 +568,11 @@ namespace Hunter.NATS.Client
         public async Task<string> HandleConsumerSubscribeAsync(string subject, string queueGroup,
             Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, string subscribeId = null)
         {
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 return await InternalConsumerSubscribeAsync(subject, queueGroup, messageHandlerSetup, subscribeId);
-            });
+
+            }, new Dictionary<string, object>() { { "hld", "HandleConsumerSubscribeAsync" } });
         }
 
 

@@ -1,6 +1,7 @@
 ﻿using DotNetty.Codecs.NATS.Packets;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -91,10 +92,10 @@ namespace Hunter.NATS.Client
         public async Task<string> HandleSubscribeAsync(string subject, string queueGroup,
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
-            return await _policy.ExecuteAsync(async () =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
                 return await InternalSubscribeAsync(subject, queueGroup, messageHandlerSetup, maxMsg, subscribeId);
-            });
+            }, new Dictionary<string, object>() { { "hld", "HandleSubscribeAsync" } });
         }
 
         
@@ -190,14 +191,14 @@ namespace Hunter.NATS.Client
 
         public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
                 var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
                 await _channel.WriteAndFlushAsync(UnSubscribePacket);
-            });
+            }, new Dictionary<string, object>() { { "hld", "UnSubscribeAsync" } });
         }
 
         /// <summary>
@@ -208,14 +209,14 @@ namespace Hunter.NATS.Client
         /// <returns></returns>
         public async Task PublishAsync(string subject, byte[] data)
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
                 var Packet = new PublishPacket(subject, data);
 
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }, new Dictionary<string, object>() { { "hld", "PublishAsync" } });
         }
 
         protected void InfoAsync(InfoPacket info)
@@ -225,26 +226,26 @@ namespace Hunter.NATS.Client
 
         public async Task PingAsync()
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
                 var Packet = new PingPacket();
 
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }, new Dictionary<string, object>() { { "hld", "PingAsync" } });
         }
 
         public async Task PongAsync()
         {
-            await _policy.ExecuteAsync(async () =>
+            await _policy.ExecuteAsync(async (content) =>
             {
                 var _channel = await ConnectAsync();
 
                 var Packet = new PongPacket();
 
                 await _channel.WriteAndFlushAsync(Packet);
-            });
+            }, new Dictionary<string, object>() { { "hld", "PongAsync" } });
         }
 
         public async ValueTask DisposeAsync()

@@ -78,7 +78,8 @@ namespace TestNATSClient
 
             var services = new ServiceCollection();
 
-            services.AddLogging(options => {
+            services.AddLogging(options =>
+            {
                 options.SetMinimumLevel(LogLevel.Debug);
                 options.AddConsole();
             });
@@ -155,14 +156,15 @@ namespace TestNATSClient
             var consumerCreate = await client.ConsumerCreateAsync("TestAll-Work",
                 ConsumerConfig.Builder()
                 .SetDeliverPolicy(DeliverPolicy.DeliverAll)
-                 .SetFilterSubject("TestAll-Work.CheckIn.1"),
+                 .SetFilterSubject("TestAll-Work.CheckIn.1")
+                 .SetMaxDeliver(3),
                  //.SetDurable("T"),
                  (bytes) =>
                 {
                     Console.WriteLine("开始接受收消息");
                     var sss = Encoding.UTF8.GetString(bytes.Data);
                     Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
-                    return DateTime.Now.Ticks % 2 ==0?  MessageAck.Nak: MessageAck.Ack;
+                    return MessageAck.Nak;
                 });
 
             //var s = await client.SubscribeAsync("ApiGateway.EventTrigger.Before.>", async (bytes) =>
@@ -215,19 +217,19 @@ namespace TestNATSClient
                     Console.WriteLine("消息主题 {0}", sub);
                     await client.PublishAsync(sub, Testbytes, header);
                 });
-                    //    }
-                    //});
-                    //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                //    }
+                //});
+                //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    //await client.PublishAsync("Test2", Testbytes);
+                //await client.PublishAsync("Test2", Testbytes);
 
-                    //var ApiGatewaybytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                //var ApiGatewaybytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    //await client.PublishAsync("ApiGateway.EventTrigger.4343", ApiGatewaybytes);
+                //await client.PublishAsync("ApiGateway.EventTrigger.4343", ApiGatewaybytes);
 
-                    //var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                //var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    //await client.PublishAsync("ApiGateway.EventTrigger.4242", ApiGatewaybytes2);
+                //await client.PublishAsync("ApiGateway.EventTrigger.4242", ApiGatewaybytes2);
                 //}
 
                 stopwatch.Stop(); //  停止监视  

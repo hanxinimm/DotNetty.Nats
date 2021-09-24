@@ -84,7 +84,7 @@ namespace TestEventBus
         }
     }
 
-    [Subject("Test")]
+    [MessageSubject("Test")]
     public class MSG
     { 
         
