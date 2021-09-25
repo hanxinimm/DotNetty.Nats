@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.Protocol;
 using Hunter.NATS.Client.JetStream;
+using DotNetty.Transport.Channels;
 
 namespace Hunter.NATS.Client
 {
@@ -23,11 +24,11 @@ namespace Hunter.NATS.Client
         /// </summary>
         private readonly List<ConsumerMessageHandler> _consumerMessageHandler;
 
-        private async Task SubscribeReplyInboxAsync()
+        private async Task SubscribeReplyInboxAsync(IChannel channel)
         {
             _logger.LogDebug($"开始设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
 
-            await _embed_channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
+            await channel.WriteAndFlushAsync(new InboxPacket(DateTime.Now.Ticks.ToString(), _replyInboxId));
 
             _logger.LogDebug($"结束设置消息队列收件箱 ReplyInboxId = {_replyInboxId}");
         }
@@ -101,7 +102,7 @@ namespace Hunter.NATS.Client
 
                         var Packet = new PublishHigherPacket(_replyInboxId, subject, data, messageHeaders);
 
-                        await _embed_channel.WriteAndFlushAsync(Packet);
+                        await _channel.WriteAndFlushAsync(Packet);
                     }, new Dictionary<string, object>() { { "hld", "PublishHigherAsync" } });
                 }
                 else
@@ -154,13 +155,13 @@ namespace Hunter.NATS.Client
 
                 var Handler = new ReplyPacketHandler<InfoResponsePacket>(Packet.ReplyTo, InfoResponseReady);
 
-                _embed_channel.Pipeline.AddLast(Handler);
+                _channel.Pipeline.AddLast(Handler);
 
                 await _channel.WriteAndFlushAsync(Packet);
 
                 var InfoResponse = await InfoResponseReady.Task;
 
-                _embed_channel.Pipeline.Remove(Handler);
+                _channel.Pipeline.Remove(Handler);
 
                 //TODO:待优化
                 if (InfoResponse == null) throw new ArgumentNullException();
@@ -190,13 +191,13 @@ namespace Hunter.NATS.Client
 
                 var Handler = new ReplyPacketHandler<CreateResponsePacket>(Packet.ReplyTo, CreateResponseReady);
 
-                _embed_channel.Pipeline.AddLast(Handler);
+                _channel.Pipeline.AddLast(Handler);
 
                 await _channel.WriteAndFlushAsync(Packet);
 
                 var CreateResponse = await CreateResponseReady.Task;
 
-                _embed_channel.Pipeline.Remove(Handler);
+                _channel.Pipeline.Remove(Handler);
 
                 //TODO:待优化
                 if (CreateResponse == null) throw new ArgumentNullException();
@@ -213,29 +214,38 @@ namespace Hunter.NATS.Client
                 jetStreamConfig.Name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(jetStreamConfig, _jetStreamSetting)));
 
-            var UpdateResponseReady = new TaskCompletionSource<UpdateResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<UpdateResponsePacket>(Packet.ReplyTo, UpdateResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var UpdateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
-                UpdateResponseReady.TrySetResult(null);
-            });
+                var _channel = await ConnectAsync();
 
-            var UpdateResponse = await UpdateResponseReady.Task;
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
 
-            await UpdateResponseCancellationToken.DisposeAsync();
+                var UpdateResponseReady = new TaskCompletionSource<UpdateResponsePacket>();
 
-            _embed_channel.Pipeline.Remove(Handler);
+                var Handler = new ReplyPacketHandler<UpdateResponsePacket>(Packet.ReplyTo, UpdateResponseReady);
 
-            //TODO:待优化
-            if (UpdateResponse == null) throw new ArgumentNullException();
+                _channel.Pipeline.AddLast(Handler);
 
-            return UpdateResponse.Message;
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var UpdateResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+                {
+                    UpdateResponseReady.TrySetResult(null);
+                });
+
+                var UpdateResponse = await UpdateResponseReady.Task;
+
+                await UpdateResponseCancellationToken.DisposeAsync();
+
+                _channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (UpdateResponse == null) throw new ArgumentNullException();
+
+                return UpdateResponse.Message;
+
+            }, new Dictionary<string, object>() { { "hld", "StreamUpdateAsync" } });
         }
 
         public async Task<NamesResponse> StreamNamesAsync()
@@ -244,29 +254,38 @@ namespace Hunter.NATS.Client
                 _replyInboxId,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new IterableRequest(), _jetStreamSetting)));
 
-            var NamesResponseReady = new TaskCompletionSource<NamesResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<NamesResponsePacket>(Packet.ReplyTo, NamesResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var NamesResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
-                NamesResponseReady.TrySetResult(null);
-            });
+                var _channel = await ConnectAsync();
 
-            var NamesResponse = await NamesResponseReady.Task;
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
 
-            await NamesResponseCancellationToken.DisposeAsync();
+                var NamesResponseReady = new TaskCompletionSource<NamesResponsePacket>();
 
-            _embed_channel.Pipeline.Remove(Handler);
+                var Handler = new ReplyPacketHandler<NamesResponsePacket>(Packet.ReplyTo, NamesResponseReady);
 
-            //TODO:待优化
-            if (NamesResponse == null) throw new ArgumentNullException();
+                _channel.Pipeline.AddLast(Handler);
 
-            return NamesResponse.Message;
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var NamesResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+                {
+                    NamesResponseReady.TrySetResult(null);
+                });
+
+                var NamesResponse = await NamesResponseReady.Task;
+
+                await NamesResponseCancellationToken.DisposeAsync();
+
+                _channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (NamesResponse == null) throw new ArgumentNullException();
+
+                return NamesResponse.Message;
+
+            }, new Dictionary<string, object>() { { "hld", "StreamNamesAsync" } });
         }
 
         public async Task<ListResponse> StreamListAsync()
@@ -283,9 +302,9 @@ namespace Hunter.NATS.Client
 
                 var Handler = new ReplyPacketHandler<ListResponsePacket>(Packet.ReplyTo, ListResponseReady);
 
-                _embed_channel.Pipeline.AddLast(Handler);
+                _channel.Pipeline.AddLast(Handler);
 
-                await _embed_channel.WriteAndFlushAsync(Packet);
+                await _channel.WriteAndFlushAsync(Packet);
 
                 var ListResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
                 {
@@ -296,7 +315,7 @@ namespace Hunter.NATS.Client
 
                 await ListResponseCancellationToken.DisposeAsync();
 
-                _embed_channel.Pipeline.Remove(Handler);
+                _channel.Pipeline.Remove(Handler);
 
                 //TODO:待优化
                 if (ListResponse == null) throw new ArgumentNullException();
@@ -315,29 +334,38 @@ namespace Hunter.NATS.Client
                 name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(MessageRequest, _jetStreamSetting)));
 
-            var GetMessageResponseReady = new TaskCompletionSource<GetMessageResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
-                GetMessageResponseReady.TrySetResult(null);
-            });
+                var _channel = await ConnectAsync();
 
-            var GetMessageResponse = await GetMessageResponseReady.Task;
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
 
-            await GetMessageResponseCancellationToken.DisposeAsync();
+                var GetMessageResponseReady = new TaskCompletionSource<GetMessageResponsePacket>();
 
-            _embed_channel.Pipeline.Remove(Handler);
+                var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
 
-            //TODO:待优化
-            if (GetMessageResponse == null) throw new ArgumentNullException();
+                _channel.Pipeline.AddLast(Handler);
 
-            return GetMessageResponse.Message;
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+                {
+                    GetMessageResponseReady.TrySetResult(null);
+                });
+
+                var GetMessageResponse = await GetMessageResponseReady.Task;
+
+                await GetMessageResponseCancellationToken.DisposeAsync();
+
+                _channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (GetMessageResponse == null) throw new ArgumentNullException();
+
+                return GetMessageResponse.Message;
+
+            }, new Dictionary<string, object>() { { "hld", "StreamReadMessageAsync" } });
         }
 
         public async Task<GetMessageResponse> StreamReadMessageAsync(string name, string subject)
@@ -349,29 +377,38 @@ namespace Hunter.NATS.Client
                 name,
                 Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(MessageRequest, _jetStreamSetting)));
 
-            var GetMessageResponseReady = new TaskCompletionSource<GetMessageResponsePacket>();
-
-            var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
-
-            _embed_channel.Pipeline.AddLast(Handler);
-
-            await _embed_channel.WriteAndFlushAsync(Packet);
-
-            var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+            return await _policy.ExecuteAsync(async (content) =>
             {
-                GetMessageResponseReady.TrySetResult(null);
-            });
+                var _channel = await ConnectAsync();
 
-            var GetMessageResponse = await GetMessageResponseReady.Task;
+                if (!_info.JetStream)
+                    throw new NATSNotSupportedException("Headers are not supported by the server.");
 
-            await GetMessageResponseCancellationToken.DisposeAsync();
+                var GetMessageResponseReady = new TaskCompletionSource<GetMessageResponsePacket>();
 
-            _embed_channel.Pipeline.Remove(Handler);
+                var Handler = new ReplyPacketHandler<GetMessageResponsePacket>(Packet.ReplyTo, GetMessageResponseReady);
 
-            //TODO:待优化
-            if (GetMessageResponse == null) throw new ArgumentNullException();
+                _channel.Pipeline.AddLast(Handler);
 
-            return GetMessageResponse.Message;
+                await _channel.WriteAndFlushAsync(Packet);
+
+                var GetMessageResponseCancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(15)).Token.Register(() =>
+                {
+                    GetMessageResponseReady.TrySetResult(null);
+                });
+
+                var GetMessageResponse = await GetMessageResponseReady.Task;
+
+                await GetMessageResponseCancellationToken.DisposeAsync();
+
+                _channel.Pipeline.Remove(Handler);
+
+                //TODO:待优化
+                if (GetMessageResponse == null) throw new ArgumentNullException();
+
+                return GetMessageResponse.Message;
+
+            }, new Dictionary<string, object>() { { "hld", "StreamReadMessageAsync" } });
         }
 
         public async Task<DeleteResponse> StreamDeleteAsync(string name)
@@ -393,13 +430,13 @@ namespace Hunter.NATS.Client
 
                 var Handler = new ReplyPacketHandler<DeleteResponsePacket>(Packet.ReplyTo, DeleteResponseReady);
 
-                _embed_channel.Pipeline.AddLast(Handler);
+                _channel.Pipeline.AddLast(Handler);
 
                 await _channel.WriteAndFlushAsync(Packet);
 
                 var DeleteResponse = await DeleteResponseReady.Task;
 
-                _embed_channel.Pipeline.Remove(Handler);
+                _channel.Pipeline.Remove(Handler);
 
                 //TODO:待优化
                 if (DeleteResponse == null) throw new ArgumentNullException();
@@ -512,13 +549,13 @@ namespace Hunter.NATS.Client
 
                 var Handler = new ReplyPacketHandler<ConsumerNamesResponsePacket>(Packet.ReplyTo, ConsumerNamesResponseReady);
 
-                _embed_channel.Pipeline.AddLast(Handler);
+                _channel.Pipeline.AddLast(Handler);
 
-                await _embed_channel.WriteAndFlushAsync(Packet);
+                await _channel.WriteAndFlushAsync(Packet);
 
                 var ConsumerNamesResponse = await ConsumerNamesResponseReady.Task;
 
-                _embed_channel.Pipeline.Remove(Handler);
+                _channel.Pipeline.Remove(Handler);
 
                 //TODO:待优化
                 if (ConsumerNamesResponse == null) throw new ArgumentNullException();
@@ -545,13 +582,13 @@ namespace Hunter.NATS.Client
 
                 var Handler = new ReplyPacketHandler<ConsumerListResponsePacket>(Packet.ReplyTo, ConsumerListResponseReady);
 
-                _embed_channel.Pipeline.AddLast(Handler);
+                _channel.Pipeline.AddLast(Handler);
 
-                await _embed_channel.WriteAndFlushAsync(Packet);
+                await _channel.WriteAndFlushAsync(Packet);
 
                 var ConsumerListResponse = await ConsumerListResponseReady.Task;
 
-                _embed_channel.Pipeline.Remove(Handler);
+                _channel.Pipeline.Remove(Handler);
 
                 //TODO:待优化
                 if (ConsumerListResponse == null) throw new ArgumentNullException();
@@ -628,7 +665,7 @@ namespace Hunter.NATS.Client
             _logger.LogDebug($"开始添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
             //添加订阅响应管道
-            _embed_channel.Pipeline.AddLast(messageHandler);
+            _channel.Pipeline.AddLast(messageHandler);
 
             _logger.LogDebug($"结束添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
@@ -637,7 +674,7 @@ namespace Hunter.NATS.Client
 
             var SubscribePacketMsg = new SubscribePacket(SubscribeId, subject, queueGroup);
 
-            await _embed_channel.WriteAndFlushAsync(SubscribePacketMsg);
+            await _channel.WriteAndFlushAsync(SubscribePacketMsg);
 
             _logger.LogDebug($"结束发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
 
@@ -747,7 +784,14 @@ namespace Hunter.NATS.Client
                     break;
             }
 
-            await _embed_channel.WriteAndFlushAsync(ackPacket);
+            await _policy.ExecuteAsync(async (content) =>
+            {
+
+                var _channel = await ConnectAsync();
+
+                await _channel.WriteAndFlushAsync(ackPacket);
+
+            }, new Dictionary<string, object>() { { "hld", "AckAsync" } });
         }
 
         #endregion;

@@ -166,7 +166,7 @@ namespace Hunter.NATS.Client
                 .WaitAndRetryAsync(3,
                     (retryAttempt, context) =>
                 {
-                    logger.LogWarning($"重试执行Stan客户端命令 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
+                    logger.LogWarning($"重试执行NATS客户端命令 客户端标识{_clientId} 第 {retryAttempt} 次尝试");
                     return TimeSpan.FromSeconds(retryAttempt);
                 },
                 (ex, retryAttempt, retrySecond, context) =>

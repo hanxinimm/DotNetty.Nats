@@ -43,7 +43,7 @@ namespace Hunter.NATS.Client
                 _info = await ConnectRequestAsync();
 
                 if (_info.JetStream)
-                    await SubscribeReplyInboxAsync();
+                    await SubscribeReplyInboxAsync(_embed_channel);
 
                 _connectionState = NATSConnectionState.Connected;
             }
@@ -54,7 +54,7 @@ namespace Hunter.NATS.Client
                 _info = await ConnectRequestAsync();
 
                 if (_info.JetStream)
-                    await SubscribeReplyInboxAsync();
+                    await SubscribeReplyInboxAsync(_embed_channel);
 
                 await SubscriptionMessageAsync();
 
