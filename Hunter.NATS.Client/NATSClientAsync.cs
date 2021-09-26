@@ -43,7 +43,7 @@ namespace Hunter.NATS.Client
                 _info = await ConnectRequestAsync();
 
                 if (_info.JetStream)
-                    await SubscribeReplyInboxAsync(_embed_channel);
+                    await SubscribeReplyInboxAsync();
 
                 _connectionState = NATSConnectionState.Connected;
             }
@@ -54,11 +54,13 @@ namespace Hunter.NATS.Client
                 _info = await ConnectRequestAsync();
 
                 if (_info.JetStream)
-                    await SubscribeReplyInboxAsync(_embed_channel);
+                    await SubscribeReplyInboxAsync();
+
+                _connectionState = NATSConnectionState.Connected;
 
                 await SubscriptionMessageAsync();
 
-                _connectionState = NATSConnectionState.Connected;
+                await SubscriptionConsumerMessageAsync();
             }
         }
 
@@ -81,9 +83,8 @@ namespace Hunter.NATS.Client
             {
                 _logger.LogDebug($"开始设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
 
-                _embed_channel.Pipeline.AddLast(subscriptionMessageHandler);
-
-                await _embed_channel.WriteAndFlushAsync(new SubscribePacket(subscriptionMessageHandler.SubscriptionConfig.SubscribeId, subscriptionMessageHandler.SubscriptionConfig.Subject, subscriptionMessageHandler.SubscriptionConfig.SubscribeGroup));
+                await InternalSubscribeAsync(subscriptionMessageHandler.SubscriptionConfig.Subject, subscriptionMessageHandler.SubscriptionConfig.SubscribeGroup,
+                    subscriptionMessageHandler, subscriptionMessageHandler.SubscriptionConfig.SubscribeId);
 
                 _logger.LogDebug($"完成设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
             }
@@ -103,7 +104,7 @@ namespace Hunter.NATS.Client
         public async Task<string> InternalSubscribeAsync(string subject, string queueGroup,
             Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
-            var _channel = await ConnectAsync();
+            await ConnectAsync();
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
@@ -117,7 +118,7 @@ namespace Hunter.NATS.Client
             _logger.LogDebug($"开始添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
             //添加订阅响应管道
-            _channel.Pipeline.AddLast(messageHandler);
+            _embed_channel.Pipeline.AddLast(messageHandler);
 
             _logger.LogDebug($"结束添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
@@ -126,12 +127,39 @@ namespace Hunter.NATS.Client
 
             var SubscribePacketMsg = new SubscribePacket(SubscribeId, subject, queueGroup);
 
-            await _channel.WriteAndFlushAsync(SubscribePacketMsg);
+            await _embed_channel.WriteAndFlushAsync(SubscribePacketMsg);
 
             _logger.LogDebug($"结束发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
 
             //添加消息处理到消息处理集合
             _subscriptionMessageHandler.Add(messageHandler);
+
+            return SubscribeId;
+        }
+
+
+        public async Task<string> InternalSubscribeAsync(string subject, string queueGroup,
+            SubscriptionMessageHandler messageHandler, string subscribeId = null)
+        {
+            await ConnectAsync();
+
+            var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
+
+            _logger.LogDebug($"开始添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
+
+            //添加订阅响应管道
+            _embed_channel.Pipeline.AddLast(messageHandler);
+
+            _logger.LogDebug($"结束添加消息队列处理器 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
+
+
+            _logger.LogDebug($"开始发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
+
+            var SubscribePacketMsg = new SubscribePacket(SubscribeId, subject, queueGroup);
+
+            await _embed_channel.WriteAndFlushAsync(SubscribePacketMsg);
+
+            _logger.LogDebug($"结束发送订阅请求 订阅主题 {subject } 订阅编号 {SubscribeId}");
 
             return SubscribeId;
         }
@@ -193,11 +221,12 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async (content) =>
             {
-                var _channel = await ConnectAsync();
+                await ConnectAsync();
 
                 var UnSubscribePacket = new UnSubscribePacket(subscriptionConfig.SubscribeId);
 
-                await _channel.WriteAndFlushAsync(UnSubscribePacket);
+                await _embed_channel.WriteAndFlushAsync(UnSubscribePacket);
+
             }, new Dictionary<string, object>() { { "hld", "UnSubscribeAsync" } });
         }
 
@@ -211,11 +240,11 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async (content) =>
             {
-                var _channel = await ConnectAsync();
+                await ConnectAsync();
 
                 var Packet = new PublishPacket(subject, data);
 
-                await _channel.WriteAndFlushAsync(Packet);
+                await _embed_channel.WriteAndFlushAsync(Packet);
 
             }, new Dictionary<string, object>() { { "hld", "PublishAsync" } });
         }
@@ -230,11 +259,11 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async (content) =>
             {
-                var _channel = await ConnectAsync();
+                await ConnectAsync();
 
                 var Packet = new PublishPacket(subject, replyTo, data);
 
-                await _channel.WriteAndFlushAsync(Packet);
+                await _embed_channel.WriteAndFlushAsync(Packet);
 
             }, new Dictionary<string, object>() { { "hld", "PublishAsync" } });
         }
@@ -248,11 +277,12 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async (content) =>
             {
-                var _channel = await ConnectAsync();
+                await ConnectAsync();
 
                 var Packet = new PingPacket();
 
-                await _channel.WriteAndFlushAsync(Packet);
+                await _embed_channel.WriteAndFlushAsync(Packet);
+
             }, new Dictionary<string, object>() { { "hld", "PingAsync" } });
         }
 
@@ -260,11 +290,11 @@ namespace Hunter.NATS.Client
         {
             await _policy.ExecuteAsync(async (content) =>
             {
-                var _channel = await ConnectAsync();
+                await ConnectAsync();
 
                 var Packet = new PongPacket();
 
-                await _channel.WriteAndFlushAsync(Packet);
+                await _embed_channel.WriteAndFlushAsync(Packet);
             }, new Dictionary<string, object>() { { "hld", "PongAsync" } });
         }
 

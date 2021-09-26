@@ -31,6 +31,8 @@ namespace Hunter.NATS.Client
 
         public override bool IsSharable => true;
 
+        public NATSConsumerSubscriptionConfig SubscriptionConfig => _subscriptionConfig;
+
         protected abstract void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> ackCallback);
 
         protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
@@ -48,7 +50,7 @@ namespace Hunter.NATS.Client
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 消费者 {_subscriptionConfig.ConsumerName}");
+                    _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 消费者 {_subscriptionConfig.Config.DurableName}");
                 }
             }
             else

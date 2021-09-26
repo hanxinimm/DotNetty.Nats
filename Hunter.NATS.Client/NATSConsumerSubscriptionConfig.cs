@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DotNetty.Codecs.NATSJetStream.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,33 +9,24 @@ namespace Hunter.NATS.Client
     {
         public NATSConsumerSubscriptionConfig() { }
 
-        public NATSConsumerSubscriptionConfig(string consumerName, string subscribeId)
+        public NATSConsumerSubscriptionConfig(string streamName, ConsumerConfig config, string subscribeId)
         {
-            ConsumerName = consumerName;
+            StreamName = streamName;
+            Config = config;
             SubscribeId = subscribeId;
         }
 
-        public NATSConsumerSubscriptionConfig(string consumerName, string subscribeId, string subscribeGroup)
-        {
-            ConsumerName = consumerName;
-            SubscribeId = subscribeId;
-            SubscribeGroup = subscribeGroup;
-        }
+        public string StreamName { get; protected set; }
 
         /// <summary>
-        /// 主题
+        /// 客户端配置
         /// </summary>
-        public string ConsumerName { get; protected set; }
+        public ConsumerConfig Config { get; protected set; }
 
         /// <summary>
         /// 订阅编号
         /// </summary>
         public string SubscribeId { get; protected set; }
-
-        /// <summary>
-        /// 订阅组
-        /// </summary>
-        public string SubscribeGroup { get; protected set; }
 
         ///// <summary>
         ///// 是否为异步回调

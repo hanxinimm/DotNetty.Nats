@@ -250,7 +250,7 @@ namespace Hunter.NATS.Client
             if (_embed_channel != null && _embed_channel.Active && _connectionState == NATSConnectionState.Connected)
                 return _embed_channel;
 
-            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed}");
+            _logger.LogInformation($"当前通道 1 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed} _connectionState = {_connectionState}");
 
             if (timeout.HasValue)
             {
@@ -262,7 +262,7 @@ namespace Hunter.NATS.Client
                 _autoResetEvent.WaitOne();
             }
 
-            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed}");
+            _logger.LogInformation($"当前通道 2 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed} _connectionState = {_connectionState}");
 
             if (_embed_channel != null && _embed_channel.Active && _connectionState == NATSConnectionState.Connected)
             {
@@ -272,7 +272,7 @@ namespace Hunter.NATS.Client
 
             await ChannelConnectAsync();
 
-            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed}");
+            _logger.LogInformation($"当前通道 3 ClientId = {_clientId} _channel = {_embed_channel != null} _active = {_embed_channel?.Active} _isSet = {_autoResetEvent.SafeWaitHandle.IsClosed} _connectionState = {_connectionState}");
 
             _autoResetEvent.Set();
 

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
@@ -49,19 +50,19 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         private JetStreamConfig() { }
 
         private JetStreamConfig(
-            string name, 
-            List<string> subjects, 
+            string name,
+            List<string> subjects,
             RetentionPolicy retentionPolicy,
             long maxConsumers,
-            long maxMsgs, 
+            long maxMsgs,
             long maxBytes,
             TimeSpan maxAge,
             long maxMsgSize,
             StorageType storageType,
-            int replicas, 
-            bool noAck, 
+            int replicas,
+            bool noAck,
             string templateOwner,
-            DiscardPolicy discardPolicy, 
+            DiscardPolicy discardPolicy,
             TimeSpan? duplicateWindow,
             Placement placement,
             StreamSource mirror,
@@ -73,7 +74,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             this.MaxConsumers = maxConsumers;
             this.MaxMsgs = maxMsgs;
             this.MaxBytes = maxBytes;
-            this.MaxAge = NATSJetStreamDuration.OfMillis( maxAge.Milliseconds).Nanos;
+            this.MaxAge = NATSJetStreamDuration.OfMillis(((long)maxAge.TotalMilliseconds)).Nanos;
             this.MaxMsgSize = maxMsgSize;
             this.StorageType = storageType;
             this.Replicas = replicas;
@@ -82,7 +83,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             this.DiscardPolicy = discardPolicy;
             if (duplicateWindow.HasValue)
             {
-                this.DuplicateWindow = NATSJetStreamDuration.OfMillis(duplicateWindow.Value.Milliseconds).Nanos;
+                this.DuplicateWindow = NATSJetStreamDuration.OfMillis(((long)duplicateWindow.Value.TotalMilliseconds)).Nanos;
             }
             this.Placement = placement;
             this.Mirror = mirror;
@@ -93,7 +94,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         {
             return $@"NATSJetStreamConfig{{
                     name='{ Name }'
-                    , subjects={ string.Join('|', Subjects) }
+                    , subjects={ string.Join("|", Subjects) }
                     , retentionPolicy={ RetentionPolicy }
                     , MaxConsumers={ MaxConsumers }
                     , MaxMsgs={ MaxMsgs }
