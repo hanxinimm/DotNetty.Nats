@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Joker Hunter-DDD实现\EventBus.NATSStreaming\Hunter.DDD.EventBus.NATSStreaming.csproj" />
     <ProjectReference Include="..\Hunter.STAN.Client\Hunter.STAN.Client.csproj" />
   </ItemGroup>
 

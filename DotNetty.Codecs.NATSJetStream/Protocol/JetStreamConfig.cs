@@ -91,25 +91,25 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 
         public override string ToString()
         {
-            return "NATSJetStreamConfig{" +
-                    "name='" + Name + '\'' +
-                    ", subjects=" + Subjects +
-                    ", retentionPolicy=" + RetentionPolicy +
-                    ", MaxConsumers=" + MaxConsumers +
-                    ", MaxMsgs=" + MaxMsgs +
-                    ", MaxBytes=" + MaxBytes +
-                    ", MaxAge=" + MaxAge +
-                    ", MaxMsgSize=" + MaxMsgSize +
-                    ", storageType=" + StorageType +
-                    ", replicas=" + Replicas +
-                    ", noAck=" + NoAck +
-                    ", template='" + TemplateOwner + '\'' +
-                    ", discardPolicy=" + DiscardPolicy +
-                    ", duplicateWindow=" + DuplicateWindow +
-                    ", " + Mirror +
-                    ", " + Placement +
-                    ", sources=" + Sources +
-                    '}';
+            return $@"NATSJetStreamConfig{{
+                    name='{ Name }'
+                    , subjects={ string.Join('|', Subjects) }
+                    , retentionPolicy={ RetentionPolicy }
+                    , MaxConsumers={ MaxConsumers }
+                    , MaxMsgs={ MaxMsgs }
+                    , MaxBytes={ MaxBytes }
+                    , MaxAge={ MaxAge }
+                    , MaxMsgSize={ MaxMsgSize }
+                    , storageType={ StorageType }
+                    , replicas={ Replicas }
+                    , noAck={ NoAck }
+                    , template='{ TemplateOwner}'
+                    , discardPolicy={ DiscardPolicy }
+                    , duplicateWindow={ DuplicateWindow }
+                    , Mirror={ Mirror }
+                    , Placement= { Placement }
+                    , sources={ Sources }
+                    }}";
         }
 
         /**

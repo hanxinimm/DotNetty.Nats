@@ -216,6 +216,26 @@ namespace Hunter.NATS.Client
                 var Packet = new PublishPacket(subject, data);
 
                 await _channel.WriteAndFlushAsync(Packet);
+
+            }, new Dictionary<string, object>() { { "hld", "PublishAsync" } });
+        }
+
+        /// <summary>
+        /// 异步发送
+        /// </summary>
+        /// <param name="subject">主体</param>
+        /// <param name="data">数据</param>
+        /// <returns></returns>
+        public async Task PublishAsync(string subject,string replyTo, byte[] data)
+        {
+            await _policy.ExecuteAsync(async (content) =>
+            {
+                var _channel = await ConnectAsync();
+
+                var Packet = new PublishPacket(subject, replyTo, data);
+
+                await _channel.WriteAndFlushAsync(Packet);
+
             }, new Dictionary<string, object>() { { "hld", "PublishAsync" } });
         }
 

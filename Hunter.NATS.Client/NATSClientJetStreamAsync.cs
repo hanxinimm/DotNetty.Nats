@@ -126,7 +126,7 @@ namespace Hunter.NATS.Client
                 {
                     var _channel = await ConnectAsync();
 
-                    var Packet = new PublishPacket(_replyInboxId, subject, data);
+                    var Packet = new PublishPacket(_replyInboxId, subject,  data);
 
                     await _channel.WriteAndFlushAsync(Packet);
                 }, new Dictionary<string, object>() { { "hld", "PublishAsync" } });

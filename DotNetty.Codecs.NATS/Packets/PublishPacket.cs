@@ -1,9 +1,5 @@
-﻿using DotNetty.Buffers;
-using DotNetty.Common;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace DotNetty.Codecs.NATS.Packets
 {

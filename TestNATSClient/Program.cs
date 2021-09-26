@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using DotNetty.Codecs.Protocol;
+using NATS.Client;
 
 namespace TestNATSClient
 {
@@ -120,13 +121,21 @@ namespace TestNATSClient
 
             //return;
 
-            await Task.Factory.StartNew(async () => await client.ConnectAsync(),
-                   new CancellationToken(),
-                   TaskCreationOptions.DenyChildAttach,
-                   TaskScheduler.Default);
+            //await Task.Factory.StartNew(async () => await client.ConnectAsync(),
+            //       new CancellationToken(),
+            //       TaskCreationOptions.DenyChildAttach,
+            //       TaskScheduler.Default);
 
 
-            //var streamList = await client.StreamListAsync();
+            var streamList = await client.StreamListAsync();
+
+            foreach (var StreamItem in streamList.Streams)
+            {
+                Console.WriteLine($"StreamName = {StreamItem.Config.Name} StreamSubjects = {string.Join(',', StreamItem.Config.Subjects)}");
+                //var rlt = await client.StreamDeleteAsync(StreamItem.Config.Name);
+            }
+
+            //Console.ReadLine();
 
             //var streamNames = await client.StreamNamesAsync();
 
@@ -134,13 +143,14 @@ namespace TestNATSClient
 
 
             //var streamCreate = await client.StreamCreateAsync(JetStreamConfig.Builder()
-            //    .SetName("TestAll-Work")
-            //    .SetSubjects("TestAll-Work.>")
+            //    .SetName("TestAll-Work-Applay")
+            //    .SetSubjects("TestAll-Work.Applay")
             //    .SetMaxAge(TimeSpan.FromMinutes(5))
             //    .SetRetentionPolicy(RetentionPolicy.Interest).Build());
 
+            var streamName = "Labor-Work-Tenant";
 
-            //var streamInfo = await client.StreamInfoAsync("TestAll-Work");
+            //var streamInfo = await client.StreamInfoAsync(streamName+"1");
 
             //var streamDelete = await client.StreamDeleteAsync("TestAll");
 
@@ -149,15 +159,15 @@ namespace TestNATSClient
             //var streamUpdate = await client.StreamUpdateAsync(JetStreamConfig.Builder(streamInfo.Config)
             //    .SetRetentionPolicy(RetentionPolicy.Interest).Build());
 
-            var streamName = "Labor-Work-Personal";
+
 
             //var consumerCreate = await client.
 
             var consumerNames = await client.ConsumerNamesAsync(streamName);
 
-            //var consumerList = await client.ConsumerListAsync(streamName);
+            ////var consumerList = await client.ConsumerListAsync(streamName);
 
-            //var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
+            ////var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
 
             foreach (var consumerName in consumerNames.Consumers)
             {
@@ -165,29 +175,33 @@ namespace TestNATSClient
                 //var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
             }
 
-            var consumerCreate = await client.ConsumerCreateAsync("Labor-Work-Personal",
-                ConsumerConfig.Builder()
-                .SetDeliverPolicy(DeliverPolicy.DeliverLast)
-                 .SetAckPolicy(AckPolicy.AckAll)
-                 .SetMaxDeliver(3)
-                 .SetDurable("T")
-                 .SetAckWait(TimeSpan.FromSeconds(20)),
-                 (bytes) =>
-                {
-                    Console.WriteLine("开始接受收消息");
-                    var sss = Encoding.UTF8.GetString(bytes.Data);
-                    Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
-                    return MessageAck.Ack;
-                });
+            //Console.ReadLine();
 
-            Console.WriteLine($"Type = {consumerCreate?.Type} ErrorCode = {consumerCreate?.Error?.Code} ErrorDescription = {consumerCreate?.Error?.Description}");
 
-            //var s = await client.SubscribeAsync("ApiGateway.EventTrigger.Before.>", async (bytes) =>
-            //{
-            //    Console.WriteLine("开始接受收消息");
-            //    var sss = Encoding.UTF8.GetString(bytes.Data);
-            //    Console.WriteLine("收到消息 {0}", sss);
-            //});
+            //var consumerCreate = await client.ConsumerCreateAsync(streamName,
+            //    ConsumerConfig.Builder()
+            //    .SetDeliverPolicy(DeliverPolicy.DeliverLast)
+            //     .SetAckPolicy(AckPolicy.AckAll)
+            //     .SetMaxDeliver(3)
+            //     .SetDurable("T")
+            //     .SetAckWait(TimeSpan.FromSeconds(20)),
+            //     (bytes) =>
+            //    {
+            //        Console.WriteLine("开始接受收消息");
+            //        var sss = Encoding.UTF8.GetString(bytes.Data);
+            //        Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
+            //        return MessageAck.Ack;
+            //    });
+
+            //Console.WriteLine($"Type = {consumerCreate?.Type} ErrorCode = {consumerCreate?.Error?.Code} ErrorDescription = {consumerCreate?.Error?.Description}");
+
+            //完成发布消息 Labor-Work-Tenant.MultipleInterviewPassedMessage 消息标识95260000-5992-6c2b-39e9-08d9809856ca
+            var s2 = await client.SubscribeAsync("FRONT.>", string.Empty, (bytes) =>
+            {
+                Console.WriteLine("开始接受收消息");
+                var sss = Encoding.UTF8.GetString(bytes.Data);
+                Console.WriteLine("收到消息 {0}", sss);
+            });
 
             Console.WriteLine("按任意键开始发布消息");
 
@@ -206,6 +220,23 @@ namespace TestNATSClient
             header.Add("Safe", "true");
             header.Add("Token", "auth");
 
+            var sub = "FRONT.DOOR";
+
+
+            Options opts = ConnectionFactory.GetDefaultOptions();
+            opts.Url = "mq.nats.yd.com";
+
+            using IConnection c = new ConnectionFactory().CreateConnection(opts);
+
+
+            EventHandler<MsgHandlerEventArgs> msgHandler = (sender, args) =>
+            {
+                Console.WriteLine("Received: " + args.Message);
+            };
+
+            IAsyncSubscription s = c.SubscribeAsync("FRONT.>", msgHandler);
+
+
             while (true)
             {
                 Console.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -214,7 +245,7 @@ namespace TestNATSClient
                 stopwatch.Start(); //  开始监视代码运行时间
 
 
-                var Testbytes = Encoding.UTF8.GetBytes($"TestAll 的测试消息");
+                var Testbytes = Encoding.UTF8.GetBytes($"Knock Knock");
 
 
                 //for (int i = 0; i < 30; i++)
@@ -226,12 +257,15 @@ namespace TestNATSClient
 
 
 
-                await Task.Factory.StartNew(async () =>
-                {
-                    var sub = $"TestAll-Work.CheckIn.{DateTime.Now.Ticks % 2}";
-                    Console.WriteLine("消息主题 {0}", sub);
-                    await client.PublishAsync(sub, Testbytes, header);
-                });
+                //await Task.Factory.StartNew(async () =>
+                //{
+                c.Publish(sub, "INBOX.22", Testbytes);
+
+
+                //var sub = $"TestAll-Work.CheckIn.{DateTime.Now.Ticks % 2}";
+                Console.WriteLine("消息主题 {0}", sub);
+                await client.PublishAsync(sub, "INBOX.22", Testbytes);
+                //});
                 //    }
                 //});
                 //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
