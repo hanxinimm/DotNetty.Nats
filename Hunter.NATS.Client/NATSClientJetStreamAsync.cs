@@ -570,14 +570,17 @@ namespace Hunter.NATS.Client
             ConsumerConfigBuilder consumerConfigBuilder,
             Func<NATSJetStreamMsgContent, ValueTask> handler)
         {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
+            if (consumerInfo.Error == null)
+            {
+                await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                return consumerInfo;
+            }
+
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-
-            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfig.DurableName,
-                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
-
-            if (consumerInfo.Error == null) return consumerInfo;
 
             await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
             return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
@@ -589,14 +592,17 @@ namespace Hunter.NATS.Client
             ConsumerConfigBuilder consumerConfigBuilder,
             Action<NATSJetStreamMsgContent> handler)
         {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
+            if (consumerInfo.Error == null)
+            {
+                await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                return consumerInfo;
+            }
+
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-
-            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfig.DurableName,
-                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
-
-            if (consumerInfo.Error == null) return consumerInfo;
 
             await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
             return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
@@ -608,14 +614,17 @@ namespace Hunter.NATS.Client
             ConsumerConfigBuilder consumerConfigBuilder,
             Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> handler)
         {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
+            if (consumerInfo.Error == null)
+            {
+                await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                return consumerInfo;
+            }
+
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-
-            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfig.DurableName,
-                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
-
-            if (consumerInfo.Error == null) return consumerInfo;
 
             await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
             return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
@@ -628,13 +637,17 @@ namespace Hunter.NATS.Client
             ConsumerConfigBuilder consumerConfigBuilder,
             Func<NATSJetStreamMsgContent, MessageAck> handler)
         {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
+            if (consumerInfo.Error == null)
+            {
+                await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                return consumerInfo;
+            }
+
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-
-            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfig.DurableName,
-                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
-            if (consumerInfo.Error == null) return consumerInfo;
 
             await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
             return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
@@ -800,24 +813,24 @@ namespace Hunter.NATS.Client
 
             var SubscribeId = subscribeId ?? $"sid{Interlocked.Increment(ref _subscribeId)}";
 
-            _logger.LogDebug($"[消费者]设置订阅消息队列订阅编号 Subject = {streamName} QueueGroup = {config.DurableName} SubscribeId = {SubscribeId}");
+            _logger.LogDebug($"[消费者]设置订阅消息队列订阅编号 Subject = {streamName} SubscribeId = {SubscribeId}");
 
             var SubscriptionConfig = new NATSConsumerSubscriptionConfig(streamName, config, SubscribeId);
 
             //处理订阅响应的管道
             var messageHandler = messageHandlerSetup(SubscriptionConfig);
 
-            _logger.LogDebug($"[消费者]开始添加消息队列处理器 Subject = {streamName} QueueGroup = {config.DurableName} SubscribeId = {SubscribeId}");
+            _logger.LogDebug($"[消费者]开始添加消息队列处理器 Subject = {streamName}  SubscribeId = {SubscribeId}");
 
             //添加订阅响应管道
             _embed_channel.Pipeline.AddLast(messageHandler);
 
-            _logger.LogDebug($"[消费者]结束添加消息队列处理器 Subject = {streamName} QueueGroup = {config.DurableName} SubscribeId = {SubscribeId}");
+            _logger.LogDebug($"[消费者]结束添加消息队列处理器 Subject = {streamName}  SubscribeId = {SubscribeId}");
 
 
             _logger.LogDebug($"[消费者]开始发送订阅请求 订阅主题 {streamName } 订阅编号 {SubscribeId}");
 
-            var SubscribePacketMsg = new SubscribePacket(SubscribeId, config.DeliverSubject, config.DurableName);
+            var SubscribePacketMsg = new SubscribePacket(SubscribeId, config.DeliverSubject);
 
             await _embed_channel.WriteAndFlushAsync(SubscribePacketMsg);
 

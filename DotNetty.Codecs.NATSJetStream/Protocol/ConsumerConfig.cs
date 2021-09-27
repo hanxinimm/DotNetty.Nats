@@ -157,6 +157,16 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             }
 
             /**
+             * Get the name of the durable subscription.
+             * @param durable name of the durable subscription.
+             * @return the builder
+             */
+            public string GetDurable()
+            {
+                return this.DurableName;
+            }
+
+            /**
              * Sets the delivery policy of the ConsumerConfiguration.
              * @param policy the delivery policy.
              * @return Builder

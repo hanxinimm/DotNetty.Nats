@@ -123,28 +123,33 @@ namespace TestNATSClient
             //       TaskScheduler.Default);
 
 
-            var streamList = await client.StreamListAsync();
+            //var streamList = await client.StreamListAsync();
 
-            foreach (var StreamItem in streamList.Streams)
-            {
-                Console.WriteLine($"StreamName = {StreamItem.Config.Name} StreamSubjects = {string.Join(',', StreamItem.Config.Subjects)}");
-                //var rlt = await client.StreamDeleteAsync(StreamItem.Config.Name);
-            }
+            //foreach (var StreamItem in streamList.Streams)
+            //{
+            //    Console.WriteLine($"StreamName = {StreamItem.Config.Name} " +
+            //        $"StreamSubjects = {string.Join(',', StreamItem.Config.Subjects)}" +
+            //        $"Stream = {StreamItem}");
+            //    //var rlt = await client.StreamDeleteAsync(StreamItem.Config.Name);
+            //}
 
-            //Console.ReadLine();
+            var streamInfo = await client.StreamInfoAsync("Labor-Work-Tenant");
+            Console.WriteLine(streamInfo);
+
+            Console.ReadLine();
 
             //var streamNames = await client.StreamNamesAsync();
 
             //var streamName = streamNames.Streams.FirstOrDefault();
 
-            var ssss1 ="TestAll-Work.Apply.1";
+            var streamName = "Labor-Work-Tenant";
 
-            var streamCreate = await client.StreamCreateOrGetAsync(JetStreamConfig.Builder()
-                .SetName("TestAll-Work")
-                .SetSubjects("TestAll-Work.>")
-                .SetMaxAge(TimeSpan.FromMinutes(5)).Build());
+            //var streamCreate = await client.StreamCreateOrGetAsync(JetStreamConfig.Builder()
+            //    .SetName("TestAll-Work")
+            //    .SetSubjects("TestAll-Work.>")
+            //    .SetMaxAge(TimeSpan.FromMinutes(5)).Build());
 
-            Console.WriteLine($"StreamName = {streamCreate}");
+            //Console.WriteLine($"StreamName = {streamCreate}");
 
 
             //var streamInfo = await client.StreamInfoAsync("TestAll-Work");
@@ -154,7 +159,7 @@ namespace TestNATSClient
             //    .SetSubjects("TestAll-Work.>")
             //    .SetMaxAge(TimeSpan.FromDays(5)).Build());
 
-            var streamName = "TestAll-Work";
+
             //var streamName = "Labor-Work-Tenant";
             //var streamInfo = await client.StreamInfoAsync(streamName+"1");
 
@@ -185,11 +190,11 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateOrGetAsync(streamName,
                 ConsumerConfig.Builder()
-                .SetFilterSubject("TestAll-Work.>")
+                //.SetFilterSubject($"{streamName}.>")
                 .SetDeliverPolicy(DeliverPolicy.DeliverLast)
                  .SetAckPolicy(AckPolicy.AckAll)
                  .SetMaxDeliver(3)
-                 .SetDurable("T2")
+                 .SetDurable("T")
                  .SetAckWait(TimeSpan.FromSeconds(20)),
                  (bytes) =>
                 {
@@ -202,7 +207,7 @@ namespace TestNATSClient
             //Console.WriteLine($"Type = {consumerCreate?.Type} ErrorCode = {consumerCreate?.Error?.Code} ErrorDescription = {consumerCreate?.Error?.Description}");
             //=Labor-Work-Tenant.MultipleInterviewPassedMessage
             //完成发布消息 Labor-Work-Tenant.MultipleInterviewPassedMessage 消息标识95260000-5992-6c2b-39e9-08d9809856ca
-            var s2 = await client.SubscribeAsync("TestAll-Work.>", string.Empty, (bytes) =>
+            var s2 = await client.SubscribeAsync($"{streamName}.>", string.Empty, (bytes) =>
             {
                 Console.WriteLine("开始接受收消息");
                 var sss = Encoding.UTF8.GetString(bytes.Data);
@@ -268,7 +273,9 @@ namespace TestNATSClient
 
                 //await Task.Factory.StartNew(async () =>
                 //{
-                //c.Publish(sub, "INBOX.22", Testbytes);
+                //var ss = c.CreateJetStreamManagementContext();
+                //ss.AddOrUpdateConsumer(streamName, null);
+                
 
 
                 //var sub = $"TestAll-Work.CheckIn.{DateTime.Now.Ticks % 2}";
