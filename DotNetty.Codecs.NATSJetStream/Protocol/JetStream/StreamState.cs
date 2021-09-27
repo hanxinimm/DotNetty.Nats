@@ -67,6 +67,21 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("consumer_count")]
         public int Consumers { get; set; }
 
+        public override string ToString()
+        {
+            return $@"StreamState {{
+                        messages={ MessageTotal }
+                        , bytes={ ByteLength }
+                        , first_seq={ FirstSequence }
+                        , first_ts={ FirstTime }
+                        , last_seq={ LastSequence }
+                        , last_ts={ LastTime }
+                        , num_deleted={ NumDeleted }
+                        , deleted={ Deleted }
+                        , lost={ Lost }
+                        , consumer_count={ Consumers }
+                    }}";
+        }
 
     }
 }

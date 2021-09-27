@@ -42,5 +42,17 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         /// </summary>
         [JsonProperty("sources")]
         public List<StreamSourceInfo> Sources { get; set; } = new List<StreamSourceInfo>();
+
+        public override string ToString()
+        {
+            return $@"StreamInfo {{
+                        config='{ Config }'
+                        , created={ Created }
+                        , state={ State }
+                        , cluster={ Cluster }
+                        , mirror={ Mirror }
+                        , sources={ string.Join("|", Sources) }
+                    }}";
+        }
     }
 }

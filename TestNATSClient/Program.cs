@@ -137,11 +137,15 @@ namespace TestNATSClient
 
             //var streamName = streamNames.Streams.FirstOrDefault();
 
+            var ssss1 ="TestAll-Work.Apply.1";
 
-            //var streamCreate = await client.StreamCreateAsync(JetStreamConfig.Builder()
-            //    .SetName("TestAll-Work")
-            //    .SetSubjects("TestAll-Work.>")
-            //    .SetMaxAge(TimeSpan.FromMinutes(5)).Build());
+            var streamCreate = await client.StreamCreateOrGetAsync(JetStreamConfig.Builder()
+                .SetName("TestAll-Work")
+                .SetSubjects("TestAll-Work.>")
+                .SetMaxAge(TimeSpan.FromMinutes(5)).Build());
+
+            Console.WriteLine($"StreamName = {streamCreate}");
+
 
             //var streamInfo = await client.StreamInfoAsync("TestAll-Work");
 
@@ -179,8 +183,9 @@ namespace TestNATSClient
             //Console.ReadLine();
 
 
-            var consumerCreate = await client.ConsumerCreateAsync(streamName,
+            var consumerCreate = await client.ConsumerCreateOrGetAsync(streamName,
                 ConsumerConfig.Builder()
+                .SetFilterSubject("TestAll-Work.>")
                 .SetDeliverPolicy(DeliverPolicy.DeliverLast)
                  .SetAckPolicy(AckPolicy.AckAll)
                  .SetMaxDeliver(3)

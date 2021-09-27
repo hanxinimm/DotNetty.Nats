@@ -4,7 +4,8 @@ using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
-    public class ConsumerCreateResponse : JetStreamResponse
+    public class ConsumerCreateResponse : ConsumerInfoResponse
     {
+
     }
 }

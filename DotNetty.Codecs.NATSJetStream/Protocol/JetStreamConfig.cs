@@ -12,8 +12,16 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         /// </summary>
         [JsonProperty("name")]
         public string Name { get; private set; }
+
+        /// <summary>
+        /// 流中的subjects
+        /// </summary>
         [JsonProperty("subjects")]
         public List<string> Subjects { get; private set; }
+
+        /// <summary>
+        /// 消息的保留策略，默认为LimitsPolicy，即通过各种限制条件来决定消息的保留
+        /// </summary>
         [JsonProperty("retention")]
         public RetentionPolicy RetentionPolicy { get; private set; }
         [JsonProperty("max_consumers")]
@@ -28,16 +36,28 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         public long MaxMsgPer { get; private set; }
         [JsonProperty("max_msg_size")]
         public long MaxMsgSize { get; private set; }
+
+        /// <summary>
+        /// 丢弃策略，默认为DiscardOld，即消息存储到达上限时，将老的消息删除
+        /// </summary>
         [JsonProperty("discard")]
         public DiscardPolicy DiscardPolicy { get; private set; }
         [JsonProperty("storage")]
         public StorageType StorageType { get; private set; }
+
+        /// <summary>
+        /// 消息在集群中的副本数量，只有集群才用得到，最大值为5
+        /// </summary>
         [JsonProperty("num_replicas")]
         public int Replicas { get; private set; }
         [JsonProperty("no_ack")]
         public bool NoAck { get; private set; }
         [JsonProperty("template_owner")]
         public string TemplateOwner { get; private set; }
+
+        /// <summary>
+        /// 对消息去重时使用的时间窗，建议尽可能小
+        /// </summary>
         [JsonProperty("duplicate_window")]
         public long? DuplicateWindow { get; private set; }
         [JsonProperty("placement")]
@@ -93,23 +113,23 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         public override string ToString()
         {
             return $@"NATSJetStreamConfig{{
-                    name='{ Name }'
-                    , subjects={ string.Join("|", Subjects) }
-                    , retentionPolicy={ RetentionPolicy }
-                    , MaxConsumers={ MaxConsumers }
-                    , MaxMsgs={ MaxMsgs }
-                    , MaxBytes={ MaxBytes }
-                    , MaxAge={ MaxAge }
-                    , MaxMsgSize={ MaxMsgSize }
-                    , storageType={ StorageType }
-                    , replicas={ Replicas }
-                    , noAck={ NoAck }
-                    , template='{ TemplateOwner}'
-                    , discardPolicy={ DiscardPolicy }
-                    , duplicateWindow={ DuplicateWindow }
-                    , Mirror={ Mirror }
-                    , Placement= { Placement }
-                    , sources={ Sources }
+                        name='{ Name }'
+                        , subjects={ string.Join("|", Subjects) }
+                        , retentionPolicy={ RetentionPolicy }
+                        , MaxConsumers={ MaxConsumers }
+                        , MaxMsgs={ MaxMsgs }
+                        , MaxBytes={ MaxBytes }
+                        , MaxAge={ MaxAge }
+                        , MaxMsgSize={ MaxMsgSize }
+                        , storageType={ StorageType }
+                        , replicas={ Replicas }
+                        , noAck={ NoAck }
+                        , template='{ TemplateOwner}'
+                        , discardPolicy={ DiscardPolicy }
+                        , duplicateWindow={ DuplicateWindow }
+                        , Mirror={ Mirror }
+                        , Placement= { Placement }
+                        , sources={ Sources }
                     }}";
         }
 

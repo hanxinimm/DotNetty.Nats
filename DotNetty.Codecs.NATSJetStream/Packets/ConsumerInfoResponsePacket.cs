@@ -10,7 +10,7 @@ using System.Text;
 namespace DotNetty.Codecs.NATSJetStream.Packets
 {
     [DataContract]
-    public class ConsumerInfoResponsePacket : MessagePacket<InfoResponse>
+    public class ConsumerInfoResponsePacket : MessagePacket<ConsumerInfoResponse>
     {
         public override NATSPacketType PacketType => NATSPacketType.CONSUMER_INFO_RESPONSE;
 

@@ -18,5 +18,13 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         /// </summary>
         [JsonProperty("bytes")]
         public long Bytes { get; set; }
+
+        public override string ToString()
+        {
+            return $@"LostStreamData {{
+                    messages={ string.Join("|", Messages) }
+                    , bytes={ Bytes }
+                    }}";
+        }
     }
 }

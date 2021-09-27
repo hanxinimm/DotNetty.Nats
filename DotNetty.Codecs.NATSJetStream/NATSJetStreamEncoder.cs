@@ -98,8 +98,14 @@ namespace DotNetty.Codecs.NATSJetStream
                 case NATSPacketType.STREAM_LEADER_STEPDOWN:
                     EncodePublishMessage(bufferAllocator, (LeaderStepDownPacket)packet, output);
                     break;
+                case NATSPacketType.STREAM_INFO:
+                    EncodePublishMessage(bufferAllocator, (Packets.InfoPacket)packet, output);
+                    break;
                 case NATSPacketType.CONSUMER_CREATE:
                     EncodePublishMessage(bufferAllocator, (ConsumerCreatePacket)packet, output);
+                    break;
+                case NATSPacketType.CONSUMER_INFO:
+                    EncodePublishMessage(bufferAllocator, (ConsumerInfoPacket)packet, output);
                     break;
                 case NATSPacketType.CONSUMER_NAMES:
                     EncodePublishMessage(bufferAllocator, (ConsumerNamesPacket)packet, output);
@@ -110,9 +116,7 @@ namespace DotNetty.Codecs.NATSJetStream
                 case NATSPacketType.CONSUMER_DELETE:
                     EncodePublishMessage(bufferAllocator, (ConsumerDeletePacket)packet, output);
                     break;
-                case NATSPacketType.STREAM_INFO:
-                    EncodePublishMessage(bufferAllocator, (Packets.InfoPacket)packet, output);
-                    break;
+
                 default:
                     return false;
             }
