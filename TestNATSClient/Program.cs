@@ -85,9 +85,9 @@ namespace TestNATSClient
             {
                 //options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                //options.Host = "127.0.0.1";
+                options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
-                options.Host = "mq.nats.yd.com";
+                //options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
                 //options.IsAuthentication = true;
@@ -133,26 +133,31 @@ namespace TestNATSClient
             //    //var rlt = await client.StreamDeleteAsync(StreamItem.Config.Name);
             //}
 
-            var streamInfo = await client.StreamInfoAsync("Labor-Work-Tenant");
-            Console.WriteLine(streamInfo);
+            //var streamInfo = await client.StreamInfoAsync("Labor-Work-Tenant");
+            //Console.WriteLine(streamInfo);
 
-            Console.ReadLine();
+            //Console.WriteLine("按任意键继续");
+
+            //Console.ReadLine();
 
             //var streamNames = await client.StreamNamesAsync();
 
             //var streamName = streamNames.Streams.FirstOrDefault();
 
-            var streamName = "Labor-Work-Tenant";
+            var streamName = "Finance-Borrow";
 
-            //var streamCreate = await client.StreamCreateOrGetAsync(JetStreamConfig.Builder()
-            //    .SetName("TestAll-Work")
-            //    .SetSubjects("TestAll-Work.>")
-            //    .SetMaxAge(TimeSpan.FromMinutes(5)).Build());
-
-            //Console.WriteLine($"StreamName = {streamCreate}");
+            var streamCreate = await client.StreamCreateOrGetAsync(JetStreamConfig.Builder()
+                .SetName(streamName)
+                .SetSubjects($"{streamName}.>")
+                .SetMaxAge(TimeSpan.FromMinutes(5)).Build());
 
 
-            //var streamInfo = await client.StreamInfoAsync("TestAll-Work");
+
+            Console.WriteLine($"StreamName = {streamCreate}");
+
+            //var streamInfo = await client.StreamInfoAsync(streamName);
+
+            //Console.WriteLine("streamInfo = {0}", streamInfo);
 
 
             //var streamUpdate = await client.StreamUpdateAsync(JetStreamConfig.Builder(streamInfo.Config)
@@ -161,7 +166,7 @@ namespace TestNATSClient
 
 
             //var streamName = "Labor-Work-Tenant";
-            //var streamInfo = await client.StreamInfoAsync(streamName+"1");
+            //var streamInfo = await client.StreamInfoAsync(streamName);
 
             //var streamDelete = await client.StreamDeleteAsync("TestAll");
 
@@ -171,40 +176,54 @@ namespace TestNATSClient
 
 
 
-            //var consumerCreate = await client.
+            ///var consumerInfo = await client.ConsumerInfoAsync(streamName,"Te");
 
-            var consumerNames = await client.ConsumerNamesAsync(streamName);
+            //var consumerNames = await client.ConsumerNamesAsync("Finance-Borrow");
 
-            ////var consumerList = await client.ConsumerListAsync(streamName);
+            //foreach (var consumerName in consumerNames.Consumers)
+            //{
+            //    Console.WriteLine($"consumerName = {consumerName}");
+            //    //var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
+            //}
+
+            //var consumerList = await client.ConsumerListAsync("Finance-Borrow");
+
+            //foreach (var consumer in consumerList.Consumers)
+            //{
+            //    if (consumer.Name == "Finance_Borrow_CreateEvent_Labor_Finance_StatelessManagerService")
+            //    {
+            //        Console.WriteLine($"consumerName = {consumer.Name} {consumer.Config}");
+            //    }
+
+            //    //var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
+            //}
 
             ////var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
 
-            foreach (var consumerName in consumerNames.Consumers)
-            {
-                Console.WriteLine($"consumerName = {consumerName}");
-                //var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
-            }
 
-            //Console.ReadLine();
+            Console.WriteLine("按任意键继续");
 
+            Console.ReadLine();
+            //[事件]开始处理 主题 Finance-Borrow.CreateEvent.5128660 序号 2
 
             var consumerCreate = await client.ConsumerCreateOrGetAsync(streamName,
                 ConsumerConfig.Builder()
-                //.SetFilterSubject($"{streamName}.>")
+                .SetFilterSubject($"{streamName}.CreateEvent.>")
                 .SetDeliverPolicy(DeliverPolicy.DeliverLast)
                  .SetAckPolicy(AckPolicy.AckAll)
                  .SetMaxDeliver(3)
-                 .SetDurable("T")
+                 .SetDurable("T19")
                  .SetAckWait(TimeSpan.FromSeconds(20)),
                  (bytes) =>
                 {
-                    Console.WriteLine("开始接受收消息");
+                    Console.WriteLine("[消费者]开始接受收消息");
                     var sss = Encoding.UTF8.GetString(bytes.Data);
                     Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
                     return MessageAck.Ack;
                 });
 
-            //Console.WriteLine($"Type = {consumerCreate?.Type} ErrorCode = {consumerCreate?.Error?.Code} ErrorDescription = {consumerCreate?.Error?.Description}");
+            Console.WriteLine($"consumerConfig = {consumerCreate.Config}");
+
             //=Labor-Work-Tenant.MultipleInterviewPassedMessage
             //完成发布消息 Labor-Work-Tenant.MultipleInterviewPassedMessage 消息标识95260000-5992-6c2b-39e9-08d9809856ca
             var s2 = await client.SubscribeAsync($"{streamName}.>", string.Empty, (bytes) =>
@@ -231,20 +250,20 @@ namespace TestNATSClient
             header.Add("Safe", "true");
             header.Add("Token", "auth");
 
-            var sub = "TestAll-Work.Applay";
+            var sub = $"{streamName}.Apply."+ DateTime.Now.Millisecond;
 
 
             Options opts = ConnectionFactory.GetDefaultOptions();
             //opts.Name
             opts.Url = "mq.nats.yd.com:4221";
 
-            using IConnection c = new ConnectionFactory().CreateConnection(opts);
+            //using IConnection c = new ConnectionFactory().CreateConnection(opts);
 
 
-            EventHandler<MsgHandlerEventArgs> msgHandler = (sender, args) =>
-            {
-                Console.WriteLine("Received: " + args.Message);
-            };
+            //EventHandler<MsgHandlerEventArgs> msgHandler = (sender, args) =>
+            //{
+            //    Console.WriteLine("Received: " + args.Message);
+            //};
             //IAsyncSubscription s11 = c.SubscribeAsync($"FRONT.>", msgHandler);
 
             //IAsyncSubscription s12 = c.SubscribeAsync($"{streamName}.>", msgHandler);

@@ -14,11 +14,14 @@ using DotNetty.Codecs.NATS.Packets;
 using DotNetty.Codecs.Protocol;
 using Hunter.NATS.Client.JetStream;
 using DotNetty.Transport.Channels;
+using System.Text.RegularExpressions;
 
 namespace Hunter.NATS.Client
 {
     public partial class NATSClient
     {
+        private static readonly Regex _publishStreamRegex = new Regex(@"[a-zA-Z\d-_]{1,32}$", RegexOptions.Compiled);
+
         /// <summary>
         /// 订阅消息处理器集合
         /// </summary>
@@ -157,6 +160,8 @@ namespace Hunter.NATS.Client
 
         public async Task<InfoResponse> StreamInfoAsync(string name)
         {
+            if (!_publishStreamRegex.IsMatch(name)) throw new ArgumentException(name);
+
             var jetStreamConfig = JetStreamConfig.Builder().SetName(name).Build();
 
             var Packet = new DotNetty.Codecs.NATSJetStream.Packets.InfoPacket(
@@ -639,6 +644,7 @@ namespace Hunter.NATS.Client
         {
             var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
+
             if (consumerInfo.Error == null)
             {
                 await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);

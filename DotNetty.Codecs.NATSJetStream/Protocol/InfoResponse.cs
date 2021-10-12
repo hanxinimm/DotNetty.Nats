@@ -52,6 +52,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
                         , cluster={ Cluster }
                         , mirror={ Mirror }
                         , sources={ string.Join("|", Sources) }
+                        , error={Error}
                     }}";
         }
     }

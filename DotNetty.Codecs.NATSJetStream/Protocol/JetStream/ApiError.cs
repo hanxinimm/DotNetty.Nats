@@ -18,5 +18,13 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         /// </summary>
         [JsonProperty("description")]
         public string Description { get; set; }
+
+        public override string ToString()
+        {
+            return $@"ApiError {{
+                        code='{ Code }'
+                        , description={ Description }
+                    }}";
+        }
     }
 }
