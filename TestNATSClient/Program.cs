@@ -85,14 +85,14 @@ namespace TestNATSClient
             {
                 //options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                options.Host = "127.0.0.1";
+                //options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
-                //options.Host = "mq.nats.yd.com";
+                options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
                 //options.IsAuthentication = true;
-                //options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
-                //options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
+                options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
+                options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
 
@@ -144,7 +144,7 @@ namespace TestNATSClient
 
             //var streamName = streamNames.Streams.FirstOrDefault();
 
-            var streamName = "Finance-Borrow";
+            var streamName = "Test-All";
 
             var streamCreate = await client.StreamCreateOrGetAsync(JetStreamConfig.Builder()
                 .SetName(streamName)
@@ -168,9 +168,12 @@ namespace TestNATSClient
             //var streamName = "Labor-Work-Tenant";
             //var streamInfo = await client.StreamInfoAsync(streamName);
 
-            //var streamDelete = await client.StreamDeleteAsync("TestAll");
+            //Console.WriteLine("按任意键删除流");
+            //Console.ReadLine();
 
-            //Console.WriteLine("streamInfo = {0}", streamInfo);
+            //var streamDelete = await client.StreamDeleteAsync(streamName);
+
+            //Console.WriteLine("streamDelete = {0}", streamDelete);
 
 
 
@@ -186,7 +189,7 @@ namespace TestNATSClient
             //    //var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
             //}
 
-            //var consumerList = await client.ConsumerListAsync("Finance-Borrow");
+            //var consumerList = await client.ConsumerListAsync("Recruit-Job");
 
             //foreach (var consumer in consumerList.Consumers)
             //{
@@ -198,6 +201,7 @@ namespace TestNATSClient
             //    //var rlt = await client.ConsumerDeleteAsync(streamName, consumerName);
             //}
 
+            //var rlt = await client.ConsumerDeleteAsync("Recruit-Job", "Recruit_Job_PublishJobCommand_Labor_Recruit_StatelessManagerService");
             ////var streamMessage = await client.StreamReadMessageAsync("TestAll", 2);
 
 
@@ -208,11 +212,12 @@ namespace TestNATSClient
 
             var consumerCreate = await client.ConsumerCreateOrGetAsync(streamName,
                 ConsumerConfig.Builder()
-                .SetFilterSubject($"{streamName}.CreateEvent.>")
+                .SetFilterSubject($"{streamName}.Apply.>")
                 .SetDeliverPolicy(DeliverPolicy.DeliverLast)
                  .SetAckPolicy(AckPolicy.AckAll)
                  .SetMaxDeliver(3)
-                 .SetDurable("T19")
+                 .SetDurable("T19_2")
+                 //.SetDeliverGroup("T")
                  .SetAckWait(TimeSpan.FromSeconds(20)),
                  (bytes) =>
                 {
@@ -226,12 +231,12 @@ namespace TestNATSClient
 
             //=Labor-Work-Tenant.MultipleInterviewPassedMessage
             //完成发布消息 Labor-Work-Tenant.MultipleInterviewPassedMessage 消息标识95260000-5992-6c2b-39e9-08d9809856ca
-            var s2 = await client.SubscribeAsync($"{streamName}.>", string.Empty, (bytes) =>
-            {
-                Console.WriteLine("开始接受收消息");
-                var sss = Encoding.UTF8.GetString(bytes.Data);
-                Console.WriteLine("收到消息 {0}", sss);
-            });
+            //var s2 = await client.SubscribeAsync($"{streamName}.>", "T", (bytes) =>
+            //{
+            //    Console.WriteLine("开始接受收消息");
+            //    var sss = Encoding.UTF8.GetString(bytes.Data);
+            //    Console.WriteLine("收到消息 {0}", sss);
+            //});
 
             Console.WriteLine("按任意键开始发布消息");
 

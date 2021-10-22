@@ -5,6 +5,10 @@ using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
+    /// <summary>
+    /// 错误信息
+    /// </summary>
+    /// <see cref="http://nats-io.github.io/nats.c/status_8h.html#a36c934157b663b7b5fb5d6609c897c80"/>
     public class ApiError
     {
         /// <summary>

@@ -16,6 +16,9 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         public DeliverPolicy DeliverPolicy { get; private set; }
         [JsonProperty("deliver_subject")]
         public string DeliverSubject { get; private set; }
+
+        [JsonProperty("deliver_group")]
+        public string DeliverGroup { get; private set; }
         [JsonProperty("durable_name")]
         public string DurableName { get; private set; }
         [JsonProperty("filter_subject")]
@@ -44,6 +47,12 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("sample_freq")]
         public string SampleFrequency { get; private set; }
 
+        [JsonProperty("description")]
+        public string Description { get; private set; }
+
+        [JsonProperty("headers_only")]
+        public string HeadersOnly { get; private set; }
+
         private ConsumerConfig() { }
 
         // For the builder
@@ -59,6 +68,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             string sampleFrequency,
             long? rateLimit,
             string deliverSubject,
+            string deliverGroup,
             long? maxAckPending,
             long? heartbeat,
             bool? flowControl)
@@ -75,6 +85,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             this.SampleFrequency = sampleFrequency;
             this.RateLimit = rateLimit;
             this.DeliverSubject = deliverSubject;
+            this.DeliverGroup = deliverGroup;
             this.MaxAckPending = maxAckPending;
             this.Heartbeat = heartbeat;
             this.FlowControl = flowControl;
@@ -120,6 +131,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             private string SampleFrequency;
             private long? RateLimit;
             private string DeliverSubject;
+            private string DeliverGroup;
             private long? MaxAckPending;
             private long? Heartbeat;
             private bool? FlowControl;
@@ -140,6 +152,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
                 this.SampleFrequency = consumerConfig.SampleFrequency;
                 this.RateLimit = consumerConfig.RateLimit;
                 this.DeliverSubject = consumerConfig.DeliverSubject;
+                this.DeliverGroup = consumerConfig.DeliverGroup;
                 this.MaxAckPending = consumerConfig.MaxAckPending;
                 this.Heartbeat = consumerConfig.Heartbeat;
                 this.FlowControl = consumerConfig.FlowControl;
@@ -174,6 +187,18 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             public ConsumerConfigBuilder SetDeliverPolicy(DeliverPolicy policy)
             {
                 this.DeliverPolicy = policy;
+                return this;
+            }
+
+
+            /**
+             * Sets the delivery policy of the ConsumerConfiguration.
+             * @param policy the delivery policy.
+             * @return Builder
+             */
+            public ConsumerConfigBuilder SetDeliverGroup(string deliverGroup)
+            {
+                this.DeliverGroup = deliverGroup;
                 return this;
             }
 
@@ -340,6 +365,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
                         SampleFrequency,
                         RateLimit,
                         DeliverSubject,
+                        DeliverGroup,
                         MaxAckPending,
                         Heartbeat,
                         FlowControl
@@ -353,6 +379,7 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
                     "durable='" + DurableName + '\'' +
                     ", deliverPolicy=" + DeliverPolicy +
                     ", deliverSubject='" + DeliverSubject + '\'' +
+                    ", deliverGroup='" + DeliverGroup + '\'' +
                     ", startSeq=" + StartSequence +
                     ", startTime=" + StartTime +
                     ", ackPolicy=" + AckPolicy +
