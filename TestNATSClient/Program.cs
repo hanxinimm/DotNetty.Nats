@@ -210,7 +210,7 @@ namespace TestNATSClient
             Console.ReadLine();
             //[事件]开始处理 主题 Finance-Borrow.CreateEvent.5128660 序号 2
 
-            var consumerCreate = await client.ConsumerCreateOrGetAsync(streamName,
+            var consumerCreate = await client.ConsumerCreateOrAdaptiveAsync(streamName,
                 ConsumerConfig.Builder()
                 .SetFilterSubject($"{streamName}.Apply.>")
                 .SetDeliverPolicy(DeliverPolicy.DeliverLast)

@@ -570,6 +570,8 @@ namespace Hunter.NATS.Client
             }, contentData ?? new Dictionary<string, object>() { { "hld", "ConsumerCreateAsync" } });
         }
 
+        #region CreateOrGet
+
         public async Task<ConsumerInfoResponse> ConsumerCreateOrGetAsync(
             string streamName,
             ConsumerConfigBuilder consumerConfigBuilder,
@@ -660,6 +662,212 @@ namespace Hunter.NATS.Client
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
         }
 
+        #endregion;
+
+        #region CreateOrAdaptive;
+
+        public async Task<ConsumerInfoResponse> ConsumerCreateOrAdaptiveAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Func<NATSJetStreamMsgContent, ValueTask> handler)
+        {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrAdaptiveAsync => ConsumerInfoAsync" } });
+
+            if (consumerInfo.Error == null)
+            {
+                if (consumerInfo.Config.FilterSubject != consumerConfigBuilder.GetFilterSubject()
+                    || consumerInfo.Config.DeliverGroup != consumerConfigBuilder.GetDeliverGroup())
+                {
+                    await ConsumerDeleteAsync(streamName, consumerInfo.Name);
+                }
+                else
+                {
+                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    return consumerInfo;
+                }
+            }
+
+
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            var consumerConfig = consumerConfigBuilder.Build();
+
+            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+        }
+
+        public async Task<ConsumerInfoResponse> ConsumerCreateOrAdaptiveAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Action<NATSJetStreamMsgContent> handler)
+        {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrAdaptiveAsync => ConsumerInfoAsync" } });
+
+            if (consumerInfo.Error == null)
+            {
+                if (consumerInfo.Config.FilterSubject != consumerConfigBuilder.GetFilterSubject()
+                    || consumerInfo.Config.DeliverGroup != consumerConfigBuilder.GetDeliverGroup())
+                {
+                    await ConsumerDeleteAsync(streamName, consumerInfo.Name);
+                }
+                else
+                {
+                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    return consumerInfo;
+                }
+            }
+
+
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            var consumerConfig = consumerConfigBuilder.Build();
+
+            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+        }
+
+        public async Task<ConsumerInfoResponse> ConsumerCreateOrAdaptiveAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> handler)
+        {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrAdaptiveAsync => ConsumerInfoAsync" } });
+
+
+            if (consumerInfo.Error == null)
+            {
+                if (consumerInfo.Config.FilterSubject != consumerConfigBuilder.GetFilterSubject()
+                    || consumerInfo.Config.DeliverGroup != consumerConfigBuilder.GetDeliverGroup())
+                {
+                    await ConsumerDeleteAsync(streamName, consumerInfo.Name);
+                }
+                else
+                {
+                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    return consumerInfo;
+                }
+            }
+
+
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            var consumerConfig = consumerConfigBuilder.Build();
+
+            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+        }
+
+
+        public async Task<ConsumerInfoResponse> ConsumerCreateOrAdaptiveAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Func<NATSJetStreamMsgContent, MessageAck> handler)
+        {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrAdaptiveAsync => ConsumerInfoAsync" } });
+
+            if (consumerInfo.Error == null)
+            {
+                if (consumerInfo.Config.FilterSubject != consumerConfigBuilder.GetFilterSubject()
+                    || consumerInfo.Config.DeliverGroup != consumerConfigBuilder.GetDeliverGroup())
+                {
+                    await ConsumerDeleteAsync(streamName, consumerInfo.Name);
+                }
+                else
+                {
+                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    return consumerInfo;
+                }
+            }
+
+
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            var consumerConfig = consumerConfigBuilder.Build();
+
+            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+        }
+
+        #endregion;
+
+        #region CreateOrUpdate;
+
+        public async Task<ConsumerInfoResponse> ConsumerCreateOrUpdateAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Func<NATSJetStreamMsgContent, ValueTask> handler)
+        {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync => ConsumerInfoAsync" } });
+
+            if (consumerInfo.Error == null)
+            {
+                await ConsumerDeleteAsync(streamName, consumerInfo.Name);
+            }
+
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            var consumerConfig = consumerConfigBuilder.Build();
+
+            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
+        }
+
+        public async Task<ConsumerInfoResponse> ConsumerCreateOrUpdateAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Action<NATSJetStreamMsgContent> handler)
+        {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync => ConsumerInfoAsync" } });
+
+            if (consumerInfo.Error == null)
+            {
+                await ConsumerDeleteAsync(streamName, consumerInfo.Name);
+            }
+
+
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            var consumerConfig = consumerConfigBuilder.Build();
+
+            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
+        }
+
+        public async Task<ConsumerInfoResponse> ConsumerCreateOrUpdateAsync(
+            string streamName,
+            ConsumerConfigBuilder consumerConfigBuilder,
+            Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> handler)
+        {
+            var consumerInfo = await ConsumerInfoAsync(streamName, consumerConfigBuilder.GetDurable(),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync => ConsumerInfoAsync" } });
+
+            if (consumerInfo.Error == null)
+            {
+                await ConsumerDeleteAsync(streamName, consumerInfo.Name);
+            }
+
+            var consumer_inbox = Guid.NewGuid().ToString("n");
+            consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
+            var consumerConfig = consumerConfigBuilder.Build();
+
+            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+                new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
+        }
+
+
         public async Task<ConsumerInfoResponse> ConsumerCreateOrUpdateAsync(
             string streamName,
             ConsumerConfigBuilder consumerConfigBuilder,
@@ -681,6 +889,8 @@ namespace Hunter.NATS.Client
             return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
         }
+
+        #endregion;
 
         public async Task<ConsumerInfoResponse> ConsumerInfoAsync(string streamName, string consumerName,
             Dictionary<string, object> contentData = null)

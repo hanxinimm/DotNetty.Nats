@@ -203,6 +203,16 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
             }
 
             /**
+            * Sets the delivery policy of the ConsumerConfiguration.
+            * @param policy the delivery policy.
+            * @return Builder
+            */
+            public string GetDeliverGroup()
+            {
+                return this.DeliverGroup;
+            }
+
+            /**
              * Sets the subject to deliver messages to.
              * @param subject the delivery subject.
              * @return the builder
@@ -273,6 +283,16 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
              * @param filterSubject the filter subject
              * @return Builder
              */
+            public string GetFilterSubject()
+            {
+               return this.FilterSubject;
+            }
+
+            /**
+            * Sets the filter subject of the ConsumerConfiguration.
+            * @param filterSubject the filter subject
+            * @return Builder
+            */
             public ConsumerConfigBuilder SetFilterSubject(string filterSubject)
             {
                 this.FilterSubject = filterSubject;
