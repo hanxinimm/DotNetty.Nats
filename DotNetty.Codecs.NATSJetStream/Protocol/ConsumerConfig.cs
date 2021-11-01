@@ -395,24 +395,24 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 
         public override string ToString()
         {
-            return "ConsumerConfiguration{" +
-                    "durable='" + DurableName + '\'' +
-                    ", deliverPolicy=" + DeliverPolicy +
-                    ", deliverSubject='" + DeliverSubject + '\'' +
-                    ", deliverGroup='" + DeliverGroup + '\'' +
-                    ", startSeq=" + StartSequence +
-                    ", startTime=" + StartTime +
-                    ", ackPolicy=" + AckPolicy +
-                    ", ackWait=" + AckWait +
-                    ", maxDeliver=" + MaxDeliver +
-                    ", filterSubject='" + FilterSubject + '\'' +
-                    ", replayPolicy=" + ReplayPolicy +
-                    ", sampleFrequency='" + SampleFrequency + '\'' +
-                    ", rateLimit=" + RateLimit +
-                    ", maxAckPending=" + MaxAckPending +
-                    ", idleHeartbeat=" + Heartbeat +
-                    ", flowControl=" + FlowControl +
-                    '}';
+            return @$"ConsumerConfiguration {{
+                        durable='{ DurableName }'
+                        , deliverPolicy={ DeliverPolicy }
+                        , deliverSubject='{ DeliverSubject }'
+                        , deliverGroup='{ DeliverGroup }'
+                        , startSeq={ StartSequence }
+                        , startTime={ StartTime }
+                        , ackPolicy={ AckPolicy }
+                        , ackWait={ AckWait }
+                        , maxDeliver={ MaxDeliver }
+                        , filterSubject='{ FilterSubject}'
+                        , replayPolicy={ ReplayPolicy}
+                        , sampleFrequency='{ SampleFrequency }'
+                        , rateLimit={ RateLimit }
+                        , maxAckPending={ MaxAckPending }
+                        , idleHeartbeat={ Heartbeat }
+                        , flowControl={ FlowControl }
+                    }}";
         }
     }
 }

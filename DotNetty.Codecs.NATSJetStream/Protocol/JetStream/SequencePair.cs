@@ -18,5 +18,13 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         /// </summary>
         [JsonProperty("stream_seq")]
         public long Stream { get; set; }
+
+        public override string ToString()
+        {
+            return @$"SequencePair {{
+					    consumer_seq={ Consumer }
+					    , stream_seq= { Stream }
+					}}";
+        }
     }
 }

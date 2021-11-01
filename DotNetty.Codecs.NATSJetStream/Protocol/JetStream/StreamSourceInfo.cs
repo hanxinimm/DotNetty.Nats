@@ -37,5 +37,16 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("error")]
         public ApiError Error { get; set; }
 
+        public override string ToString()
+        {
+            return $@"StreamSourceInfo {{
+                        name='{ Name }'
+                        , external={ External }
+                        , active={ Active }
+                        , lag={ Lag }
+                        , error={ Error }
+                    }}";
+        }
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace DotNetty.Codecs.NATSJetStream.Protocol
@@ -23,6 +24,15 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         /// 节点分片
         /// </summary>
         [JsonProperty("replicas")]
-        public List<PeerInfo> Replicas { get; set; }
+        public List<PeerInfo> Replicas { get; set; } = new List<PeerInfo>();
+
+        public override string ToString()
+        {
+            return @$"SequencePair {{
+					    name='{ Name }' 
+					    , leader='{ Leader }'
+					    , replicas= { string.Join("|", Replicas.Select(v => v.ToString())) }
+					}}";
+        }
     }
 }

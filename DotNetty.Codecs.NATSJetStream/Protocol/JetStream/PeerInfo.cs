@@ -37,5 +37,16 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
         [JsonProperty("lag")]
         public long Lag { get; set; }
 
+        public override string ToString()
+        {
+            return @$"SequencePair {{
+					name='{ Name }' 
+					, current={ Current }
+					, isOffline={ IsOffline }
+					, active='{ Active }'
+					, lag={ Lag }
+                    }}";
+        }
+
     }
 }

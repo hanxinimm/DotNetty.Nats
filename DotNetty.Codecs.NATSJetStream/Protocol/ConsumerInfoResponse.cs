@@ -72,5 +72,23 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 		/// </summary>
 		[JsonProperty("cluster")]
 		public ClusterInfo Cluster { get; set; }
-	}
+
+
+        public override string ToString()
+        {
+			return @$"ConsumerInfoResponse {{
+						streamName='{ StreamName }'
+						, name= '{ Name }'
+						, config='{Config}'
+						, created='{Created }' 
+						, delivered={ Delivered } 
+						, ackFloor={ AckFloor } 
+						, numAckPending={ NumAckPending } 
+						, numRedelivered={ NumRedelivered } 
+						, numWaiting={ NumWaiting } 
+						, numPending={ NumPending } 
+						, cluster={ Cluster } 
+					}}";
+		}
+    }
 }

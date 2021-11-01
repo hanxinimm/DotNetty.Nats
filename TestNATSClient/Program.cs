@@ -227,7 +227,7 @@ namespace TestNATSClient
                     return MessageAck.Ack;
                 });
 
-            Console.WriteLine($"consumerConfig = {consumerCreate.Config}");
+            Console.WriteLine($"consumerConfig = {consumerCreate}");
 
             //=Labor-Work-Tenant.MultipleInterviewPassedMessage
             //完成发布消息 Labor-Work-Tenant.MultipleInterviewPassedMessage 消息标识95260000-5992-6c2b-39e9-08d9809856ca

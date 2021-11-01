@@ -7,18 +7,6 @@ namespace DotNetty.Codecs.NATSJetStream.Protocol
 {
     public class ConsumerInfo
     {
-		//Stream   string        `json:"stream_name"`
-		//Name string         `json:"name"`
-		//Config ConsumerConfig `json:"config"`
-		//Created time.Time      `json:"created"`
-		//Delivered SequencePair   `json:"delivered"`
-		//AckFloor SequencePair   `json:"ack_floor"`
-		//NumAckPending  int            `json:"num_ack_pending"`
-		//NumRedelivered int            `json:"num_redelivered"`
-		//NumWaiting     int            `json:"num_waiting"`
-		//NumPending uint64         `json:"num_pending"`
-		//Cluster* ClusterInfo   `json:"cluster,omitempty"`
-
 		/// <summary>
 		/// 流名称
 		/// </summary>
