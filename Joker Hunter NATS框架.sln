@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30309.148
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hunter.NATS.Client", "Hunter.NATS.Client\Hunter.NATS.Client.csproj", "{31559577-D23B-4FB9-B366-06F1135D31A7}"
 EndProject
@@ -26,8 +26,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetty.Codecs.NATSJetStream", "DotNetty.Codecs.NATSJetStream\DotNetty.Codecs.NATSJetStream.csproj", "{514F345D-1EE9-454C-9C6B-D119371B57AE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestEventBus", "TestEventBus\TestEventBus.csproj", "{C14C0125-47E2-4375-BF35-9438E751DF2F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NATS.Client", "..\..\GitHub\csharp-nats\src\NATS.Client\NATS.Client.csproj", "{F95314A6-4FB9-4A2D-9917-2E520B2609C0}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -86,10 +84,6 @@ Global
 		{C14C0125-47E2-4375-BF35-9438E751DF2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C14C0125-47E2-4375-BF35-9438E751DF2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C14C0125-47E2-4375-BF35-9438E751DF2F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F95314A6-4FB9-4A2D-9917-2E520B2609C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F95314A6-4FB9-4A2D-9917-2E520B2609C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F95314A6-4FB9-4A2D-9917-2E520B2609C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F95314A6-4FB9-4A2D-9917-2E520B2609C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

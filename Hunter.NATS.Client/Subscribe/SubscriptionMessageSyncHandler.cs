@@ -31,10 +31,11 @@ namespace Hunter.NATS.Client
             _messageHandler = messageHandler;
         }
 
-
-        protected override void MessageHandler(MessagePacket msg)
+        protected override ValueTask MessageHandler(NATSMsgContent msg)
         {
-            _messageHandler(PackMsgContent(msg));
+            _messageHandler(msg);
+
+            return ValueTask.CompletedTask;
         }
     }
 }

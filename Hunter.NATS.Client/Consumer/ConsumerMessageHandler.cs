@@ -14,50 +14,22 @@ namespace Hunter.NATS.Client
 {
     public abstract class ConsumerMessageHandler : MessagePacketHandler
     {
-        protected readonly ILogger _logger;
         protected readonly NATSConsumerSubscriptionConfig _subscriptionConfig;
         protected readonly Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> _messageAckCallback;
-        private readonly Action<IChannelHandlerContext, MessagePacket> _channelRead;
         public ConsumerMessageHandler(
             ILogger logger,
             NATSConsumerSubscriptionConfig subscriptionConfig,
             Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> messageAckCallback)
+            : base(logger)
         {
-            _logger = logger;
             _subscriptionConfig = subscriptionConfig;
             _messageAckCallback = messageAckCallback;
-            _channelRead = MessageHandler;
+            SubscribeId = subscriptionConfig.SubscribeId;
         }
 
         public override bool IsSharable => true;
 
         public NATSConsumerSubscriptionConfig SubscriptionConfig => _subscriptionConfig;
-
-        protected abstract void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> ackCallback);
-
-        protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
-        {
-            _channelRead(contex, msg);
-        }
-
-        private void MessageHandler(IChannelHandlerContext contex, MessagePacket msg)
-        {
-            if (msg.SubscribeId == _subscriptionConfig.SubscribeId)
-            {
-                try
-                {
-                    MessageHandler(msg, _messageAckCallback);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 消费者 {_subscriptionConfig.Config.DurableName}");
-                }
-            }
-            else
-            {
-                contex.FireChannelRead(msg);
-            }
-        }
 
         protected NATSJetStreamMsgContent PackMsgContent(MessagePacket msg)
         {

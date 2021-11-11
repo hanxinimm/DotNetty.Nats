@@ -31,16 +31,9 @@ namespace Hunter.NATS.Client
             _messageHandler = messageHandler;
         }
 
-        protected override void MessageHandler(MessagePacket msg)
+        protected override ValueTask MessageHandler(NATSMsgContent msg)
         {
-            Task.Factory.StartNew(async _msg =>
-            {
-                await _messageHandler(PackMsgContent((MessagePacket)_msg));
-            }, 
-            msg, 
-            default, 
-            TaskCreationOptions.DenyChildAttach,
-            TaskScheduler.Default);
+            return _messageHandler(msg);
         }
     }
 }

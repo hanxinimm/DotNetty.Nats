@@ -25,7 +25,7 @@ namespace Hunter.STAN.Client.Handlers
         {
             base.ChannelInactive(context);
             _logger.LogDebug("ChannelInactive connected to {0}", context.Channel.RemoteAddress);
-            context.Channel.EventLoop.Schedule(_ => _reconnectHandler((EndPoint)_), context.Channel.RemoteAddress, TimeSpan.FromMilliseconds(1000));
+            context.Channel.EventLoop.ScheduleAsync(_ => _reconnectHandler((EndPoint)_), context.Channel.RemoteAddress, TimeSpan.FromMilliseconds(1000)).ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

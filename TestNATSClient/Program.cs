@@ -3,14 +3,12 @@ using DotNetty.Codecs.Protocol;
 using Hunter.NATS.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NATS.Client;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace TestNATSClient
@@ -87,9 +85,9 @@ namespace TestNATSClient
             {
                 //options.ClusterID = "stan-k8s-cluster";
                 options.ClientId = "TestClientId" + Guid.NewGuid().ToString("N");
-                //options.Host = "127.0.0.1";
+                options.Host = "127.0.0.1";
                 //options.Host = "192.168.4.131";
-                options.Host = "mq.nats.yd.com";
+                //options.Host = "mq.nats.yd.com";
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
                 //options.IsAuthentication = true;
@@ -227,13 +225,13 @@ namespace TestNATSClient
                  .SetDurable("T19_2")
                  //.SetDeliverGroup("T")
                  .SetAckWait(TimeSpan.FromSeconds(20)),
-                 async (bytes) =>
+                 (bytes) =>
                 {
 
                     Console.WriteLine("[消费者]请求数据S" + DateTime.Now);
 
 
-                    await httpclient.GetAsync("https://api.docs.gateway.yidujob.com/apiGateway/docs/Enterprise");
+                    //await httpclient.GetAsync("https://api.docs.gateway.yidujob.com/apiGateway/docs/Enterprise");
 
                     Console.WriteLine("[消费者]请求数据E" + DateTime.Now);
 
@@ -275,9 +273,9 @@ namespace TestNATSClient
 
 
 
-            Options opts = ConnectionFactory.GetDefaultOptions();
+            //Options opts = ConnectionFactory.GetDefaultOptions();
             //opts.Name
-            opts.Url = "mq.nats.yd.com:4221";
+            //opts.Url = "mq.nats.yd.com:4221";
 
             //using IConnection c = new ConnectionFactory().CreateConnection(opts);
 

@@ -11,7 +11,7 @@ namespace DotNetty.Handlers.STAN
 
         protected override void ChannelRead0(IChannelHandlerContext contex, HeartbeatPacket msg)
         {
-            contex.WriteAndFlushAsync(new HeartbeatAckPacket(msg.ReplyTo));
+            contex.WriteAndFlushAsync(new HeartbeatAckPacket(msg.ReplyTo)).ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

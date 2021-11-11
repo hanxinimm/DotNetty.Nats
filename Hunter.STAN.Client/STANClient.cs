@@ -245,7 +245,7 @@ namespace Hunter.STAN.Client
 
             if (_subscriptionMessageHandler.Count > 0)
             {
-                Task.Factory.StartNew(async () => await ConnectAsync());
+                ConnectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
             }
 
             _logger.LogInformation($"STAN重新连接端口 ClientId = {_clientId} 完成实例化新的连接管道");
@@ -315,7 +315,7 @@ namespace Hunter.STAN.Client
 
                     ReconnectIfNeed(null);
                 }
-            });
+            }).Unwrap();
         }
     }
 }

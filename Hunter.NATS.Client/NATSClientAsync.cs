@@ -110,7 +110,7 @@ namespace Hunter.NATS.Client
 
             _logger.LogDebug($"设置订阅消息队列订阅编号 Subject = {subject} QueueGroup = {queueGroup} SubscribeId = {SubscribeId}");
 
-            var SubscriptionConfig = new NATSSubscriptionConfig(subject, SubscribeId, queueGroup, maxMsg);
+            var SubscriptionConfig = new NATSMsgSubscriptionConfig(subject, SubscribeId, queueGroup, maxMsg);
 
             //处理订阅响应的管道
             var messageHandler = messageHandlerSetup(SubscriptionConfig);

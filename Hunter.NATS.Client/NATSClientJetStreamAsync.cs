@@ -486,7 +486,7 @@ namespace Hunter.NATS.Client
 
         #region Consumer;
 
-        public Task<ConsumerCreateResponse> ConsumerCreateAsync(
+        public async Task<ConsumerCreateResponse> ConsumerCreateAsync(
             string streamName,
             ConsumerConfigBuilder consumerConfigBuilder,
             Func<NATSJetStreamMsgContent, ValueTask> handler)
@@ -494,11 +494,15 @@ namespace Hunter.NATS.Client
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-            ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
-        public Task<ConsumerCreateResponse> ConsumerCreateAsync(
+        public async Task<ConsumerCreateResponse> ConsumerCreateAsync(
             string streamName,
             ConsumerConfigBuilder consumerConfigBuilder,
             Action<NATSJetStreamMsgContent> handler)
@@ -506,11 +510,16 @@ namespace Hunter.NATS.Client
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-            ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
-        public Task<ConsumerCreateResponse> ConsumerCreateAsync(
+        public async Task<ConsumerCreateResponse> ConsumerCreateAsync(
             string streamName,
             ConsumerConfigBuilder consumerConfigBuilder,
             Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> handler)
@@ -518,11 +527,15 @@ namespace Hunter.NATS.Client
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-            ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
-        public Task<ConsumerCreateResponse> ConsumerCreateAsync(
+        public async Task<ConsumerCreateResponse> ConsumerCreateAsync(
             string streamName,
             ConsumerConfigBuilder consumerConfigBuilder,
             Func<NATSJetStreamMsgContent, MessageAck> handler)
@@ -530,8 +543,12 @@ namespace Hunter.NATS.Client
             var consumer_inbox = Guid.NewGuid().ToString("n");
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
-            ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig));
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
 
@@ -562,10 +579,7 @@ namespace Hunter.NATS.Client
 
                 _embed_channel.Pipeline.Remove(Handler);
 
-                //TODO:待优化
-                if (ConsumerCreateResponse == null) throw new ArgumentNullException();
-
-                return ConsumerCreateResponse.Message;
+                return ConsumerCreateResponse?.Message;
 
             }, contentData ?? new Dictionary<string, object>() { { "hld", "ConsumerCreateAsync" } });
         }
@@ -581,7 +595,9 @@ namespace Hunter.NATS.Client
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync => ConsumerInfoAsync" } });
             if (consumerInfo.Error == null)
             {
-                await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                var message_handler = await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                await message_handler.MessageProcessingAsync();
+
                 return consumerInfo;
             }
 
@@ -589,9 +605,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         public async Task<ConsumerInfoResponse> ConsumerCreateOrGetAsync(
@@ -611,9 +631,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         public async Task<ConsumerInfoResponse> ConsumerCreateOrGetAsync(
@@ -633,9 +657,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
 
@@ -657,9 +685,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         #endregion;
@@ -683,7 +715,9 @@ namespace Hunter.NATS.Client
                 }
                 else
                 {
-                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    var message_handler = await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    await message_handler.MessageProcessingAsync();
+
                     return consumerInfo;
                 }
             }
@@ -693,9 +727,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         public async Task<ConsumerInfoResponse> ConsumerCreateOrAdaptiveAsync(
@@ -715,7 +753,9 @@ namespace Hunter.NATS.Client
                 }
                 else
                 {
-                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    var message_handler = await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    await message_handler.MessageProcessingAsync();
+
                     return consumerInfo;
                 }
             }
@@ -725,9 +765,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         public async Task<ConsumerInfoResponse> ConsumerCreateOrAdaptiveAsync(
@@ -748,7 +792,9 @@ namespace Hunter.NATS.Client
                 }
                 else
                 {
-                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    var message_handler = await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    await message_handler.MessageProcessingAsync();
+
                     return consumerInfo;
                 }
             }
@@ -758,9 +804,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
 
@@ -781,7 +831,9 @@ namespace Hunter.NATS.Client
                 }
                 else
                 {
-                    await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    var message_handler = await ConsumerSubscribeAsync(streamName, consumerInfo.Config, handler);
+                    await message_handler.MessageProcessingAsync();
+
                     return consumerInfo;
                 }
             }
@@ -791,9 +843,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrGetAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         #endregion;
@@ -817,9 +873,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         public async Task<ConsumerInfoResponse> ConsumerCreateOrUpdateAsync(
@@ -840,9 +900,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         public async Task<ConsumerInfoResponse> ConsumerCreateOrUpdateAsync(
@@ -862,9 +926,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
 
@@ -885,9 +953,13 @@ namespace Hunter.NATS.Client
             consumerConfigBuilder.SetDeliverSubject(consumer_inbox);
             var consumerConfig = consumerConfigBuilder.Build();
 
-            await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
-            return await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
+            var messageHandler = await ConsumerSubscribeAsync(streamName, consumerConfig, handler);
+            var createResponse = await ConsumerCreateAsync(new ConsumerCreateRequest(streamName, consumerConfig),
                 new Dictionary<string, object>() { { "hld", "ConsumerCreateOrUpdateAsync" } });
+
+            await messageHandler.MessageProcessingAsync();
+
+            return createResponse;
         }
 
         #endregion;
@@ -1032,7 +1104,7 @@ namespace Hunter.NATS.Client
 
         #region ConsumerSubscribe;
 
-        public async Task<string> HandleConsumerSubscribeAsync(
+        public async Task<ConsumerMessageHandler> HandleConsumerSubscribeAsync(
             string streamName, 
             ConsumerConfig config,
             Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, 
@@ -1052,7 +1124,7 @@ namespace Hunter.NATS.Client
 
 
 
-        public async Task<string> InternalConsumerSubscribeAsync(string streamName, ConsumerConfig config,
+        public async Task<ConsumerMessageHandler> InternalConsumerSubscribeAsync(string streamName, ConsumerConfig config,
             Func<NATSConsumerSubscriptionConfig, ConsumerMessageHandler> messageHandlerSetup, string subscribeId = null)
         {
             await ConnectAsync();
@@ -1085,7 +1157,7 @@ namespace Hunter.NATS.Client
             //添加消息处理到消息处理集合
             _consumerMessageHandler.Add(messageHandler);
 
-            return SubscribeId;
+            return messageHandler;
         }
 
 
@@ -1119,7 +1191,7 @@ namespace Hunter.NATS.Client
         #region 订阅自动确认 异步处理消息
 
 
-        public Task<string> ConsumerSubscribeAsync(string streamName, ConsumerConfig config, Func<NATSJetStreamMsgContent, ValueTask> handler, string subscribeId = null)
+        public Task<ConsumerMessageHandler> ConsumerSubscribeAsync(string streamName, ConsumerConfig config, Func<NATSJetStreamMsgContent, ValueTask> handler, string subscribeId = null)
         {
             return HandleConsumerSubscribeAsync(streamName, config, (config) =>
                 new ConsumerMessageAsynHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
@@ -1129,7 +1201,7 @@ namespace Hunter.NATS.Client
 
         #region 订阅自动确认 同步处理消息
 
-        public Task<string> ConsumerSubscribeAsync(string streamName, ConsumerConfig config, Action<NATSJetStreamMsgContent> handler, string subscribeId = null)
+        public Task<ConsumerMessageHandler> ConsumerSubscribeAsync(string streamName, ConsumerConfig config, Action<NATSJetStreamMsgContent> handler, string subscribeId = null)
         {
             return HandleConsumerSubscribeAsync(streamName, config, (config) =>
                 new ConsumerMessageSyncHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
@@ -1139,7 +1211,7 @@ namespace Hunter.NATS.Client
 
         #region 订阅手动确认 异步处理消息
 
-        public Task<string> ConsumerSubscribeAsync(string streamName, ConsumerConfig config, Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> handler, string subscribeId = null)
+        public Task<ConsumerMessageHandler> ConsumerSubscribeAsync(string streamName, ConsumerConfig config, Func<NATSJetStreamMsgContent, ValueTask<MessageAck>> handler, string subscribeId = null)
         {
             return HandleConsumerSubscribeAsync(streamName, config, (config) =>
                 new ConsumerMessageAckAsynHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
@@ -1150,7 +1222,7 @@ namespace Hunter.NATS.Client
         #region 订阅手动确认 同步处理消息
 
 
-        public Task<string> ConsumerSubscribeAsync(string streamName, 
+        public Task<ConsumerMessageHandler> ConsumerSubscribeAsync(string streamName, 
             ConsumerConfig config, Func<NATSJetStreamMsgContent, MessageAck> handler, 
             string subscribeId = null, 
             Dictionary<string, object> contentData = null)

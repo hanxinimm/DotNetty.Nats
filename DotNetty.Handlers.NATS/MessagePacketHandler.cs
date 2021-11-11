@@ -13,11 +13,14 @@ namespace DotNetty.Handlers.NATS
     public abstract class MessagePacketHandler : SimpleChannelInboundHandler<MessagePacket>
     {
         private readonly EventWaitHandle _queueEventWaitHandle;
+        protected readonly ILogger _logger;
+
         public string SubscribeId { get; protected set; }
         protected ConcurrentQueue<MessagePacket> MessageQueues { get; }
 
-        public MessagePacketHandler()
+        public MessagePacketHandler(ILogger logger)
         {
+            _logger = logger;
             MessageQueues = new ConcurrentQueue<MessagePacket>();
             _queueEventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
         }
@@ -43,15 +46,24 @@ namespace DotNetty.Handlers.NATS
         protected abstract ValueTask HandleMessageAsync(MessagePacket msg);
 
 
-        public void MessageProcessingAsync()
+        public Task MessageProcessingAsync()
         {
-            Task.Factory.StartNew(async () =>
+            return Task.Factory.StartNew(async () =>
             {
                 while (true)
                 {
-                    while (MessageQueues.TryDequeue(out var packet))
+                    try
                     {
-                        await HandleMessageAsync(packet);
+
+                        while (MessageQueues.TryDequeue(out var packet))
+                        {
+
+                            await HandleMessageAsync(packet);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 主题 {SubscribeId}");
                     }
 
                     _queueEventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));

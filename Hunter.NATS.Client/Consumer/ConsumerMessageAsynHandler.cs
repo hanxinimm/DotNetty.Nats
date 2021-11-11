@@ -23,18 +23,10 @@ namespace Hunter.NATS.Client
             _messageHandler = messageHandler;
         }
 
-        protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> ackCallback)
+        protected override async ValueTask HandleMessageAsync(MessagePacket msg)
         {
-            Task.Factory.StartNew(async _msg =>
-            {
-                var current_msg = _msg as MessagePacket;
-                await _messageHandler(PackMsgContent(current_msg));
-                await ackCallback(_subscriptionConfig, current_msg, MessageAck.Ack);
-            }, 
-            msg, 
-            default, 
-            TaskCreationOptions.DenyChildAttach,
-            TaskScheduler.Default);
+            await _messageHandler(PackMsgContent(msg));
+            await _messageAckCallback(_subscriptionConfig, msg, MessageAck.Ack);
         }
     }
 }

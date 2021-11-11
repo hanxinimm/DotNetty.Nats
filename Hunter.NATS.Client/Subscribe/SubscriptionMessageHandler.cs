@@ -12,25 +12,24 @@ namespace Hunter.NATS.Client
     public abstract class SubscriptionMessageHandler : MessagePacketHandler
     {
         private int _messageHandlerCounter = 0;
-        private readonly ILogger _logger;
         protected readonly NATSMsgSubscriptionConfig _subscriptionConfig;
         private readonly Func<NATSMsgSubscriptionConfig, Task> _unSubscriptionCallback;
-        private readonly Action<IChannelHandlerContext, MessagePacket> _channelRead;
+        private readonly Func<NATSMsgContent,ValueTask> _messageHandler;
         public SubscriptionMessageHandler(
             ILogger logger,
             NATSMsgSubscriptionConfig subscriptionConfig,
             Func<NATSMsgSubscriptionConfig, Task> unSubscriptionCallback = null)
+            : base(logger)
         {
-            _logger = logger;
             _subscriptionConfig = subscriptionConfig;
             _unSubscriptionCallback = unSubscriptionCallback;
             if (subscriptionConfig.MaxMsg.HasValue)
             {
-                _channelRead = LimitedMessageHandler;
+                _messageHandler = LimitedMessageHandler;
             }
             else
             {
-                _channelRead = EndlessMessageHandler;
+                _messageHandler = EndlessMessageHandler;
             }
         }
 
@@ -38,56 +37,28 @@ namespace Hunter.NATS.Client
 
         public NATSMsgSubscriptionConfig SubscriptionConfig => _subscriptionConfig;
 
-        protected abstract void MessageHandler(MessagePacket msg);
-
-        protected override void ChannelRead0(IChannelHandlerContext contex, MessagePacket msg)
+        protected override async ValueTask HandleMessageAsync(MessagePacket msg)
         {
-            _channelRead(contex, msg);
+            await _messageHandler(PackMsgContent(msg));
         }
 
-        private void EndlessMessageHandler(IChannelHandlerContext contex, MessagePacket msg)
+        protected abstract ValueTask MessageHandler(NATSMsgContent msg);
+
+        private async ValueTask EndlessMessageHandler(NATSMsgContent msg)
         {
-            if (msg.SubscribeId == _subscriptionConfig.SubscribeId)
+            await MessageHandler(msg);
+        }
+
+        private async ValueTask LimitedMessageHandler(NATSMsgContent msg)
+        {
+            if (_messageHandlerCounter < _subscriptionConfig.MaxMsg)
             {
-                try
-                {
-                    MessageHandler(msg);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 主题 {_subscriptionConfig.Subject}");
-                }
+                await MessageHandler(msg);
+                _messageHandlerCounter++;
             }
             else
             {
-                contex.FireChannelRead(msg);
-            }
-        }
-
-        private void LimitedMessageHandler(IChannelHandlerContext contex, MessagePacket msg)
-        {
-            if (msg.SubscribeId == _subscriptionConfig.SubscribeId)
-            {
-                if (_messageHandlerCounter < _subscriptionConfig.MaxMsg)
-                {
-                    try
-                    {
-                        MessageHandler(msg);
-                        _messageHandlerCounter++;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 主题 {_subscriptionConfig.Subject}");
-                    }
-                }
-                else
-                {
-                    _unSubscriptionCallback(_subscriptionConfig);
-                }
-            }
-            else
-            {
-                contex.FireChannelRead(msg);
+                await _unSubscriptionCallback(_subscriptionConfig);
             }
         }
 
