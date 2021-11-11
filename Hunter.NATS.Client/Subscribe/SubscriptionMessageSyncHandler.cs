@@ -11,6 +11,9 @@ namespace Hunter.NATS.Client
     public class SubscriptionMessageSyncHandler : SubscriptionMessageHandler
     {
         private readonly Action<NATSMsgContent> _messageHandler;
+#if NETSTANDARD2_1
+        private readonly ValueTask completedValueTask = new ValueTask();
+#endif
 
         public SubscriptionMessageSyncHandler(
             ILogger logger,
@@ -35,7 +38,11 @@ namespace Hunter.NATS.Client
         {
             _messageHandler(msg);
 
+#if NETSTANDARD2_1
+            return completedValueTask;
+#else
             return ValueTask.CompletedTask;
+#endif
         }
     }
 }
