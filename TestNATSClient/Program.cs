@@ -7,8 +7,10 @@ using NATS.Client;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TestNATSClient
@@ -91,8 +93,8 @@ namespace TestNATSClient
                 //options.Host = "mq.nats.laboroa.cn";
                 options.Port = 4221;
                 //options.IsAuthentication = true;
-                options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
-                options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
+                //options.UserName = "08GF8EJeRlHKvQGTU0m5QA==";
+                //options.Password = "PXAR6Dj8DDDdMqV1HyZttA==";
                 //options.ClusterNodes = new List<EndPoint>() { new IPEndPoint(IPAddress.Parse("mq.stan.yidujob.com"), 4222) };
             });
 
@@ -208,6 +210,12 @@ namespace TestNATSClient
             Console.WriteLine("按任意键继续");
 
             Console.ReadLine();
+
+            var httpclient = new HttpClient();
+            httpclient.Timeout = TimeSpan.FromSeconds(20);
+
+            //ThreadPool.QueueUserWorkItem(new WaitCallback(MessageProcessingChannelAsyncConfigAsync), Packet.Message.Inbox);
+
             //[事件]开始处理 主题 Finance-Borrow.CreateEvent.5128660 序号 2
 
             var consumerCreate = await client.ConsumerCreateOrAdaptiveAsync(streamName,
@@ -219,8 +227,18 @@ namespace TestNATSClient
                  .SetDurable("T19_2")
                  //.SetDeliverGroup("T")
                  .SetAckWait(TimeSpan.FromSeconds(20)),
-                 (bytes) =>
+                 async (bytes) =>
                 {
+
+                    Console.WriteLine("[消费者]请求数据S" + DateTime.Now);
+
+
+                    await httpclient.GetAsync("https://api.docs.gateway.yidujob.com/apiGateway/docs/Enterprise");
+
+                    Console.WriteLine("[消费者]请求数据E" + DateTime.Now);
+
+
+
                     Console.WriteLine("[消费者]开始接受收消息");
                     var sss = Encoding.UTF8.GetString(bytes.Data);
                     Console.WriteLine("收到消息 {0}  标识 {1}", sss, bytes.Metadata);
@@ -255,7 +273,6 @@ namespace TestNATSClient
             header.Add("Safe", "true");
             header.Add("Token", "auth");
 
-            var sub = $"{streamName}.Apply."+ DateTime.Now.Millisecond;
 
 
             Options opts = ConnectionFactory.GetDefaultOptions();
@@ -286,40 +303,33 @@ namespace TestNATSClient
                 var Testbytes = Encoding.UTF8.GetBytes($"Knock Knock");
 
 
-                //for (int i = 0; i < 30; i++)
-                //{
-                //    await Task.Factory.StartNew(async () =>
-                //    {
-                //        for (int j = 0; j < 30; j++)
-                //        {
+                for (int i = 0; i < 3; i++)
+                {
+                    await Task.Factory.StartNew(async () =>
+                    {
+                        for (int j = 0; j < 3; j++)
+                        {
+                            await Task.Factory.StartNew(async () =>
+                            {
+                                var sub = $"{streamName}.Apply." + DateTime.Now.Millisecond;
+                                Console.WriteLine("消息主题 {0}", sub);
+                                await client.PublishAsync(sub, Testbytes);
+                            });
+                        }
+                    });
 
+                    //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
+                    //await client.PublishAsync("Test2", Testbytes);
 
-                //await Task.Factory.StartNew(async () =>
-                //{
-                //var ss = c.CreateJetStreamManagementContext();
-                //ss.AddOrUpdateConsumer(streamName, null);
-                
+                    //var ApiGatewaybytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
+                    //await client.PublishAsync("ApiGateway.EventTrigger.4343", ApiGatewaybytes);
 
-                //var sub = $"TestAll-Work.CheckIn.{DateTime.Now.Ticks % 2}";
-                Console.WriteLine("消息主题 {0}", sub);
-                await client.PublishAsync(sub, Testbytes);
-                //});
-                //    }
-                //});
-                //var Testbytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [Test2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    //var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                //await client.PublishAsync("Test2", Testbytes);
-
-                //var ApiGatewaybytes = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-
-                //await client.PublishAsync("ApiGateway.EventTrigger.4343", ApiGatewaybytes);
-
-                //var ApiGatewaybytes2 = Encoding.UTF8.GetBytes($"序号 {msg_sq++} [ApiGateway2]这是一个客户端测试消息-特殊标记" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-
-                //await client.PublishAsync("ApiGateway.EventTrigger.4242", ApiGatewaybytes2);
-                //}
+                    //await client.PublishAsync("ApiGateway.EventTrigger.4242", ApiGatewaybytes2);
+                }
 
                 stopwatch.Stop(); //  停止监视  
 

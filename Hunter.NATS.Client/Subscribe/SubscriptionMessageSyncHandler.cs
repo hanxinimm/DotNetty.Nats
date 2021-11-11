@@ -14,7 +14,7 @@ namespace Hunter.NATS.Client
 
         public SubscriptionMessageSyncHandler(
             ILogger logger,
-            NATSSubscriptionConfig subscriptionConfig,
+            NATSMsgSubscriptionConfig subscriptionConfig,
             Action<NATSMsgContent> messageHandler)
             : base(logger, subscriptionConfig)
         {
@@ -23,9 +23,9 @@ namespace Hunter.NATS.Client
 
         public SubscriptionMessageSyncHandler(
             ILogger logger,
-            NATSSubscriptionConfig subscriptionConfig,
+            NATSMsgSubscriptionConfig subscriptionConfig,
             Action<NATSMsgContent> messageHandler,
-            Func<NATSSubscriptionConfig, Task> unSubscriptionCallback)
+            Func<NATSMsgSubscriptionConfig, Task> unSubscriptionCallback)
             : base(logger, subscriptionConfig, unSubscriptionCallback)
         {
             _messageHandler = messageHandler;

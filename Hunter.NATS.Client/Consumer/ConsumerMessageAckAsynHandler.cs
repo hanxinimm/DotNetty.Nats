@@ -22,6 +22,12 @@ namespace Hunter.NATS.Client
 
         protected override void MessageHandler(MessagePacket msg, Func<NATSConsumerSubscriptionConfig, MessagePacket, MessageAck, ValueTask> ackCallback)
         {
+            //var current_msg = msg as MessagePacket;
+
+            //var ack_msg =  _messageHandler(PackMsgContent(current_msg)).GetAwaiter().GetResult();
+
+            //ackCallback(_subscriptionConfig, current_msg, ack_msg).GetAwaiter().GetResult();
+
             Task.Factory.StartNew(async _msg =>
             {
                 try

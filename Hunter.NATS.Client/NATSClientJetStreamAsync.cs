@@ -1150,11 +1150,23 @@ namespace Hunter.NATS.Client
         #region 订阅手动确认 同步处理消息
 
 
-        public Task<string> ConsumerSubscribeAsync(string streamName, ConsumerConfig config, Func<NATSJetStreamMsgContent, MessageAck> handler, string subscribeId = null, Dictionary<string, object> contentData = null)
+        public Task<string> ConsumerSubscribeAsync(string streamName, 
+            ConsumerConfig config, Func<NATSJetStreamMsgContent, MessageAck> handler, 
+            string subscribeId = null, 
+            Dictionary<string, object> contentData = null)
         {
             return HandleConsumerSubscribeAsync(streamName, config, (config) =>
                 new ConsumerMessageAckSyncHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
         }
+
+        //public Task<string> ConsumerSubscribeAsync(string streamName,
+        //    ConsumerConfig config, Func<NATSJetStreamMsgContent, MessageAck, Action> handler,
+        //    string subscribeId = null,
+        //    Dictionary<string, object> contentData = null)
+        //{
+        //    return HandleConsumerSubscribeAsync(streamName, config, (config) =>
+        //        new ConsumerMessageAckSyncHandler(_logger, config, handler, AckAsync), subscribeId: subscribeId);
+        //}
 
         #endregion;
 

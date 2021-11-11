@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Hunter.NATS.Client
 {
-    public class NATSConsumerSubscriptionConfig
+    public class NATSConsumerSubscriptionConfig : NATSSubscriptionConfig
     {
         public NATSConsumerSubscriptionConfig() { }
 
@@ -22,11 +22,6 @@ namespace Hunter.NATS.Client
         /// 客户端配置
         /// </summary>
         public ConsumerConfig Config { get; protected set; }
-
-        /// <summary>
-        /// 订阅编号
-        /// </summary>
-        public string SubscribeId { get; protected set; }
 
         ///// <summary>
         ///// 是否为异步回调

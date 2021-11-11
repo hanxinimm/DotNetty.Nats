@@ -91,7 +91,7 @@ namespace Hunter.NATS.Client
         }
 
         public async Task<string> HandleSubscribeAsync(string subject, string queueGroup,
-            Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
+            Func<NATSMsgSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
             return await _policy.ExecuteAsync(async (content) =>
             {
@@ -102,7 +102,7 @@ namespace Hunter.NATS.Client
         
 
         public async Task<string> InternalSubscribeAsync(string subject, string queueGroup,
-            Func<NATSSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
+            Func<NATSMsgSubscriptionConfig, SubscriptionMessageHandler> messageHandlerSetup, int? maxMsg = null, string subscribeId = null)
         {
             await ConnectAsync();
 
@@ -217,7 +217,7 @@ namespace Hunter.NATS.Client
 
         #endregion;
 
-        public async Task UnSubscribeAsync(NATSSubscriptionConfig subscriptionConfig)
+        public async Task UnSubscribeAsync(NATSMsgSubscriptionConfig subscriptionConfig)
         {
             await _policy.ExecuteAsync(async (content) =>
             {
