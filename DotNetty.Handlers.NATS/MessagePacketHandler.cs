@@ -48,26 +48,27 @@ namespace DotNetty.Handlers.NATS
 
         public Task MessageProcessingAsync()
         {
-            return Task.Factory.StartNew(async () =>
+            return Task.Factory.StartNew(() =>
             {
-                while (true)
+                return Task.Factory.StartNew(async () =>
                 {
-                    try
+                    while (true)
                     {
-
-                        while (MessageQueues.TryDequeue(out var packet))
+                        try
                         {
-
-                            await HandleMessageAsync(packet);
+                            while (MessageQueues.TryDequeue(out var packet))
+                            {
+                                await HandleMessageAsync(packet);
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 主题 {SubscribeId}");
-                    }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"[SubscriptionMessageHandler]消息处理发生异常 主题 {SubscribeId}");
+                        }
 
-                    _queueEventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
-                }
+                        _queueEventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
+                    }
+                });
             }, TaskCreationOptions.LongRunning);
         }
     }
