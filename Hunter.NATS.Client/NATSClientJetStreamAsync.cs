@@ -40,6 +40,8 @@ namespace Hunter.NATS.Client
                     consumerMessageHandler, 
                     consumerMessageHandler.SubscriptionConfig.SubscribeId);
 
+                await consumerMessageHandler.MessageProcessingAsync();
+
                 _logger.LogDebug($"[消费者]完成设置主题处理器 Subject = {consumerMessageHandler.SubscriptionConfig.StreamName}");
             }
         }

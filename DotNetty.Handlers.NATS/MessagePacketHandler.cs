@@ -68,8 +68,8 @@ namespace DotNetty.Handlers.NATS
 
                         _queueEventWaitHandle.WaitOne(TimeSpan.FromMinutes(5));
                     }
-                });
-            }, TaskCreationOptions.LongRunning);
+                }, TaskCreationOptions.LongRunning);
+            });
         }
     }
 }

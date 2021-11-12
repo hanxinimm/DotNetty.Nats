@@ -86,6 +86,8 @@ namespace Hunter.NATS.Client
                 await InternalSubscribeAsync(subscriptionMessageHandler.SubscriptionConfig.Subject, subscriptionMessageHandler.SubscriptionConfig.SubscribeGroup,
                     subscriptionMessageHandler, subscriptionMessageHandler.SubscriptionConfig.SubscribeId);
 
+                await subscriptionMessageHandler.MessageProcessingAsync();
+
                 _logger.LogDebug($"完成设置主题处理器 Subject = {subscriptionMessageHandler.SubscriptionConfig.Subject}");
             }
         }
